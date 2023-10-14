@@ -1,0 +1,408 @@
+==========
+References
+==========
+WalletService.Api.Controllers
+Microsoft.AspNetCore.Mvc
+System.Net
+WalletService.Core.Services.IServices
+System
+WalletService.Models.Responses
+WalletService.Models.Requests.CoinPayRequest
+Microsoft.AspNetCore.Http.HttpResults
+WalletService.Models.Requests.EcoPoolConfigurationRequest
+Microsoft.IdentityModel.Tokens
+WalletService.Models.Requests.TransferBalanceRequest
+WalletService.Models.Requests.WalletRequest
+WalletService.Models.Requests.WalletHistoryRequest
+WalletService.Models.Requests.WalletPeriodRequest
+WalletService.Models.Requests.WalletRequestRequest
+WalletService.Models.Requests.WalletRetentionConfigRequest
+WalletService.Models.Requests.WalletWaitRequest
+WalletService.Models.Requests.WalletWithDrawalRequest
+QuestPDF.Infrastructure
+WalletService.Core.Middlewares
+WalletService.Ioc
+global::Microsoft.AspNetCore.Builder
+global::Microsoft.AspNetCore.Hosting
+global::Microsoft.AspNetCore.Http
+global::Microsoft.AspNetCore.Routing
+global::Microsoft.Extensions.Configuration
+global::Microsoft.Extensions.DependencyInjection
+global::Microsoft.Extensions.Hosting
+global::Microsoft.Extensions.Logging
+global::System
+global::System.Collections.Generic
+global::System.IO
+global::System.Linq
+global::System.Net.Http
+global::System.Net.Http.Json
+global::System.Threading
+global::System.Threading.Tasks
+System.Reflection
+project.all
+WalletService.Data.Adapters
+WalletService.Data.Adapters.IAdapters
+WalletService.Models.Configuration
+System.Net.Http
+WalletService.Models.Responses.BaseResponses
+WalletService.Models.Requests.RequestValidationCode
+WalletService.Utility.Extensions
+RestSharp
+System.Collections.Generic
+WalletService.Data.Database.CustomModels
+WalletService.Data.Database.Models
+WalletService.Data.Database
+Microsoft.EntityFrameworkCore
+Microsoft.EntityFrameworkCore.Metadata.Builders
+WalletService.Data.Repositories
+WalletService.Data.Repositories.IRepositories
+System.Threading.Tasks
+System.Linq
+WalletService.Models.Constants
+WalletService.Models.Enums
+Microsoft.Data.SqlClient
+System.Data
+System.Data.Common
+System.Text.Json
+Microsoft.EntityFrameworkCore.Storage
+Microsoft.EntityFrameworkCore.Infrastructure
+Microsoft.Extensions.Options
+System.Text
+WalletService.Models.Requests
+WalletService.Models.Requests.InvoiceRequest
+System.Reflection.Metadata
+WalletService.Utility.Extensions.CommonExtensions
+WalletService.Core.Factory
+WalletService.Core.PaymentStrategies.IPaymentStrategies
+Microsoft.Extensions.DependencyInjection
+WalletService.Core.PaymentStrategies
+WalletService.Core.Kafka.Consumers
+System.Threading
+Confluent.Kafka
+System.Net.NetworkInformation
+WalletService.Core.Kafka.Consumers.Producer
+WalletService.Core.Kafka.Consumers.Topics
+WalletService.Core.Mapper
+AutoMapper
+Microsoft.AspNetCore.Http
+System.Net.Mime
+WalletService.Core.Services
+MimeKit
+MailKit.Net.Smtp
+MailKit.Security
+MailKit
+System.IO
+QuestPDF.Fluent
+Microsoft.Extensions.Logging
+WalletService.Models.DTO.InvoiceDetailDto
+WalletService.Models.DTO.InvoiceDto
+WalletService.Models.DTO.ProcessGradingDto
+WalletService.Models.DTO.ResultEcoPoolLevelsDto
+WalletService.Models.DTO.ResultsEcoPoolDto
+WalletService.Models.DTO.WalletDto
+WalletService.Models.DTO.WalletHistoryDto
+WalletService.Models.DTO.WalletPeriodDto
+WalletService.Models.DTO.WalletRequestDto
+WalletService.Models.DTO.WalletRetentionConfigDto
+WalletService.Models.DTO.WalletWaitDto
+WalletService.Models.DTO.WalletWithDrawalDto
+WalletService.Models.Requests.InvoiceDetailRequest
+WalletService.Models.Requests.WalletTransactionRequest
+WalletService.Models.Exceptions
+WalletService.Models.DTO.BalanceInformationDto
+WalletService.Models.Constants.Constants
+iText.StyledXmlParser.Jsoup.Select
+System.Collections
+WalletService.Models.Requests.WalletPayRequest
+WalletService.Models.DTO.ProductWalletDto
+WalletService.Models.DTO.CoinPayDto
+WalletService.Models.DTO.EcoPoolDto
+System.Text.Json.Serialization
+System.Runtime.Serialization
+WalletService.Models.DTO
+System.Globalization
+System.Text.RegularExpressions
+System.Security.Cryptography
+Newtonsoft.Json
+System.Web
+System.Dynamic
+System.Text.Json.JsonSerializer
+Microsoft.Extensions.Hosting
+Microsoft.Extensions.Configuration
+Microsoft.AspNetCore.Hosting
+NLog.Extensions.Logging
+Microsoft.AspNetCore.Builder
+Microsoft.AspNetCore.ResponseCompression
+FluentValidation.AspNetCore
+Microsoft.AspNetCore.Cors.Infrastructure
+System.Text.Json.Serialization.Metadata
+Microsoft.OpenApi.Models
+WalletService.Worker
+
+===============
+DownloadedFiles
+===============
+system.web.json
+project.all.json
+
+==============
+ProjectResults
+==============
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Api\WalletService.Api.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Core\WalletService.Core.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Ioc\WalletService.Ioc.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Worker\WalletService.Worker.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Models\WalletService.Models.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Data\WalletService.Data.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Utility\WalletService.Utility.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Worker\WalletService.Worker.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Utility\WalletService.Utility.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Api\WalletService.Api.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Data\WalletService.Data.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Ioc\WalletService.Ioc.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Models\WalletService.Models.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+----------------------
+Showing results for: D:\Jeff\Projects\Hero Systems\wallet_services\WalletService.Core\WalletService.Core.csproj
+----------------------
+---------------------------
+Target Versions:
+---------------------------
+net7.0
+---------------------------
+Source Versions:
+---------------------------
+net48
+---------------------------
+Upgrade packages:
+---------------------------
+---------------------------
+Action packages:
+---------------------------
+
+
+===========
+BuildErrors
+===========
+
+

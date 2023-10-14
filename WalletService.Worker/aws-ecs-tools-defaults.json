@@ -1,0 +1,27 @@
+
+{
+    "region" : "us-east-1",
+    "profile" : "default",
+    "configuration" : "Release",
+    "image-tag"     : "walletserviceworker:latest",
+    "docker-build-working-dir" : "",
+    "cluster"                  : "HeroSystemProd",
+    "launch-type"              : "FARGATE",
+    "launch-subnets"           : "subnet-04775aa359618a7b3,subnet-02e37dc73b1225f0e,subnet-0d97066bc77138021",
+    "launch-security-groups"   : "sg-06d4b39c4b260cb28",
+    "assign-public-ip"         : true,
+    "task-definition-name"     : "WalletServiceWorkerProd",
+    "task-cpu"                 : "1024",
+    "task-memory"              : "2048",
+    "platform-version"         : "LATEST",
+    "task-execution-role"      : "ecsTaskExecutionRole",
+    "container-name"           : "WalletServiceWorkerProd",
+    "container-port-mapping"   : "",
+    "container-environment-variables" : "\"DOTNET_ENVIRONMENT\"=\"production\"",
+    "skip-image-push"                 : false,
+    "cluster-service"                 : "HeroSystemProd/WalletServiceWorkerProd",
+    "desired-count"                   : 2,
+    "deployment-minimum-healthy-percent" : 50,
+    "deployment-maximum-percent"         : 200,
+    "vstoolkit-deployment-mode"          : "DeployService"
+}

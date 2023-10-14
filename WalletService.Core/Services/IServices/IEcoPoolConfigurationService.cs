@@ -1,0 +1,11 @@
+﻿using WalletService.Models.DTO.ProcessGradingDto;
+using WalletService.Models.Requests.EcoPoolConfigurationRequest;
+
+namespace WalletService.Core.Services.IServices;
+
+public interface IEcoPoolConfigurationService
+{
+    Task<EcoPoolConfigurationDto?> GetEcoPoolDefaultConfiguration();
+    Task<EcoPoolConfigurationDto> CreateOrUpdateEcoPoolConfiguration(EcoPoolConfigurationRequest request);
+    Task<int> GetProgressPercentage(int                                                          configurationId);
+}
