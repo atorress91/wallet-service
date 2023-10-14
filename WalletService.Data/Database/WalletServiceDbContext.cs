@@ -613,5 +613,31 @@ public class WalletServiceDbContext : DbContext
 
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
+        
+        modelBuilder.Entity<Commissions>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ConceptId).IsRequired();
+            entity.Property(e => e.AffiliateId).IsRequired();
+            entity.Property(e => e.DepositAffiliateId).IsRequired();
+            entity.Property(e => e.InvoiceId).IsRequired();
+            entity.Property(e => e.Level).HasColumnType("int");
+            entity.Property(e => e.Gif).HasColumnType("decimal(10,2)");
+            entity.Property(e => e.Compression).HasColumnType("decimal(10,2)");
+            entity.Property(e => e.Compressionable).HasColumnType("decimal(10,2)");
+            entity.Property(e => e.SalesPrice).HasColumnType("decimal(10,2)");
+            entity.Property(e => e.Tax).HasColumnType("decimal(10,2)");
+            entity.Property(e => e.Quantity).HasColumnType("int");
+            entity.Property(e => e.Percentage).HasColumnType("decimal(10,2)");
+            entity.Property(e => e.SubtractBinary).HasColumnType("decimal(10,2)");
+            entity.Property(e => e.CompressionPosition).HasColumnType("tinyint");
+            entity.Property(e => e.ClosingDate).HasColumnType("datetime");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+            entity.Property(e => e.DeletedAt).HasColumnType("datetime");
+
+
+            entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
+        });
     }
 }
