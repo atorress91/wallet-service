@@ -183,13 +183,13 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
 
             for (var i = 0; i < leaderBoardModel5.Count; i++)
             {
-                var row = 00;
-                var col = 00;
-                if (i is not 0)
+                if (i is 0)
                 {
-                    row = i / Constants.MatrixModel5[0];
-                    col = (i + 1) % Constants.MatrixModel5[1];
+                    leaderBoardModel5[i].MatrixPosition = "{head}";
+                    continue;
                 }
+                var row = i / Constants.MatrixModel5[0];
+                var col = i % Constants.MatrixModel5[1];
                 leaderBoardModel5[i].MatrixPosition =
                     new[] { row, col }.ToJsonString();
                 leaderBoardModel5[i].GradingPosition = i;
@@ -197,14 +197,15 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
 
             for (var i = 0; i < leaderBoardModel6.Count; i++)
             {
-                var row = 00;
-                var col = 00;
-                if (i is not 0)
+                if (i is 0)
                 {
-                    row = i / Constants.MatrixModel6[0];
-                    col = (i + 1) % Constants.MatrixModel6[1];
+                    leaderBoardModel6[i].MatrixPosition = "{head}";
+                    continue;
                 }
-                leaderBoardModel6[i].MatrixPosition  = new[] { row, col }.ToJsonString();
+                var row = i / Constants.MatrixModel6[0];
+                var col = i % Constants.MatrixModel6[1];
+                leaderBoardModel6[i].MatrixPosition =
+                    new[] { row, col }.ToJsonString();
                 leaderBoardModel6[i].GradingPosition = i;
             }
 
