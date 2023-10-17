@@ -48,8 +48,7 @@ public static class Constants
     public const string CommissionPoolDescription       = "Comisión del pool por {0}, nivel {1}";
     public const string CommissionPoolDescriptionNormal = "Comisión del pool";
     public const string CommissionMembership            = "Comisión de membresía por";
-    public const string FirstModel4Level                      = "Cliente";
-    public const string SecondModel4Level                      ="Colaborador";
+
     public const string ConceptRecurringPayment         = "Pago recurrente - ${0} - Calificacion {1}";
     public const string ConceptBinaryPayment         = "Pago modelo 4 - ${0} - Calificacion {1}";
     public const string ConceptCommissionBinaryPayment         = "Comisión modelo 4 - ${0} - Calificacion {1}";
@@ -58,7 +57,28 @@ public static class Constants
     public const int    UsdtIdCurrency                  = 19;
     public const int    UsdtIdNetwork                   = 99;
     public const int    CoinPayIdWallet                 = 46616;
+    public static int[] MatrixModel5 = { 3, 8 };
+    public static int[] MatrixModel6 = { 4, 10 };
+    
+    
+    //Models
+    public static string[] Model4Level = { "Cliente", "Colaborador" };
+    public const int CustomerModel4Scope = 2;
+    public const int CustomerModel5Scope = 3;
+    public static int[] CustomerModel6Scope = { 4,5,6,7,8,9,10 };
 
+    public static string[] Model5Level = { "Ejecutivo" };
+
+    public static string[] Model6Level =
+    {
+        "Gestor",
+        "Coordinador",
+        "Supervisor",
+        "Asesor",
+        "VP_Comercial",
+        "Subdirector",
+        "Director"
+    };
 
     public static string[] PartitionKeys =
         { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "12", "13", "14", "18", "29", "30" };

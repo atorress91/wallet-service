@@ -33,7 +33,9 @@ public class WalletServiceDbContext : DbContext
     public virtual DbSet<ApiClient> ApiClient { get; set; }
     public virtual DbSet<PaymentTransaction> PaymentTransaction { get; set; }
     public virtual DbSet<ModelFourStatistics> ModelFourStatistics { get; set; }
-
+    public virtual DbSet<Commissions> Commissions { get; set; }
+    public virtual DbSet<LeaderBoardModel5> LeaderBoardModel5 { get; set; }
+    public virtual DbSet<LeaderBoardModel6> LeaderBoardModel6 { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<InvoicesSpResponse>(entity => entity.HasNoKey());
@@ -638,6 +640,26 @@ public class WalletServiceDbContext : DbContext
 
 
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
+        });
+        
+        modelBuilder.Entity<LeaderBoardModel5>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.AffiliateId).IsRequired().HasColumnType("int");
+            entity.Property(e => e.MatrixPosition).IsRequired().HasColumnType("varchar(20)");
+            entity.Property(e => e.GradingPosition).IsRequired().HasColumnType("int");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
+            entity.Property(e => e.Amount).IsRequired().HasColumnType("decimal(10,2)");
+        });
+        
+        modelBuilder.Entity<LeaderBoardModel6>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.AffiliateId).IsRequired().HasColumnType("int");
+            entity.Property(e => e.MatrixPosition).IsRequired().HasColumnType("varchar(20)");
+            entity.Property(e => e.GradingPosition).IsRequired().HasColumnType("int");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
+            entity.Property(e => e.Amount).IsRequired().HasColumnType("decimal(10,2)");
         });
     }
 }

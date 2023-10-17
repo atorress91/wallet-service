@@ -4,12 +4,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WalletService.Core.Kafka.Messages;
 using WalletService.Data.Adapters.IAdapters;
+using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Configuration;
 using WalletService.Models.Constants;
+using WalletService.Models.DTO.AffiliateInformation;
 using WalletService.Models.Enums;
 using WalletService.Models.Requests.UserGradingRequest;
 using WalletService.Models.Requests.WalletRequest;
+using WalletService.Utility.Extensions;
 
 namespace WalletService.Core.Kafka.Consumers;
 
@@ -48,6 +51,7 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
         using var scope                 = ServiceScopeFactory.CreateScope();
         var       walletRepository      = scope.ServiceProvider.GetService<IWalletRepository>();
         var       accountServiceAdapter = scope.ServiceProvider.GetService<IAccountServiceAdapter>();
+        var       leaderBoardRepository = scope.ServiceProvider.GetService<ILeaderBoardRepository>();
 
         var listUsersGraded = model.UserGradings.Where(x => x.Grading is { Id: > 1 }).ToList();
 
@@ -55,7 +59,7 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
             return false;
 
         var dictionary = await ResultGradingProcess(model, listUsersGraded, walletRepository, accountServiceAdapter);
-        await BinaryProcess(model, listUsersGraded, accountServiceAdapter, walletRepository, dictionary);
+        await BinaryProcess(model, listUsersGraded, accountServiceAdapter, walletRepository, dictionary, leaderBoardRepository);
 
         return true;
     }
@@ -68,9 +72,9 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
     {
         var userDictionary = listUsersGraded.ToDictionary(x => x.AffiliateId, _ => 0m);
         foreach (var item in listUsersGraded)
-            if (item.Grading!.ScopeLevel > 2)
+            if (item.Grading!.ScopeLevel > Constants.CustomerModel4Scope)
             {
-                var firstGrading = model.Gradings.First(x => x.ScopeLevel == 2);
+                var firstGrading = model.Gradings.First(x => x.ScopeLevel == Constants.CustomerModel4Scope);
                 if (walletRepository is not null)
                     await CreateDebitPayment(
                         walletRepository,
@@ -115,136 +119,289 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
         IReadOnlyCollection<UserGradingRequest> listUsersGraded,
         IAccountServiceAdapter?                 accountServiceAdapter,
         IWalletRepository?                      walletRepository,
-        Dictionary<int, decimal>                userDictionary)
-    {
+        Dictionary<int, decimal>                userDictionary,
+        ILeaderBoardRepository?                 leaderBoardRepository)
+     {
         try
         {
-            var resultPoints    = await accountServiceAdapter!.CalculatePointPerUser(userDictionary);
-            var resultOldPoints = await walletRepository!.GetUserModelFour(userDictionary.Select(x => x.Key).ToArray());
+            var resultPoints      = await accountServiceAdapter!.CalculatePointPerUser(userDictionary);
+            var resultOldPoints   = await walletRepository!.GetUserModelFour(userDictionary.Select(x => x.Key).ToArray());
+            var leaderBoardModel5 = new List<LeaderBoardModel5>();
+            var leaderBoardModel6 = new List<LeaderBoardModel6>();
 
             foreach (var user in userDictionary)
             {
-                var oldPoints              = resultOldPoints.Where(x => x.AffiliateId == user.Key).ToList();
-                var leftPoints             = oldPoints.Sum(x => x.CreditLeft - x.DebitLeft);
-                var rightPoints            = oldPoints.Sum(x => x.CreditRight - x.DebitRight);
-                var userPointsInformation  = resultPoints.Where(x => x.UserId == user.Key)!.FirstOrDefault();
-                var userInformation        = listUsersGraded.First(x => x.AffiliateId == user.Key);
+                var oldPoints             = resultOldPoints.Where(x => x.AffiliateId == user.Key).ToList();
+                var oldLeftPoints         = oldPoints.Sum(x => x.CreditLeft - x.DebitLeft);
+                var oldRightPoints        = oldPoints.Sum(x => x.CreditRight - x.DebitRight);
+                var leftPoints            = 0m;
+                var rightPoints           = 0m;
+                var userPointsInformation = resultPoints.Where(x => x.UserId == user.Key)!.FirstOrDefault();
+                var userInformation       = listUsersGraded.First(x => x.AffiliateId == user.Key);
                 if (userPointsInformation is not null)
                 {
-                    leftPoints  += userPointsInformation.PointsLeft;
-                    rightPoints += userPointsInformation.PointsRight;
+                    leftPoints  = oldLeftPoints + userPointsInformation.PointsLeft;
+                    rightPoints = oldRightPoints + userPointsInformation.PointsRight;
                 }
 
                 if (leftPoints == rightPoints && leftPoints > 0)
-                {
-                    if (!(leftPoints > 0))
-                        continue;
-
-                    var grading = model.Gradings.Where(x
-                            => x.VolumePoints < leftPoints && userInformation.Grading!.Id > x.Id).OrderDescending()
-                        .FirstOrDefault();
-                    if (grading is null)
-                    {
-                        await walletRepository.TransactionPoints(
-                            user.Key, 0, 0,
-                            userPointsInformation!.PointsLeft,
-                            userPointsInformation.PointsRight);
-
-                        continue;
-                    }
-
-                    await CreateDebitPayment(
+                    await EqualsProcess(
+                        model,
+                        accountServiceAdapter,
                         walletRepository,
-                        user.Key,
-                        userInformation.UserName,
-                        grading!.PersonalPurchases,
-                        string.Format(Constants.ConceptBinaryPayment, grading.PersonalPurchases, grading.Name),
-                        WalletConceptType.recurring_payment.ToString()
-                    );
-                    await accountServiceAdapter!.UpdateGradingByUser(user.Key, grading.Id);
+                        leftPoints,
+                        userInformation,
+                        user,
+                        userPointsInformation,
+                        leaderBoardModel5,
+                        leaderBoardModel6);
 
-                    await CreateCreditPayment(
-                        walletRepository,
-                        user.Key,
-                        userInformation.UserName,
-                        (double)leftPoints,
-                        string.Format(Constants.ConceptCommissionBinaryPayment, leftPoints, grading.Name),
-                        WalletConceptType.recurring_payment.ToString()
-                    );
-
-                    await walletRepository.TransactionPoints(
-                        user.Key, leftPoints, leftPoints, 0m, 0m);
-                }
                 else if (leftPoints > 0 || rightPoints > 0)
-                {
-                    decimal payment;
-                    decimal resultRight;
-                    decimal resultLeft;
-                    if (leftPoints < rightPoints)
-                    {
-                        payment     = leftPoints;
-                        resultRight = rightPoints - leftPoints;
-                        resultLeft  = leftPoints;
-                    }
-                    else
-                    {
-                        payment     = leftPoints;
-                        resultLeft  = leftPoints - rightPoints;
-                        resultRight = rightPoints;
-                    }
-
-                    if (payment <= 0)
-                        continue;
-
-                    var grading = model.Gradings.Where(x
-                            => x.VolumePoints < payment && userInformation.Grading!.Id > x.Id)
-                        .OrderDescending()
-                        .FirstOrDefault();
-
-                    if (grading is null)
-                    {
-                        await walletRepository.TransactionPoints(
-                            user.Key, 0, 0,
-                            userPointsInformation!.PointsLeft,
-                            userPointsInformation.PointsRight);
-
-                        continue;
-                    }
-
-                    await CreateDebitPayment(
+                    await NormalProcess(
+                        model,
+                        accountServiceAdapter,
                         walletRepository,
-                        user.Key,
-                        userInformation.UserName,
-                        grading.PersonalPurchases,
-                        string.Format(Constants.ConceptBinaryPayment, grading.PersonalPurchases, grading.Name),
-                        WalletConceptType.recurring_payment.ToString()
-                    );
-
-                    await accountServiceAdapter!.UpdateGradingByUser(user.Key, grading.Id);
-
-                    await CreateCreditPayment(
-                        walletRepository,
-                        user.Key,
-                        userInformation.UserName,
-                        (double)payment,
-                        string.Format(Constants.ConceptCommissionBinaryPayment, payment, grading.Name),
-                        WalletConceptType.recurring_payment.ToString()
-                    );
-
+                        leftPoints,
+                        rightPoints,
+                        userInformation,
+                        user,
+                        userPointsInformation,
+                        leaderBoardModel5,
+                        leaderBoardModel6);
+                else
                     await walletRepository.TransactionPoints(
-                        user.Key,
-                        resultLeft,
-                        resultRight,
-                        0m,
-                        0m);
-                }
+                        user.Key, 0, 0,
+                        userPointsInformation!.PointsLeft,
+                        userPointsInformation.PointsRight);
             }
+
+            if (leaderBoardModel5 is { Count: > 0 })
+                leaderBoardModel5 = leaderBoardModel5.OrderByDescending(x => x.Amount).ToList();
+
+            if (leaderBoardModel6 is { Count: > 0 })
+                leaderBoardModel6 = leaderBoardModel6.OrderByDescending(x => x.Amount).ToList();
+
+            for (var i = 0; i < leaderBoardModel5.Count; i++)
+            {
+                var row = 00;
+                var col = 00;
+                if (i is not 0)
+                {
+                    row = i / Constants.MatrixModel5[0];
+                    col = (i + 1) % Constants.MatrixModel5[1];
+                }
+                leaderBoardModel5[i].MatrixPosition =
+                    new[] { row, col }.ToJsonString();
+                leaderBoardModel5[i].GradingPosition = i;
+            }
+
+            for (var i = 0; i < leaderBoardModel6.Count; i++)
+            {
+                var row = 00;
+                var col = 00;
+                if (i is not 0)
+                {
+                    row = i / Constants.MatrixModel6[0];
+                    col = (i + 1) % Constants.MatrixModel6[1];
+                }
+                leaderBoardModel6[i].MatrixPosition  = new[] { row, col }.ToJsonString();
+                leaderBoardModel6[i].GradingPosition = i;
+            }
+
+            await leaderBoardRepository!.CleanLeaderBoardModel5();
+            if(leaderBoardModel5 is {Count:>0})
+                await leaderBoardRepository.AddCustomersToModel5(leaderBoardModel5);
+            
+            await leaderBoardRepository.CleanLeaderBoardModel6();
+            if(leaderBoardModel6 is {Count:>0})
+                await leaderBoardRepository.AddCustomersToModel6(leaderBoardModel6);
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
             throw;
         }
+    }
+
+    private static async Task NormalProcess(
+        ModelFourMessage               model,
+        IAccountServiceAdapter         accountServiceAdapter,
+        IWalletRepository              walletRepository,
+        decimal                        leftPoints,
+        decimal                        rightPoints,
+        UserGradingRequest             userInformation,
+        KeyValuePair<int, decimal>     user,
+        UserBinaryInformation?         userPointsInformation,
+        List<LeaderBoardModel5> leaderBoardModel5,
+        List<LeaderBoardModel6> leaderBoardModel6)
+    {
+        var payment     = leftPoints < rightPoints ? leftPoints : rightPoints;
+        var pointsModel = payment + (decimal)userInformation.Commissions;
+
+        var grading = model.Gradings.Where(x
+                => x.VolumePoints < pointsModel && userInformation.Grading!.ScopeLevel < x.ScopeLevel)
+            .MaxBy(o => o.ScopeLevel);
+
+        if (grading is null)
+        {
+            await walletRepository.TransactionPoints(
+                user.Key, 0, 0,
+                userPointsInformation!.PointsLeft,
+                userPointsInformation.PointsRight);
+
+            if (userInformation.Grading!.ScopeLevel == Constants.CustomerModel5Scope)
+                leaderBoardModel5.Add(new LeaderBoardModel5
+                {
+                    AffiliateId     = userInformation.AffiliateId,
+                    Amount          = pointsModel,
+                    GradingPosition = 0,
+                    MatrixPosition  = string.Empty,
+                    CreatedAt       = DateTime.Now
+                });
+            if (Constants.CustomerModel6Scope.Contains(userInformation.Grading!.ScopeLevel))
+                leaderBoardModel6.Add(new LeaderBoardModel6
+                {
+                    AffiliateId     = userInformation.AffiliateId,
+                    Amount          = pointsModel,
+                    GradingPosition = 0,
+                    MatrixPosition  = string.Empty,
+                    CreatedAt       = DateTime.Now
+                });
+
+            return;
+        }
+
+        await CreateDebitPayment(
+            walletRepository,
+            user.Key,
+            userInformation.UserName,
+            grading.PersonalPurchases,
+            string.Format(Constants.ConceptBinaryPayment, grading.PersonalPurchases, grading.Name),
+            WalletConceptType.recurring_payment.ToString()
+        );
+
+        await accountServiceAdapter!.UpdateGradingByUser(user.Key, grading.Id);
+
+        await CreateCreditPayment(
+            walletRepository,
+            user.Key,
+            userInformation.UserName,
+            (double)payment,
+            string.Format(Constants.ConceptCommissionBinaryPayment, payment, grading.Name),
+            WalletConceptType.recurring_payment.ToString()
+        );
+
+        await walletRepository.TransactionPoints(
+            user.Key,
+            payment,
+            payment,
+            0m,
+            0m);
+
+        if (grading.ScopeLevel == Constants.CustomerModel5Scope)
+            leaderBoardModel5.Add(new LeaderBoardModel5
+            {
+                AffiliateId     = userInformation.AffiliateId,
+                Amount          = pointsModel,
+                GradingPosition = 0,
+                MatrixPosition  = string.Empty,
+                CreatedAt       = DateTime.Now
+            });
+        if (Constants.CustomerModel6Scope.Contains(grading.ScopeLevel))
+            leaderBoardModel6.Add(new LeaderBoardModel6
+            {
+                AffiliateId     = userInformation.AffiliateId,
+                Amount          = pointsModel,
+                GradingPosition = 0,
+                MatrixPosition  = string.Empty,
+                CreatedAt       = DateTime.Now
+            });
+    }
+
+    private static async Task EqualsProcess(
+        ModelFourMessage           model,
+        IAccountServiceAdapter     accountServiceAdapter,
+        IWalletRepository          walletRepository,
+        decimal                    equalsPoints,
+        UserGradingRequest         userInformation,
+        KeyValuePair<int, decimal> user,
+        UserBinaryInformation?     userPointsInformation,
+        List<LeaderBoardModel5>    leaderBoardModel5,
+        List<LeaderBoardModel6>    leaderBoardModel6)
+    {
+        var pointsModel = equalsPoints + (decimal)userInformation.Commissions;
+        var grading = model.Gradings.Where(x
+            => x.VolumePoints < pointsModel && userInformation.Grading!.Id < x.Id).MaxBy(o => o.ScopeLevel);
+
+        if (grading is null)
+        {
+            await walletRepository.TransactionPoints(
+                user.Key, 0, 0,
+                userPointsInformation!.PointsLeft,
+                userPointsInformation.PointsRight);
+
+            if (userInformation.Grading!.ScopeLevel == Constants.CustomerModel5Scope)
+                leaderBoardModel5.Add(new LeaderBoardModel5
+                {
+                    AffiliateId     = userInformation.AffiliateId,
+                    Amount          = pointsModel,
+                    GradingPosition = 0,
+                    MatrixPosition  = string.Empty,
+                    CreatedAt       = DateTime.Now
+                });
+            if (Constants.CustomerModel6Scope.Contains(userInformation.Grading!.ScopeLevel))
+                leaderBoardModel6.Add(new LeaderBoardModel6
+                {
+                    AffiliateId     = userInformation.AffiliateId,
+                    Amount          = pointsModel,
+                    GradingPosition = 0,
+                    MatrixPosition  = string.Empty,
+                    CreatedAt       = DateTime.Now
+                });
+
+            return;
+        }
+
+        await CreateDebitPayment(
+            walletRepository,
+            user.Key,
+            userInformation.UserName,
+            grading!.PersonalPurchases,
+            string.Format(Constants.ConceptBinaryPayment, grading.PersonalPurchases, grading.Name),
+            WalletConceptType.recurring_payment.ToString()
+        );
+        await accountServiceAdapter!.UpdateGradingByUser(user.Key, grading.Id);
+
+        await CreateCreditPayment(
+            walletRepository,
+            user.Key,
+            userInformation.UserName,
+            (double)equalsPoints,
+            string.Format(Constants.ConceptCommissionBinaryPayment, equalsPoints, grading.Name),
+            WalletConceptType.recurring_payment.ToString()
+        );
+
+        await walletRepository.TransactionPoints(
+            user.Key, equalsPoints, equalsPoints, 0m, 0m);
+
+        if (grading.ScopeLevel == Constants.CustomerModel5Scope)
+            leaderBoardModel5.Add(new LeaderBoardModel5
+            {
+                AffiliateId     = userInformation.AffiliateId,
+                Amount          = pointsModel,
+                GradingPosition = 0,
+                MatrixPosition  = string.Empty,
+                CreatedAt       = DateTime.Now
+            });
+        if (Constants.CustomerModel6Scope.Contains(grading.ScopeLevel))
+            leaderBoardModel6.Add(new LeaderBoardModel6
+            {
+                AffiliateId     = userInformation.AffiliateId,
+                Amount          = pointsModel,
+                GradingPosition = 0,
+                MatrixPosition  = string.Empty,
+                CreatedAt       = DateTime.Now
+            });
     }
 
     private static Task CreateDebitPayment(

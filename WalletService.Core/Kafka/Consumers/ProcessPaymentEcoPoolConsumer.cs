@@ -54,17 +54,17 @@ public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
         using var                       scope                    = ServiceScopeFactory.CreateScope();
         var                             resultsEcoPoolRepository = scope.ServiceProvider.GetService<IResultsEcoPoolRepository>();
         var                             walletRepository         = scope.ServiceProvider.GetService<IWalletRepository>();
-        var                             configurationAdapter     = scope.ServiceProvider.GetService<IConfigurationAdapter>();    
+        var                             configurationAdapter     = scope.ServiceProvider.GetService<IConfigurationAdapter>();
         var                             kafkaProducer            = scope.ServiceProvider.GetService<KafkaProducer>();
         ICollection<UserGradingRequest> listGrading              = new List<UserGradingRequest>();
         var                             responseGradings         = new GradingResponse();
         var                             listEcoPools             = await resultsEcoPoolRepository!.GetResultsEcoPoolToPayment();
         var dictionary = listEcoPools.GroupBy(x
             => x.AffiliateId).ToDictionary(group => group.Key, group => group.ToList());
-        
+
         if (listEcoPools is { Count: 0 })
             return false;
-        
+
         var gradingResponse = await configurationAdapter!.GetGradings();
         if (gradingResponse.IsSuccessful && !string.IsNullOrEmpty(gradingResponse.Content))
             responseGradings = gradingResponse.Content.ToJsonObject<GradingResponse>();
@@ -95,12 +95,12 @@ public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
                 if (ecoPoolLevelsList.Any(x => x.CompletedAt != null))
                     continue;
 
-                var userNameLevel      = ecoPoolLevelsList.First().AffiliateName;
-                var level              = ecoPoolLevelsList.First().Level;
-                var side              = ecoPoolLevelsList.First().BinarySide;
-                var globalPaymentLevel = (double)ecoPoolLevelsList.Sum(x => x.PaymentAmount);
+                var userNameLevel         = ecoPoolLevelsList.First().AffiliateName;
+                var level                 = ecoPoolLevelsList.First().Level;
+                var side                  = ecoPoolLevelsList.First().BinarySide;
+                var globalPaymentLevel    = (double)ecoPoolLevelsList.Sum(x => x.PaymentAmount);
                 var globalCommissionLevel = (double)ecoPoolLevelsList.Sum(x => x.CommisionAmount);
-                var globalPointsLevel  = (double)ecoPoolLevelsList.Sum(x => x.Points)!;
+                var globalPointsLevel     = (double)ecoPoolLevelsList.Sum(x => x.Points)!;
 
                 if (walletRepository is not null && globalPaymentLevel is not 0)
                     await CreateCreditPayment(
@@ -110,19 +110,20 @@ public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
                         globalPaymentLevel,
                         string.Format(Constants.CommissionPoolDescription, userNameLevel, level),
                         WalletConceptType.pool_commission.ToString());
-                AddOrUpdateGrading(ref listGrading, userLevel, key, userNameLevel, globalCommissionLevel, globalPointsLevel, side, gradings);
+                AddOrUpdateGrading(ref listGrading, userLevel, key, userNameLevel, globalCommissionLevel, globalPointsLevel, side,
+                    gradings);
             }
         }
 
-        var model = new ModelFourMessage()
+        var model = new ModelFourMessage
         {
-            Gradings = gradings.Where(x  => x.Id > 1).ToList(),
+            Gradings     = gradings.Where(x => x.Id > 1).ToList(),
             UserGradings = listGrading.Where(x => x.Grading is { Id: > 1 }).ToList()
         }.ToJsonString();
-        
+
         _ = Task.Run(async ()
             => await kafkaProducer!.ProduceAsync(KafkaTopics.ProcessModelFourTopic, model));
-        
+
         return true;
     }
 
@@ -133,7 +134,7 @@ public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
         string                              userName,
         double                              globalPaymentLevel,
         double                              points,
-        int side,
+        int                                 side,
         ICollection<GradingDto>?            gradings)
     {
         var userGrading = listGrading.FirstOrDefault(x => x.AffiliateId == userLevel);
@@ -151,7 +152,7 @@ public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
                 UserName         = userName,
                 Commissions      = globalPaymentLevel,
                 Points           = points,
-                Side = side
+                Side             = side
             };
             listGrading.Add(userGrading);
         }

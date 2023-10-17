@@ -754,7 +754,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             await sql.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
 
-            bool isSuccess = (bool)successParameter.Value;  
+            var isSuccess = (bool)successParameter.Value;  
         
             await sql.CloseAsync();
 
