@@ -637,8 +637,7 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
             entity.Property(e => e.DeletedAt).HasColumnType("datetime");
-
-
+            
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
         
@@ -650,6 +649,8 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.GradingPosition).IsRequired().HasColumnType("int");
             entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.Amount).IsRequired().HasColumnType("decimal(10,2)");
+            entity.Property(e => e.UserName).IsRequired().HasColumnType("varchar(50)");
+            entity.Property(e => e.GradingId).IsRequired().HasColumnType("int");
         });
         
         modelBuilder.Entity<LeaderBoardModel6>(entity =>
@@ -660,6 +661,8 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.GradingPosition).IsRequired().HasColumnType("int");
             entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.Amount).IsRequired().HasColumnType("decimal(10,2)");
+            entity.Property(e => e.UserName).IsRequired().HasColumnType("varchar(50)");
+            entity.Property(e => e.GradingId).IsRequired().HasColumnType("int");
         });
     }
 }

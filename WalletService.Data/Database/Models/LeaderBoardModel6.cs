@@ -8,4 +8,6 @@ public class LeaderBoardModel6
     public int GradingPosition { get; set; }
     public DateTime CreatedAt { get; set; }
     public decimal Amount { get; set; }
+    public string UserName { get; set; }
+    public int GradingId { get; set; }
 }

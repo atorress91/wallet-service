@@ -51,7 +51,11 @@ public static class Constants
 
     public const string ConceptRecurringPayment         = "Pago recurrente - ${0} - Calificacion {1}";
     public const string ConceptBinaryPayment         = "Pago modelo 4 - ${0} - Calificacion {1}";
+    public const string ConceptModelFivePayment         = "Pago modelo 5 - ${0} - Calificacion {1}";
+    public const string ConceptModelSixPayment         = "Pago modelo 6 - ${0} - Calificacion {1}";
     public const string ConceptCommissionBinaryPayment         = "Comisión modelo 4 - ${0} - Calificacion {1}";
+    public const string ConceptCommissionModelFivePayment         = "Comisión modelo 5 - ${0} - Calificacion {1}";
+    public const string ConceptCommissionModelSixPayment         = "Comisión modelo 6 - ${0} - Calificacion {1}";
 
     public const string DefaultWithdrawalZone           = "Central America Standard Time";
     public const int    UsdtIdCurrency                  = 19;
@@ -63,7 +67,7 @@ public static class Constants
     
     //Models
     public static string[] Model4Level = { "Cliente", "Colaborador" };
-    public const int CustomerModel4Scope = 2;
+    public static int[] CustomerModel4Scope = { 1, 2};
     public const int CustomerModel5Scope = 3;
     public static int[] CustomerModel6Scope = { 4,5,6,7,8,9,10 };
 

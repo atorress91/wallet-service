@@ -8,9 +8,7 @@ namespace WalletService.Data.Repositories;
 
 public class LeaderBoardRepository : BaseRepository, ILeaderBoardRepository
 {
-    protected LeaderBoardRepository(WalletServiceDbContext context) : base(context)
-    {
-    }
+    public LeaderBoardRepository(WalletServiceDbContext context) : base(context) { }
 
     public Task<List<LeaderBoardModel5>> GetMatrixModel5()
         => Context.LeaderBoardModel5.OrderBy(x => x.GradingPosition).ToListAsync();
