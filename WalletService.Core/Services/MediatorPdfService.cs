@@ -38,7 +38,7 @@ public class MediatorPdfService : IMediatorPdfService
                             row.RelativeItem().Column(col =>
                             {
                                 col.Item().AlignRight().Background("#257272").Border(1).BorderColor("#257272").AlignCenter()
-                                    .Text($"Factura #{spResponse.InvoiceNumber}")
+                                    .Text($"Factura #{spResponse.Id}")
                                     .FontColor("#fff");
 
                                 col.Item().AlignRight().Text("Razón Social: Ecosystem Sharing Evolution S.A.").FontSize(10);

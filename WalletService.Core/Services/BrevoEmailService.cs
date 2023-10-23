@@ -10,7 +10,7 @@ using WalletService.Data.Database.CustomModels;
 using WalletService.Models.Constants;
 using WalletService.Models.Responses;
 using WalletService.Utility.Extensions;
-using Task = System.Threading.Tasks.Task;
+
 
 
 namespace WalletService.Core.Services;
@@ -30,10 +30,10 @@ public class BrevoEmailService : IBrevoEmailService
         var apiInstance = new TransactionalEmailsApi();
         var sendSmtpEmail = new SendSmtpEmail
         {
-            To          = new List<SendSmtpEmailTo> { new SendSmtpEmailTo(toEmail) },
-            Subject     = subject,
+            To = new List<SendSmtpEmailTo> { new SendSmtpEmailTo(toEmail) },
+            Subject = subject,
             HtmlContent = body,
-            Sender      = new SendSmtpEmailSender("Ecosystem Sharing Evolution", _appSettings.EmailCredentials!.From)
+            Sender = new SendSmtpEmailSender("Ecosystem Sharing Evolution", _appSettings.EmailCredentials!.From)
         };
 
         try
@@ -48,7 +48,9 @@ public class BrevoEmailService : IBrevoEmailService
             return false;
         }
     }
-    private async Task<bool> SendEmailWithInvoice(string toEmail, string subject, string body, Dictionary<string, byte[]> pdfDataDict)
+
+    private async Task<bool> SendEmailWithInvoice(string toEmail, string subject, string body,
+        Dictionary<string, byte[]> pdfDataDict)
     {
         var apiInstance = new TransactionalEmailsApi();
 
@@ -86,15 +88,15 @@ public class BrevoEmailService : IBrevoEmailService
         var dictionary = new Dictionary<string, string>();
 
         var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        var separator        = Path.DirectorySeparatorChar;
-        var pathFile         = $"{workingDirectory}{separator}EmailTemplates{separator}welcome.html";
-        var bodyString       = await File.ReadAllTextAsync(pathFile, Encoding.UTF8);
+        var separator = Path.DirectorySeparatorChar;
+        var pathFile = $"{workingDirectory}{separator}EmailTemplates{separator}welcome.html";
+        var bodyString = await File.ReadAllTextAsync(pathFile, Encoding.UTF8);
 
         if (string.IsNullOrEmpty(bodyString))
             return false;
 
         var fullName = $"{user.Name} {user.LastName}";
-        var date     = DateTime.Now.ToString("MM/dd/yyyy");
+        var date = DateTime.Now.ToString("MM/dd/yyyy");
         dictionary.Add("{0}", fullName);
         dictionary.Add("{1}", user.UserName ?? "");
         dictionary.Add("{2}", date);
@@ -110,9 +112,9 @@ public class BrevoEmailService : IBrevoEmailService
         var dictionary = new Dictionary<string, string>();
 
         var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        var separator        = Path.DirectorySeparatorChar;
-        var pathFile         = $"{workingDirectory}{separator}EmailTemplates{separator}confirm-bonus.html";
-        var bodyString       = await File.ReadAllTextAsync(pathFile, Encoding.UTF8);
+        var separator = Path.DirectorySeparatorChar;
+        var pathFile = $"{workingDirectory}{separator}EmailTemplates{separator}confirm-bonus.html";
+        var bodyString = await File.ReadAllTextAsync(pathFile, Encoding.UTF8);
 
         if (string.IsNullOrEmpty(bodyString))
             return false;
@@ -126,7 +128,8 @@ public class BrevoEmailService : IBrevoEmailService
         return await SendEmail(user.Email!, Constants.SubjectConfirmBonus, body);
     }
 
-    public async Task<bool> SendEmailPurchaseConfirm(UserInfoResponse user, Dictionary<string, byte[]> pdfDataDict, InvoicesSpResponse spResponse)
+    public async Task<bool> SendEmailPurchaseConfirm(UserInfoResponse user, Dictionary<string, byte[]> pdfDataDict,
+        InvoicesSpResponse spResponse)
     {
         var dictionary = new Dictionary<string, string>();
 
@@ -143,7 +146,7 @@ public class BrevoEmailService : IBrevoEmailService
         dictionary.Add("{0}", fullName);
         dictionary.Add("{1}", date);
         dictionary.Add("{2}", spResponse.PaymentMethod ?? "");
-        dictionary.Add("{3}", spResponse.InvoiceNumber.ToString());
+        dictionary.Add("{3}", spResponse.Id.ToString());
         dictionary.Add("{4}", spResponse.TotalInvoice.ToString() ?? "");
 
         var body = bodyString.ReplaceHtml(dictionary);
@@ -152,22 +155,22 @@ public class BrevoEmailService : IBrevoEmailService
     }
 
 
-
-    public async Task<bool> SendEmailConfirmationEmailToThirdParty(UserInfoResponse user, string nameOfPurchaser, List<string> productNames)
+    public async Task<bool> SendEmailConfirmationEmailToThirdParty(UserInfoResponse user, string nameOfPurchaser,
+        List<string> productNames)
     {
-        var           dictionary          = new Dictionary<string, string>();
+        var dictionary = new Dictionary<string, string>();
         StringBuilder productNamesBuilder = new StringBuilder();
 
         var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        var separator        = Path.DirectorySeparatorChar;
-        var pathFile         = $"{workingDirectory}{separator}EmailTemplates{separator}PaymentsToThirdParties.html";
-        var bodyString       = await File.ReadAllTextAsync(pathFile, Encoding.UTF8);
+        var separator = Path.DirectorySeparatorChar;
+        var pathFile = $"{workingDirectory}{separator}EmailTemplates{separator}PaymentsToThirdParties.html";
+        var bodyString = await File.ReadAllTextAsync(pathFile, Encoding.UTF8);
 
         if (string.IsNullOrEmpty(bodyString))
             return false;
 
         var fullName = $"{user.Name} {user.LastName}";
-        var date     = DateTime.Now.ToString("MM/dd/yyyy");
+        var date = DateTime.Now.ToString("MM/dd/yyyy");
         dictionary.Add("{0}", fullName);
         dictionary.Add("{1}", nameOfPurchaser);
         dictionary.Add("{2}", date);
@@ -189,16 +192,16 @@ public class BrevoEmailService : IBrevoEmailService
         var apiInstance = new TransactionalEmailsApi();
         var sendSmtpEmail = new SendSmtpEmail
         {
-            To          = new List<SendSmtpEmailTo> { new SendSmtpEmailTo(toEmail) },
-            Subject     = subject,
+            To = new List<SendSmtpEmailTo> { new SendSmtpEmailTo(toEmail) },
+            Subject = subject,
             HtmlContent = body,
-            Sender      = new SendSmtpEmailSender("Ecosystem Sharing Evolution", _appSettings.EmailCredentials!.From),
+            Sender = new SendSmtpEmailSender("Ecosystem Sharing Evolution", _appSettings.EmailCredentials!.From),
             Attachment = new List<SendSmtpEmailAttachment>
             {
                 new SendSmtpEmailAttachment
                 {
                     Content = pdfData,
-                    Name    = "Invoice.pdf"
+                    Name = "Invoice.pdf"
                 }
             }
         };
@@ -215,21 +218,22 @@ public class BrevoEmailService : IBrevoEmailService
             return false;
         }
     }
-    
-    public async Task<bool> SendEmailMembershipConfirm(UserInfoResponse user, byte[] pdfData, InvoicesSpResponse spResponse)
+
+    public async Task<bool> SendEmailMembershipConfirm(UserInfoResponse user, byte[] pdfData,
+        InvoicesSpResponse spResponse)
     {
         var dictionary = new Dictionary<string, string>();
 
         var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        var separator        = Path.DirectorySeparatorChar;
-        var pathFile         = $"{workingDirectory}{separator}EmailTemplates{separator}confirm-purchase.html";
-        var bodyString       = await File.ReadAllTextAsync(pathFile, Encoding.UTF8);
+        var separator = Path.DirectorySeparatorChar;
+        var pathFile = $"{workingDirectory}{separator}EmailTemplates{separator}confirm-purchase.html";
+        var bodyString = await File.ReadAllTextAsync(pathFile, Encoding.UTF8);
 
         if (string.IsNullOrEmpty(bodyString))
             return false;
 
         var fullName = $"{user.Name} {user.LastName}";
-        var date     = DateTime.Now.ToString("MM/dd/yyyy");
+        var date = DateTime.Now.ToString("MM/dd/yyyy");
         dictionary.Add("{0}", fullName);
         dictionary.Add("{1}", date);
         dictionary.Add("{2}", spResponse.PaymentMethod ?? "");
@@ -240,5 +244,4 @@ public class BrevoEmailService : IBrevoEmailService
 
         return await SendEmailForMembership(user.Email!, Constants.SubjectConfirmPurchase, body, pdfData);
     }
-
 }
