@@ -477,29 +477,6 @@ public class ConPaymentService : BaseService, IConPaymentService
                 }
                 index++;
             }
-            
-            foreach (var successfulRequest in successfulRequests)
-            {
-                var relatedWithdrawalInfo = withdrawalResults?.Result?.FirstOrDefault(x => x.Key == successfulRequest.Id.ToString()).Value;
-    
-                var successfulWithdrawal = new WalletsWithdrawals
-                {
-                    AffiliateId = successfulRequest.AffiliateId,
-                    AffiliateUserName = successfulRequest.AdminUserName!, 
-                    Observation = successfulRequest.Concept,
-                    AdminObservation = relatedWithdrawalInfo?.Id, 
-                    Amount = successfulRequest.Amount, 
-                    Date = DateTime.Now, 
-                    ResponseDate = DateTime.Now, 
-                    RetentionPercentage = 0, 
-                    Status = true, 
-                    IsProcessed = true,
-                    CreatedAt = DateTime.Now
-                };
-
-                await _walletWithDrawalRepository.CreateWalletWithdrawalAsync(successfulWithdrawal);
-            }
-            
             await CreateDebitTransaction(successfulRequests.ToArray());
             await UpdateWithdrawals(successfulRequests.ToArray());
         }
