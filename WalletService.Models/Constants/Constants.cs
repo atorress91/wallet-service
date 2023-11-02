@@ -13,6 +13,7 @@ public static class Constants
     public const int    AdminUserId                    = 1;
     public const string WalletBalance                  = "Saldo de billetera";
     public const string AdminPayment                   = "Administrativo";
+    public const string AdminCredit                    = "Crédito Administrativo";
     public const string ReverseBalance                 = "Saldo revertido";
     public const string PurchasingPoolFor              = "Pool Adquisitivo para";
     public const string PurchasingPoolTo               = "Pool Adquisitivo de";

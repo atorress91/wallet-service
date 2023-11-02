@@ -300,7 +300,7 @@ public class WalletService : BaseService, IWalletService
         var userBalance = await GetBalanceInformationByAffiliateId(data.FromAffiliateId);
 
         if (currentUserResult?.Data?.VerificationCode != data.SecurityCode)
-            return new ServicesResponse { Success = false, Message = "El código de seguridad no coincide.", Code = 400 };
+            return new ServicesResponse { Success = false, Message = "El código de seguridad no coincidec.", Code = 400 };
         
         if (amount > userBalance.AvailableBalance)
             return new ServicesResponse { Success = false, Message = "El monto es mayor al saldo disponible.", Code = 400 };
@@ -502,7 +502,33 @@ public class WalletService : BaseService, IWalletService
 
         return result;
     }
+    public async Task<bool> CreateBalanceAdmin(CreditTransactionAdminRequest request)
+    {
+        if (request.Amount == 0)
+            return false;
 
+        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
 
+        if (user is null)
+            return false;
+
+        var credit = new CreditTransactionRequest
+        {
+            AdminUserName     = Constants.AdminEcosystemUserName,
+            AffiliateId       = user.Id,
+            Concept           = Constants.AdminCredit,
+            Credit            = request.Amount,
+            AffiliateUserName = user.UserName,
+            ConceptType       = WalletConceptType.balance_transfer.ToString(),
+            UserId            = Constants.AdminUserId
+        };
+        
+        var result = await _walletRepository.CreditTransaction(credit);
+        if (!result)
+            return false;
+
+        return true;
+    }
+    
     #endregion
 }

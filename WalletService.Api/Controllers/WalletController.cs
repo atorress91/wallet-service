@@ -164,5 +164,13 @@ public class WalletController : BaseController
         return Ok(Success(result));
     }
 
+    [HttpPost("createCreditAdmin")]
+    public async Task<IActionResult> CreateCreditAdmin(CreditTransactionAdminRequest request)
+    {
+        var result = await _walletService.CreateBalanceAdmin(request);
+
+        return  Ok(result);
+    }
+
     #endregion
 }

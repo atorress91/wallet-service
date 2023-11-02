@@ -37,6 +37,7 @@ public interface IWalletService
 
     Task<bool> AdminPaymentHandler(WalletRequest request);
     Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance();
+    Task<bool> CreateBalanceAdmin(CreditTransactionAdminRequest request);
 
     #endregion
 }
