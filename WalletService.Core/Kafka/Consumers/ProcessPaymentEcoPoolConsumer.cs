@@ -108,7 +108,7 @@ public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
                         userLevel,
                         userNameLevel,
                         globalPaymentLevel,
-                        string.Format(Constants.CommissionPoolDescription, userNameLevel, level),
+                        string.Format(Constants.CommissionPoolDescription, userName, level),
                         WalletConceptType.pool_commission.ToString());
                 AddOrUpdateGrading(ref listGrading, userLevel, key, userNameLevel, globalCommissionLevel, globalPointsLevel, side,
                     gradings);
@@ -119,10 +119,10 @@ public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
         {
             Gradings     = gradings.Where(x => x.Id > 1).ToList(),
             UserGradings = listGrading.Where(x => x.Grading is { Id: > 1 }).ToList()
-        }.ToJsonString();
+        };
 
         _ = Task.Run(async ()
-            => await kafkaProducer!.ProduceAsync(KafkaTopics.ProcessModelFourTopic, model));
+            => await kafkaProducer!.ProduceAsync(KafkaTopics.ProcessModelFourTopic, model.ToJsonString()));
 
         return true;
     }
@@ -176,6 +176,11 @@ public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
         string            concept,
         string            conceptType)
     {
+        if (globalPayment <= 0)
+            return Task.CompletedTask;
+        
+        // return Task.CompletedTask;
+
         var creditTransaction = new CreditTransactionRequest
         {
             AffiliateId       = userId,
@@ -186,8 +191,7 @@ public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
             AdminUserName     = Constants.AdminEcosystemUserName,
             ConceptType       = conceptType
         };
-        // return walletRepository.CreditTransaction(creditTransaction);
-        return Task.CompletedTask;
+        return walletRepository.CreditTransaction(creditTransaction);
     }
 
 }

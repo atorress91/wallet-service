@@ -783,8 +783,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             Date               = DateTime.Now,
             InvoiceId          = 0
         };
-        // Context.ModelFourStatistics.Add(debit);
-        // return Context.SaveChangesAsync();
-        return Task.CompletedTask;
+        Context.ModelFourStatistics.Add(debit);
+        return Context.SaveChangesAsync();
     }
 }

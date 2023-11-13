@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
@@ -72,6 +73,7 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
     {
         var userDictionary = listUsersGraded.ToDictionary(x => x.AffiliateId, _ => 0m);
         foreach (var item in listUsersGraded)
+        {
             if (item.Grading!.ScopeLevel >= Constants.CustomerModel5Scope)
             {
                 var firstGrading = model.Gradings.First(x => x.ScopeLevel == Constants.CustomerModel4Scope[1]);
@@ -108,7 +110,8 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
                     );
                 userDictionary[item.AffiliateId] = item.Grading.PurchasesNetwork;
             }
-            // await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
+            await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
+        }
 
         return userDictionary;
     }
@@ -127,17 +130,17 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
             var resultOldPoints   = await walletRepository!.GetUserModelFour(userDictionary.Select(x => x.Key).ToArray());
             var leaderBoardModel5 = new List<LeaderBoardModel5>();
             var leaderBoardModel6 = new List<LeaderBoardModel6>();
-
+            var paymentTotal      = 0m;
             foreach (var user in userDictionary)
             {
-                var oldPoints      = resultOldPoints.Where(x => x.AffiliateId == user.Key).ToList();
-                var oldLeftPoints  = oldPoints.Sum(x => x.CreditLeft - x.DebitLeft);
-                var oldRightPoints = oldPoints.Sum(x => x.CreditRight - x.DebitRight);
-                var payment        = 0m;
-                var leftPoints            = 0m;
-                var rightPoints           = 0m;
-                var userPointsInformation = resultPoints.Where(x => x.UserId == user.Key)!.FirstOrDefault();
-                var userInformation       = listUsersGraded.First(x => x.AffiliateId == user.Key);
+                var     oldPoints      = resultOldPoints.Where(x => x.AffiliateId == user.Key).ToList();
+                var     oldLeftPoints  = oldPoints.Sum(x => x.CreditLeft - x.DebitLeft);
+                var     oldRightPoints = oldPoints.Sum(x => x.CreditRight - x.DebitRight);
+                decimal payment;
+                var     leftPoints            = 0m;
+                var     rightPoints           = 0m;
+                var     userPointsInformation = resultPoints.Where(x => x.UserId == user.Key)!.FirstOrDefault();
+                var     userInformation       = listUsersGraded.First(x => x.AffiliateId == user.Key);
                 
                 if (userPointsInformation is not null)
                 {
@@ -147,7 +150,8 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
 
                 if (leftPoints == rightPoints && leftPoints > 0)
                 {
-                    payment = leftPoints;
+                    payment      =  leftPoints;
+                    paymentTotal += payment;
                     await SecondGradingProcess(
                         model,
                         accountServiceAdapter,
@@ -163,7 +167,8 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
                 
                 else if (leftPoints > 0 || rightPoints > 0)
                 { 
-                    payment = leftPoints < rightPoints ? leftPoints : rightPoints;
+                    payment      =  leftPoints < rightPoints ? leftPoints : rightPoints;
+                    paymentTotal += payment;
                     await SecondGradingProcess(
                         model,
                         accountServiceAdapter,
@@ -182,76 +187,77 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
                         userPointsInformation!.PointsLeft,
                         userPointsInformation.PointsRight);
             }
+            
 
             if (leaderBoardModel5 is { Count: > 0 })
+            {
                 leaderBoardModel5 = leaderBoardModel5.OrderByDescending(x => x.Amount).ToList();
 
-            if (leaderBoardModel6 is { Count: > 0 })
-                leaderBoardModel6 = leaderBoardModel6.OrderByDescending(x => x.Amount).ToList();
-
-            for (var i = 0; i < leaderBoardModel5.Count; i++)
-            {
-                if (i is 0)
+                for (var i = 0; i < leaderBoardModel5.Count; i++)
                 {
-                    leaderBoardModel5[i].MatrixPosition = "{head}";
-                }
-                else
-                {
+                    
                     var row = i / Constants.MatrixModel5[0];
                     var col = i % Constants.MatrixModel5[1];
-                    leaderBoardModel5[i].MatrixPosition =
-                        new[] { row, col }.ToJsonString();
+                    leaderBoardModel5[i].MatrixPosition  = col is 0 ? "{head}" : new[] { row, col }.ToJsonString();
+                    leaderBoardModel5[i].GradingPosition = i;
+
+                    if (leaderBoardModel5[i].MatrixPosition is not "{head}")
+                        continue;
+                    
+                    var count = leaderBoardModel5.Count >= Constants.MatrixModel5[0] 
+                        ? Constants.MatrixModel5[0] - 1 : leaderBoardModel5.Count - 1;
+                    
+                    var grading = model.Gradings.First(x => x.Id == leaderBoardModel5[i].GradingId);
+                    var payment = grading.PurchasesNetwork * count;
+                    await CreateCreditPayment(
+                        walletRepository,
+                        leaderBoardModel5[i].AffiliateId,
+                        leaderBoardModel5[i].UserName,
+                        (double)payment,
+                        string.Format(Constants.ConceptCommissionModelFivePayment, payment, grading.Name), 
+                        WalletConceptType.model_six_payment.ToString());
                 }
                 
-                leaderBoardModel5[i].GradingPosition = i;
-                
-                
-                var grading = model.Gradings.First(x => x.Id == leaderBoardModel5[i].GradingId);
-                var payment = grading.PurchasesNetwork * (leaderBoardModel5.Count - (i + 1));
-                await CreateDebitPayment(
-                    walletRepository,
-                    leaderBoardModel5[i].AffiliateId,
-                    leaderBoardModel5[i].UserName,
-                    payment,
-                    string.Format(Constants.ConceptCommissionModelFivePayment, payment, grading.Name), 
-                    WalletConceptType.model_six_payment.ToString());
+                await leaderBoardRepository!.CleanLeaderBoardModel5();
+                if(leaderBoardModel5 is {Count:>0})
+                    await leaderBoardRepository.AddCustomersToModel5(leaderBoardModel5);
             }
 
-            for (var i = 0; i < leaderBoardModel6.Count; i++)
+            if (leaderBoardModel6 is { Count: > 0 })
             {
-                if (i is 0)
-                {
-                    leaderBoardModel6[i].MatrixPosition = "{head}";
-                }
-                else
+                leaderBoardModel6 = leaderBoardModel6.OrderByDescending(x => x.Amount).ToList();
+                
+                for (var i = 0; i < leaderBoardModel6.Count; i++)
                 {
                     var row = i / Constants.MatrixModel6[0];
                     var col = i % Constants.MatrixModel6[1];
-                    leaderBoardModel6[i].MatrixPosition =
-                        new[] { row, col }.ToJsonString();
+                    leaderBoardModel6[i].MatrixPosition  = col is 0 ? "{head}" : new[] { row, col }.ToJsonString();
+                    leaderBoardModel6[i].GradingPosition = i;
+                
+                    var grading = model.Gradings.First(x => x.Id == leaderBoardModel6[i].GradingId);
+                
+                    if (leaderBoardModel6[i].MatrixPosition is not "{head}")
+                        continue;
+                    
+                    var count = leaderBoardModel6.Count >= Constants.MatrixModel6[0] 
+                        ? Constants.MatrixModel6[0] - 1 : leaderBoardModel6.Count - 1;
+                
+                    var payment = grading.PurchasesNetwork  * count;
+                    if(leaderBoardModel6[i].MatrixPosition is "{head}")
+                        await CreateCreditPayment(
+                            walletRepository,
+                            leaderBoardModel6[i].AffiliateId,
+                            leaderBoardModel6[i].UserName,
+                            (double)payment,
+                            string.Format(Constants.ConceptCommissionModelSixPayment, payment, grading.Name), 
+                            WalletConceptType.model_six_payment.ToString());
+                    leaderBoardModel6.RemoveAt(i);
                 }
-
-                leaderBoardModel6[i].GradingPosition = i;
-
-                var grading = model.Gradings.First(x => x.Id == leaderBoardModel6[i].GradingId);
-                var payment        = grading.PurchasesNetwork  * (leaderBoardModel6.Count - (i + 1));
-                await CreateDebitPayment(
-                    walletRepository,
-                    leaderBoardModel6[i].AffiliateId,
-                    leaderBoardModel6[i].UserName,
-                    payment,
-                    string.Format(Constants.ConceptCommissionModelSixPayment, payment, grading.Name), 
-                    WalletConceptType.model_six_payment.ToString());
+                
+                await leaderBoardRepository!.CleanLeaderBoardModel6();
+                if(leaderBoardModel6 is {Count:>0})
+                    await leaderBoardRepository.AddCustomersToModel6(leaderBoardModel6);
             }
-
-            await leaderBoardRepository!.CleanLeaderBoardModel5();
-            if(leaderBoardModel5 is {Count:>0})
-                await leaderBoardRepository.AddCustomersToModel5(leaderBoardModel5);
-            
-            
-            await leaderBoardRepository.CleanLeaderBoardModel6();
-            if(leaderBoardModel6 is {Count:>0})
-                await leaderBoardRepository.AddCustomersToModel6(leaderBoardModel6);
         }
         catch (Exception e)
         {
@@ -342,6 +348,11 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
         string            concept,
         string            conceptType)
     {
+        if (payment <= 0)
+            return Task.CompletedTask;
+        
+        // return Task.CompletedTask;
+
         var creditTransaction = new DebitTransactionRequest
         {
             AffiliateId       = userId,
@@ -353,8 +364,7 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
             AdminUserName     = Constants.AdminEcosystemUserName,
             ConceptType       = conceptType
         };
-        // return walletRepository.DebitEcoPoolTransactionSP(creditTransaction);
-        return Task.CompletedTask;
+        return walletRepository.DebitEcoPoolTransactionSP(creditTransaction);
     }
 
     private static Task CreateCreditPayment(
@@ -365,6 +375,11 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
         string            concept,
         string            conceptType)
     {
+        if (globalPayment <= 0)
+            return Task.CompletedTask;
+        
+        // return Task.CompletedTask;
+
         var creditTransaction = new CreditTransactionRequest
         {
             AffiliateId       = userId,
@@ -375,7 +390,6 @@ public class ProcessFourModelConsumer : BaseKafkaConsumer
             AdminUserName     = Constants.AdminEcosystemUserName,
             ConceptType       = conceptType
         };
-        // return walletRepository.CreditTransaction(creditTransaction);
-        return Task.CompletedTask;
+        return walletRepository.CreditTransaction(creditTransaction);
     }
 }

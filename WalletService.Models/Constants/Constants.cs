@@ -61,7 +61,7 @@ public static class Constants
     public const int    UsdtIdCurrency                  = 19;
     public const int    UsdtIdNetwork                   = 99;
     public const int    CoinPayIdWallet                 = 46616;
-    public static int[] MatrixModel5 = { 3, 8 };
+    public static int[] MatrixModel5 = { 5, 8 };
     public static int[] MatrixModel6 = { 4, 10 };
     
     
