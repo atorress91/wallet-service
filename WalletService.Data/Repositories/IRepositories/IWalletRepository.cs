@@ -35,4 +35,5 @@ public interface IWalletRepository
     Task<bool> BulkAdministrativeDebitTransaction(Wallets[]                       requests);
     Task TransactionPoints(int affiliateId, decimal debitLeft, decimal debitRight, decimal creditLeft, decimal creditRight);
     Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance();
+    Task<InvoicesSpResponse?> CoursesDebitTransaction(DebitTransactionRequest request);
 }

@@ -36,7 +36,8 @@ public class ConPaymentService : BaseService, IConPaymentService
     private readonly IWalletRepository                 _walletRepository;
     private readonly IBrevoEmailService                _brevoEmailService;
     private readonly IWalletRequestRepository          _walletRequestRepository;
-    private readonly IWalletWithDrawalRepository       _walletWithDrawalRepository;
+    private readonly IInventoryServiceAdapter          _inventoryServiceAdapter;
+    
 
     public ConPaymentService(
         IMapper      mapper, IOptions<ApplicationConfiguration> appSettings, 
@@ -48,7 +49,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         IWalletRepository                 walletRepository,
         IBrevoEmailService                brevoEmailService,
         IWalletRequestRepository walletRequestRepository,
-        IWalletWithDrawalRepository walletWithDrawalRepository
+        IInventoryServiceAdapter inventoryServiceAdapter
         ) : base(mapper)
     {
         _paymentStrategyFactory           = paymentStrategyFactory;
@@ -62,7 +63,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         _walletRepository                 = walletRepository;
         _brevoEmailService                = brevoEmailService;
         _walletRequestRepository          = walletRequestRepository;
-        _walletWithDrawalRepository       = walletWithDrawalRepository;
+        _inventoryServiceAdapter          = inventoryServiceAdapter;
     }
 
     public async Task<GetPayByNameProfileResponse> GetPayByNameProfile(string nameTag)
@@ -256,7 +257,7 @@ public class ConPaymentService : BaseService, IConPaymentService
 
         if (ipnRequest.status == -1)
         {
-            await HandleCancelledTransaction(transactionResult, ipnRequest, transactionResult.Products);
+            await HandleCancelledTransaction(transactionResult, ipnRequest, transactionResult.Products!);
             return "Transaction is delete";
         }
         if (!transactionResult.Acredited)
@@ -265,7 +266,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         }
         if(ipnRequest.status == 100)
         {
-            await GrantWelcomeBonus(transactionResult.AffiliateId, transactionResult.Products);
+            await GrantWelcomeBonus(transactionResult.AffiliateId, transactionResult.Products!);
         }
 
         await _coinPaymentTransactionRepository.UpdateCoinPaymentTransactionAsync(transactionResult);
@@ -282,31 +283,52 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     private async Task HandlePaymentTransaction(PaymentTransaction transactionResult, IpnRequest ipnRequest)
     {
-		_logger.LogInformation($"[ConPaymentService] | HandlePaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
+        _logger.LogInformation($"[ConPaymentService] | HandlePaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
         var walletRequest = BuildWalletRequest(ipnRequest);
 
         var products = JsonConvert.DeserializeObject<List<ProductRequest>>(transactionResult.Products!);
         if (products is null) return;
 
-        var isMembership = products.Any(p => p.ProductId == 1);
-
-		_logger.LogInformation($"[ConPaymentService] | HandlePaymentTransaction | products: {products.ToJsonString()}");
+        _logger.LogInformation($"[ConPaymentService] | HandlePaymentTransaction | products: {products.ToJsonString()}");
 
         var isExists = await _invoiceRepository.InvoiceExistsByReceiptNumber(transactionResult.IdTransaction!);
+        var productType = await GetProductType(products);
 
-		if (!isExists && isMembership && (ipnRequest.status == 1 || ipnRequest.status == 100))
+        if (!isExists && (ipnRequest.status == 1 || ipnRequest.status == 100))
         {
-			transactionResult.Acredited = true;
-			await ExecuteMembershipPayment(walletRequest, products);
-        }
+            transactionResult.Acredited = true;
 
-        if (!isExists && !isMembership && (ipnRequest.status == 1 || ipnRequest.status == 100))
-        {
-			transactionResult.Acredited = true;
-			await ExecutePayment(walletRequest, products);
+            switch (productType)
+            {
+                case ProductType.Membership:
+                    await ExecuteMembershipPayment(walletRequest, products);
+                    break;
+                case ProductType.EcoPool:
+                    await ExecuteEcoPoolPayment(walletRequest, products);
+                    break;
+                case ProductType.Course:
+                    await ExecuteCoursePayment(walletRequest, products);
+                    break;
+            }
         }
     }
+    private async Task<ProductType> GetProductType(List<ProductRequest> request)
+    {
+        var productIds   = request.Select(p => p.ProductId).ToArray();
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        
+        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content!);
 
+        var firstProductCategory = result!.Data.First().PaymentGroup;
+
+        switch (firstProductCategory)
+        {
+            case 1: return ProductType.Membership;
+            case 2: return ProductType.EcoPool;
+            default:
+                return ProductType.Course;
+        }
+    }
     private bool IsRequestValid(IpnRequest ipnRequest, IHeaderDictionary headers)
     {
         if (string.IsNullOrEmpty(ipnRequest.ipn_mode) || ipnRequest.ipn_mode.ToLower() != "hmac")
@@ -342,9 +364,9 @@ public class ConPaymentService : BaseService, IConPaymentService
         };
     }
 
-    private async Task ExecutePayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
+    private async Task ExecuteEcoPoolPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
     {
-        var paymentStrategy = _paymentStrategyFactory.GetStrategy(PaymentType.CoinPayments);
+        var paymentStrategy = _paymentStrategyFactory.GetCoinPaymentStrategy();
 
 		walletRequest.ProductsList = products.Select(product => new ProductsRequests
 		{
@@ -352,8 +374,21 @@ public class ConPaymentService : BaseService, IConPaymentService
 			Count = product.Quantity
 		}).ToList();
 
-		await paymentStrategy.ExecutePayment(walletRequest);
+		await paymentStrategy.ExecuteEcoPoolPayment(walletRequest);
 	}
+    
+    private async Task ExecuteCoursePayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
+    {
+        var paymentStrategy = _paymentStrategyFactory.GetCoinPaymentStrategy();
+
+        walletRequest.ProductsList = products.Select(product => new ProductsRequests
+        {
+            IdProduct = product.ProductId,
+            Count = product.Quantity
+        }).ToList();
+
+        await paymentStrategy.ExecuteCoursePayment(walletRequest);
+    }
     
     private async Task GrantWelcomeBonus(int userId, string productsInfo)
     {

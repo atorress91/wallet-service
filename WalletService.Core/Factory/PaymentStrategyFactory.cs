@@ -22,8 +22,6 @@ public class PaymentStrategyFactory : IPaymentStrategyFactory
                 return _serviceProvider.GetRequiredService<ReversedBalancePaymentStrategy>();
             case PaymentType.PaymentToThirdParties:
                 return _serviceProvider.GetRequiredService<ToThirdPartiesPaymentStrategy>();
-            case PaymentType.CoinPayments:
-                return _serviceProvider.GetRequiredService<CoinPaymentsPaymentStrategy>();
             default:
                 throw new ArgumentException($"No strategy available for {type}", nameof(type));
         }
@@ -37,6 +35,11 @@ public class PaymentStrategyFactory : IPaymentStrategyFactory
     public IBalancePaymentStrategy GetBalancePaymentStrategy()
     {
         return _serviceProvider.GetRequiredService<BalancePaymentStrategy>();
+    }
+
+    public ICoinPaymentStrategy GetCoinPaymentStrategy()
+    {
+        return _serviceProvider.GetRequiredService<CoinPaymentsPaymentStrategy>();
     }
 
 }

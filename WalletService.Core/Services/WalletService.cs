@@ -177,7 +177,7 @@ public class WalletService : BaseService, IWalletService
         }
         else if (balancePaymentStrategy != null)
         {
-            return await balancePaymentStrategy.ExecutePayment(request);
+            return await balancePaymentStrategy.ExecuteEcoPoolPayment(request);
         }
         else if (membershipPaymentStrategy != null)
         {
@@ -188,6 +188,14 @@ public class WalletService : BaseService, IWalletService
             throw new InvalidOperationException("No valid payment strategy was determined.");
         }
     }
+    
+    public async Task<bool> CoursePaymentHandler(WalletRequest request)
+    {
+        IBalancePaymentStrategy balancePaymentStrategy = _paymentStrategyFactory.GetBalancePaymentStrategy();
+
+        return await balancePaymentStrategy.ExecutePaymentCourses(request);
+    }
+    
     public async Task<bool> AdminPaymentHandler(WalletRequest request)
     {
         IBalancePaymentStrategy balancePaymentStrategy = _paymentStrategyFactory.GetBalancePaymentStrategy();

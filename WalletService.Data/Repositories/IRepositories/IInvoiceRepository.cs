@@ -16,4 +16,5 @@ public interface IInvoiceRepository
     Task<List<Invoices>> GetInvoicesByReceiptNumber(ICollection<string> transactionIds);
     Task RevertCoinPaymentTransactions(List<InvoiceNumber>                   invoiceNumbers);
     Task<bool> InvoiceExistsByReceiptNumber(string idTransaction);
+    Task<InvoicesSpResponse?> HandleDebitTransactionForCourse(DebitTransactionRequest request);
 }

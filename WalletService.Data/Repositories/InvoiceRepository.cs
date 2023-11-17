@@ -90,6 +90,35 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             throw;
         }
     }
+    
+    public async Task<InvoicesSpResponse?> HandleDebitTransactionForCourse(DebitTransactionRequest request)
+    {
+        try
+        {
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var cmd = new SqlCommand(Constants.HandleDebitTransactionCourse, sql);
+
+            var invoicesDetails = ConvertToDataTable(request.invoices);
+
+            CreateDebitListParameters(request, invoicesDetails, cmd);
+
+            await sql.OpenAsync();
+            await using var oReader    = await cmd.ExecuteReaderAsync();
+            var             dd         = oReader.ToDynamicList();
+            var             jsonString = dd.FirstOrDefault()!.ToJsonString();
+            var             response   = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+
+
+            await sql.CloseAsync();
+
+            return response;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
     private void CreateDebitListParameters(DebitTransactionRequest request, DataTable dataTableDetails, SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;

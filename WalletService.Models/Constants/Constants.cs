@@ -32,9 +32,11 @@ public static class Constants
     public const string TransferToMembership           = "Transferencia para membresía del afiliado";
     public const int    CoinPaymentTax                 = 2;
     public const string DebitTransationSP              = "dbo.Debit_Transation_SP";
-    public const string DebitEcoPoolTransationSP              = "dbo.Debit_Transation_EcoPool_SP";
+    public const string CoursesDebitTransactionSP      = "dbo.Courses_Debit_Transaction_SP";
+    public const string DebitEcoPoolTransationSP       = "dbo.Debit_Transation_EcoPool_SP";
     public const string AdminDebitTransactionSp        = "dbo.Admin_Debit_Transation_SP";
     public const string HandleDebitTransationSP        = "dbo.HandleDebit_Transation_SP";
+    public const string HandleDebitTransactionCourse   = "dbo.HandleDebit_Transation_For_Courses_SP";
     public const string CreditTransationSP             = "dbo.Credit_Transation_SP";
     public const string CreateEcoPoolSP                = "dbo.CreateEcoPoolSP";
     public const string RevertDebitTransaction         = "dbo.Revert_Debit_Transaction_SP";
