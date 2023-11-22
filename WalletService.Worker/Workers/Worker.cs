@@ -94,7 +94,7 @@ public class Worker : BackgroundService
             
             for (var i = 0; i < consumerCountSettings.ConsumersProcessPaymentCount; i++)
             {
-                _consumers.Add(new ProcessFourModelConsumer(new ConsumerSettings
+                _consumers.Add(new ProcessModelsConsumer(new ConsumerSettings
                 {
                     Topics          = new[] { KafkaTopics.ProcessModelFourTopic },
                     GroupId         = $"{ KafkaTopics.ProcessModelFourTopic }-group",

@@ -106,6 +106,7 @@ public static class IocExtensionWorker
         services.AddScoped<IApiClientRepository, ApiClientRepository>();
         services.AddScoped<ICoinPaymentTransactionRepository, CoinPaymentTransactionRepository>();
         services.AddScoped<ILeaderBoardRepository, LeaderBoardRepository>();
+        
     }
 
     private static void InjectAdapters(IServiceCollection services)

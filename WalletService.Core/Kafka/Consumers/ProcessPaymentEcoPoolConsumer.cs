@@ -124,7 +124,7 @@ public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
         _ = Task.Run(async ()
             => await kafkaProducer!.ProduceAsync(KafkaTopics.ProcessModelFourTopic, model.ToJsonString()));
 
-        return true;
+            return true;
     }
 
     private static void AddOrUpdateGrading(

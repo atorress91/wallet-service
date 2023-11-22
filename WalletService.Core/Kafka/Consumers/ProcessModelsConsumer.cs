@@ -17,16 +17,14 @@ using WalletService.Utility.Extensions;
 
 namespace WalletService.Core.Kafka.Consumers;
 
-public class ProcessFourModelConsumer : BaseKafkaConsumer
+public class ProcessModelsConsumer : BaseKafkaConsumer
 {
-    public ProcessFourModelConsumer(
+    public ProcessModelsConsumer(
         ConsumerSettings         consumerSettings,
         ApplicationConfiguration configuration,
         ILogger                  logger,
         IServiceScopeFactory     serviceScopeFactory
-    ) : base(consumerSettings, configuration, logger, serviceScopeFactory)
-    {
-    }
+    ) : base(consumerSettings, configuration, logger, serviceScopeFactory) { }
 
     protected override Task<bool> OnMessage(ConsumeResult<Ignore, string> e)
     {
