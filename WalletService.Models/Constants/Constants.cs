@@ -30,6 +30,7 @@ public static class Constants
     public const string Membership                     = "Membresía";
     public const string TransferForMembership          = "Transferencia para membresía al afiliado";
     public const string TransferToMembership           = "Transferencia para membresía del afiliado";
+    public const string WireTransfer                   = "Transferencia bancaria";
     public const int    CoinPaymentTax                 = 2;
     public const string DebitTransationSP              = "dbo.Debit_Transation_SP";
     public const string CoursesDebitTransactionSP      = "dbo.Courses_Debit_Transaction_SP";
@@ -47,7 +48,7 @@ public static class Constants
     public const string TypeTableAffiliateId           = "dbo.TypeTableAffiliateId";
     public const string ActiveEcoPoolsGreaterThan25    = "dbo.sp_GetInvoicePacksByAffiliateCount";
     public const string BulkAdministrativeDebitSp      = "dbo.Bulk_Administrative_Debit_Sp";
-
+      
     public const string CommissionPoolDescription       = "Comisión del pool por {0}, nivel {1}";
     public const string CommissionPoolDescriptionNormal = "Comisión del pool";
     public const string CommissionMembership            = "Comisión de membresía por";

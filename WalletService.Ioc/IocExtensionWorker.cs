@@ -133,6 +133,7 @@ public static class IocExtensionWorker
         services.AddScoped<IResultsEcoPoolService, ResultsEcoPoolService>();
         services.AddScoped<IConPaymentService, ConPaymentService>();
         services.AddScoped<IBrevoEmailService, BrevoEmailService>();
+        services.AddScoped<IPaymentTransactionService, PaymentTransactionService>();
     }
 
     private static void InjectPackages(IServiceCollection services)

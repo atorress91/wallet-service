@@ -9,4 +9,5 @@ public interface IPaymentStrategyFactory
     IMembershipPaymentStrategy GetMembershipStrategy();
     IBalancePaymentStrategy GetBalancePaymentStrategy();
     ICoinPaymentStrategy GetCoinPaymentStrategy();
+    IWireTransferStrategy GetWireTransferStrategy();
 }

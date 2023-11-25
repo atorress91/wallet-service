@@ -16,6 +16,7 @@ using WalletService.Models.DTO.WalletWithDrawalDto;
 using WalletService.Models.Requests.ConPaymentRequest;
 using WalletService.Models.Requests.InvoiceDetailRequest;
 using WalletService.Models.Requests.InvoiceRequest;
+using WalletService.Models.Requests.PaymentTransaction;
 using WalletService.Models.Requests.WalletHistoryRequest;
 using WalletService.Models.Requests.WalletPeriodRequest;
 using WalletService.Models.Requests.WalletRequest;
@@ -51,6 +52,7 @@ public class MapperProfile : Profile
         CreateMap<ResultsEcoPool, ResultsEcoPoolDto>();
         CreateMap<ResultEcoPoolLevels, ResultEcoPoolLevelsDto>();
         CreateMap<PaymentTransaction, PaymentTransactionDto>();
+     
 
         CreateMap<WalletRequestRequest, WalletsRequests>()
             .ForMember(d => d.Id, map => map.Ignore())
@@ -116,6 +118,10 @@ public class MapperProfile : Profile
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());
-
+        
+        CreateMap<PaymentTransactionRequest, PaymentTransaction>()
+            .ForMember(d => d.Id, map => map.Ignore())
+            .ForMember(d => d.UpdatedAt, map => map.Ignore())
+            .ForMember(d => d.CreatedAt, map => map.Ignore());
     }
 }
