@@ -105,7 +105,6 @@ public static class IocExtensionWorker
         services.AddScoped<IResultsEcoPoolRepository, ResultsEcoPoolRepository>();
         services.AddScoped<IApiClientRepository, ApiClientRepository>();
         services.AddScoped<ICoinPaymentTransactionRepository, CoinPaymentTransactionRepository>();
-        services.AddScoped<ILeaderBoardRepository, LeaderBoardRepository>();
         
     }
 
