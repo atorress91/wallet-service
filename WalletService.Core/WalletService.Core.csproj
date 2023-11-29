@@ -1,85 +1,83 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
 
 
-  <ItemGroup>
-    <ProjectReference Include="..\WalletService.Data\WalletService.Data.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\WalletService.Data\WalletService.Data.csproj"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
-    <PackageReference Include="Confluent.Kafka" Version="1.8.2" />
-    <PackageReference Include="Elastic.Apm.NetCoreAll" Version="1.22.0" />
-    <PackageReference Include="FluentValidation" Version="11.4.0" />
-    <PackageReference Include="HarfBuzzSharp" Version="2.8.2.4-preview.70" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="2.8.2.4-preview.70" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.WebAssembly" Version="2.8.2.4-preview.70" />
-    <PackageReference Include="itext7" Version="8.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
-    <PackageReference Include="NETCore.MailKit" Version="2.1.0" />
-    <PackageReference Include="QuestPDF" Version="2023.5.3" />
-    <PackageReference Include="sib_api_v3_sdk" Version="4.0.2" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.4-preview.70" />
-    <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0-preview.5.23280.8" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0"/>
+        <PackageReference Include="Confluent.Kafka" Version="1.8.2"/>
+        <PackageReference Include="Elastic.Apm.NetCoreAll" Version="1.22.0"/>
+        <PackageReference Include="FluentValidation" Version="11.4.0"/>
+        <PackageReference Include="HarfBuzzSharp" Version="2.8.2.4-preview.70"/>
+        <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="2.8.2.4-preview.70"/>
+        <PackageReference Include="HarfBuzzSharp.NativeAssets.WebAssembly" Version="2.8.2.4-preview.70"/>
+        <PackageReference Include="itext7" Version="8.0.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0"/>
+        <PackageReference Include="NETCore.MailKit" Version="2.1.0"/>
+        <PackageReference Include="QuestPDF" Version="2023.5.3"/>
+        <PackageReference Include="sib_api_v3_sdk" Version="4.0.2"/>
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.4-preview.70"/>
+        <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0-preview.5.23280.8"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Update="EmailTemplates\confirm-purchase.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="EmailTemplates\welcome.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\logo.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="EmailTemplates\PaymentsToThirdParties.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="EmailTemplates\confirm-bonus.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\EcoPooles\eco_pool_hormiga.pdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\EcoPooles\eco_pool_mariposa.pdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\EcoPooles\eco_pool_colibri.pdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\EcoPooles\eco_pool_yiguirro.pdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\EcoPooles\eco_pool_caballo.pdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\EcoPooles\eco_pool_delfin.pdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\EcoPooles\eco_pool_lobo.pdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\EcoPooles\eco_pool_leon.pdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\EcoPooles\eco_pool_aguila.pdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\EcoPooles\eco_pool_cocodrilo.pdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\EcoPooles\eco_pool_tiburon.pdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-
+    <ItemGroup>
+        <None Update="EmailTemplates\confirm-purchase.html">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="EmailTemplates\welcome.html">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\logo.png">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="EmailTemplates\PaymentsToThirdParties.html">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="EmailTemplates\confirm-bonus.html">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\EcoPooles\eco_pool_hormiga.pdf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\EcoPooles\eco_pool_mariposa.pdf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\EcoPooles\eco_pool_colibri.pdf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\EcoPooles\eco_pool_yiguirro.pdf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\EcoPooles\eco_pool_caballo.pdf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\EcoPooles\eco_pool_delfin.pdf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\EcoPooles\eco_pool_lobo.pdf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\EcoPooles\eco_pool_leon.pdf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\EcoPooles\eco_pool_aguila.pdf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\EcoPooles\eco_pool_cocodrilo.pdf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\EcoPooles\eco_pool_tiburon.pdf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 
 
 </Project>

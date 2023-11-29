@@ -7,14 +7,13 @@ using WalletService.Models.Requests.WalletRetentionConfigRequest;
 
 namespace WalletService.Core.Services;
 
-public class WalletRetentionConfigService:BaseService,IWalletRetentionConfigService
+public class WalletRetentionConfigService : BaseService, IWalletRetentionConfigService
 {
     private readonly IWalletRetentionConfigRepository _walletRetentionConfigRepository;
 
     public WalletRetentionConfigService(IMapper mapper, IWalletRetentionConfigRepository walletRetentionConfigRepository) : base(mapper)
-    {
-        _walletRetentionConfigRepository = walletRetentionConfigRepository;
-    }
+        => _walletRetentionConfigRepository = walletRetentionConfigRepository;
+
     public async Task<IEnumerable<WalletRetentionConfigDto>> GetAllWalletsRetentionConfig()
     {
         var response = await _walletRetentionConfigRepository.GetAllWalletsRetentionConfig();
@@ -26,9 +25,11 @@ public class WalletRetentionConfigService:BaseService,IWalletRetentionConfigServ
         var response = await _walletRetentionConfigRepository.GetWalletRetentionConfigById(id);
         return Mapper.Map<WalletRetentionConfigDto>(response);
     }
-    public async Task<IEnumerable<WalletRetentionConfigDto>> CreateWalletRetentionConfigAsync(IEnumerable<WalletRetentionConfigRequest>  request)
+
+    public async Task<IEnumerable<WalletRetentionConfigDto>> CreateWalletRetentionConfigAsync(
+        IEnumerable<WalletRetentionConfigRequest> request)
     {
-        var createdPeriods  = new List<WalletRetentionConfigDto>();
+        var createdPeriods = new List<WalletRetentionConfigDto>();
 
         foreach (var periodData in request)
         {
@@ -44,7 +45,8 @@ public class WalletRetentionConfigService:BaseService,IWalletRetentionConfigServ
                 existingPeriodRetention.Status         = periodData.Status;
                 existingPeriodRetention.UpdatedAt      = DateTime.Now;
 
-                await _walletRetentionConfigRepository.UpdateWalletRetentionConfigAsync(new List<WalletsRetentionsConfigs> {existingPeriodRetention});
+                await _walletRetentionConfigRepository.UpdateWalletRetentionConfigAsync(new List<WalletsRetentionsConfigs>
+                    { existingPeriodRetention });
                 createdPeriods.Add(Mapper.Map<WalletRetentionConfigDto>(existingPeriodRetention));
             }
             else
@@ -61,10 +63,12 @@ public class WalletRetentionConfigService:BaseService,IWalletRetentionConfigServ
                     UpdatedAt      = DateTime.Now
                 };
 
-                await _walletRetentionConfigRepository.CreateWalletRetentionConfigAsync(new List<WalletsRetentionsConfigs>{newPeriodRetention});
+                await _walletRetentionConfigRepository.CreateWalletRetentionConfigAsync(new List<WalletsRetentionsConfigs>
+                    { newPeriodRetention });
                 createdPeriods.Add(Mapper.Map<WalletRetentionConfigDto>(newPeriodRetention));
             }
         }
+
         return createdPeriods;
     }
 

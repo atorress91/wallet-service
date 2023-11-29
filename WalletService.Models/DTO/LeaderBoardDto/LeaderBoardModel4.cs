@@ -13,4 +13,6 @@ public class LeaderBoardModel4
     public int GradingId { get; set; }
     public int PositionX { get; set; }
     public int PositionY { get; set; }
+
+
 }

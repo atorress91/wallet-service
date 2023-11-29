@@ -7,14 +7,12 @@ using WalletService.Models.Requests.WalletPeriodRequest;
 
 namespace WalletService.Core.Services;
 
-public class WalletPeriodService:BaseService,IWalletPeriodService
+public class WalletPeriodService : BaseService, IWalletPeriodService
 {
     private readonly IWalletPeriodRepository _walletPeriodRepository;
 
-    public WalletPeriodService(IMapper mapper,IWalletPeriodRepository walletPeriodRepository) : base(mapper)
-    {
-        _walletPeriodRepository = walletPeriodRepository;
-    }
+    public WalletPeriodService(IMapper mapper, IWalletPeriodRepository walletPeriodRepository) : base(mapper)
+        => _walletPeriodRepository = walletPeriodRepository;
 
     public async Task<IEnumerable<WalletPeriodDto>> GetAllWalletsPeriods()
     {
@@ -27,7 +25,7 @@ public class WalletPeriodService:BaseService,IWalletPeriodService
         var response = await _walletPeriodRepository.GetWalletPeriodById(id);
         return Mapper.Map<WalletPeriodDto>(response);
     }
-    
+
     public async Task<IEnumerable<WalletPeriodDto>> CreateWalletPeriodAsync(IEnumerable<WalletPeriodRequest> request)
     {
         var createdPeriods = new List<WalletPeriodDto>();
@@ -64,8 +62,8 @@ public class WalletPeriodService:BaseService,IWalletPeriodService
 
         return createdPeriods;
     }
-    
-    
+
+
     public async Task<WalletPeriodDto?> DeleteWalletPeriodAsync(int id)
     {
         var period = await _walletPeriodRepository.GetWalletPeriodById(id);
