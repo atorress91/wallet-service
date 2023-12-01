@@ -12,11 +12,10 @@ public static class LeaderBoardExtensions
             .OrderByDescending(u => u.Amount)
             .ThenBy(u => u.UserCreatedAt)
             .ToList();
-
         var queue         = new Queue<LeaderBoardModel4>();
         var childrenCount = 0;
 
-        if (orderedUsers.Count > 0)
+        if (orderedUsers is { Count:> 0})
         {
             var firstUser = orderedUsers[0];
             firstUser.PositionX = 0; 
@@ -48,10 +47,8 @@ public static class LeaderBoardExtensions
                 user.PositionY    = father.Level + 1;
                 user.Level        = father.Level + 1;
             }
-
             queue.Enqueue(user); 
         }
-
         return orderedUsers;
     }
     

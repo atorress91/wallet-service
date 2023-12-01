@@ -1,11 +1,9 @@
-using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WalletService.Core.Kafka.Messages;
 using WalletService.Data.Adapters.IAdapters;
-using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Configuration;
 using WalletService.Models.Constants;
@@ -181,7 +179,6 @@ public class ProcessModelsConsumer : BaseKafkaConsumer
         ICollection<LeaderBoardModel6>  leaderBoardModel6)
     {
         var resultPoints = new List<UserBinaryInformation>();
-        //TODO completar calculo de piernas mediante el leaderBoard
         
         var resultOldPoints = await walletRepository!.GetUserModelFour(userDictionary.Select(x => x.Key).ToArray());
         
@@ -413,7 +410,6 @@ public class ProcessModelsConsumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        // return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {
