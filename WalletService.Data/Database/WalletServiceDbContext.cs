@@ -639,5 +639,32 @@ public class WalletServiceDbContext : DbContext
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
         
+        modelBuilder.Entity<ResultsModelTwo>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ProductExternalId).IsRequired();
+            entity.Property(e => e.AffiliateId).IsRequired();
+            entity.Property(e => e.AffiliateName).IsRequired();
+            entity.Property(e => e.ProductName).IsRequired();
+            entity.Property(e => e.BaseAmount).HasColumnType("decimal(10, 5)");
+            entity.Property(e => e.ProfitDistributedLevels).HasColumnType("decimal(10,5)");
+            entity.Property(e => e.TotalPercentage).HasColumnType("decimal(10,2)");
+            entity.Property(e => e.PaymentAmount).HasColumnType("decimal(10,5)");
+            entity.Property(e => e.Points).HasColumnType("varchar(50)");
+        });
+        
+        modelBuilder.Entity<ResultsModelTwoLevels>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ResultsModelTwoId).IsRequired();
+            entity.Property(e => e.AffiliateId).IsRequired();
+            entity.Property(e => e.AffiliateName).IsRequired();
+            entity.Property(e => e.Level).IsRequired();
+            entity.Property(e => e.PercentageLevel).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.PaymentAmount).HasColumnType("decimal(10,5)");
+            entity.Property(e => e.Points).HasColumnType("decimal(10,5)");
+            entity.Property(e => e.CompletedAt).HasColumnType("datetime");
+            entity.Property(e => e.BinarySide).IsRequired();
+        });
     }
 }

@@ -55,7 +55,7 @@ public class Worker : BackgroundService
 
             for (var i = 0; i < consumerCountSettings!.ConsumersCount; i++)
             {
-                _consumers.Add(new ProcessEcoPoolWithInConsumer(new ConsumerSettings
+                _consumers.Add(new ProcessModelThreeWithInConsumer(new ConsumerSettings
                 {
                     Topics            = new[] { KafkaTopics.ProcessEcoPoolWithInTopic },
                     GroupId           = $"{ KafkaTopics.ProcessEcoPoolWithInTopic }-group",
@@ -68,7 +68,7 @@ public class Worker : BackgroundService
 
             for (var i = 0; i < consumerCountSettings.ConsumersCount; i++)
             {
-                _consumers.Add(new ProcessEcoPoolWithOutConsumer(new ConsumerSettings
+                _consumers.Add(new ProcessModelThreeWithOutConsumer(new ConsumerSettings
                 {
                     Topics          = new[] { KafkaTopics.ProcessEcoPoolWithOutTopic },
                     GroupId         = $"{ KafkaTopics.ProcessEcoPoolWithOutTopic }-group",
@@ -94,7 +94,7 @@ public class Worker : BackgroundService
             
             for (var i = 0; i < consumerCountSettings.ConsumersProcessPaymentCount; i++)
             {
-                _consumers.Add(new ProcessModelsConsumer(new ConsumerSettings
+                _consumers.Add(new ProcessModelsFourFiveSixConsumer(new ConsumerSettings
                 {
                     Topics          = new[] { KafkaTopics.ProcessModelFourTopic },
                     GroupId         = $"{ KafkaTopics.ProcessModelFourTopic }-group",

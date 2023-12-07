@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Confluent.Kafka;
+using iText.Layout.Element;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WalletService.Core.Kafka.Messages;
@@ -17,9 +18,9 @@ using WalletService.Utility.Extensions;
 
 namespace WalletService.Core.Kafka.Consumers;
 
-public class ProcessModelsConsumer : BaseKafkaConsumer
+public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
 {
-    public ProcessModelsConsumer(
+    public ProcessModelsFourFiveSixConsumer(
         ConsumerSettings         consumerSettings,
         ApplicationConfiguration configuration,
         ILogger                  logger,
@@ -31,17 +32,17 @@ public class ProcessModelsConsumer : BaseKafkaConsumer
         try
         {
             var message = JsonSerializer.Deserialize<ModelFourMessage>(e.Message.Value);
-            Logger.LogInformation("[ProcessFourModel] OnMessage | Init");
+            Logger.LogInformation("[ProcessModelsFourFiveSixConsumer] OnMessage | Init");
             return message is not null ? Process(message) : Task.FromResult(false);
         }
         catch (Exception ex)
         {
-            Logger.LogError("[ProcessFourModel] Error | Data: {Exception}", ex);
+            Logger.LogError("[ProcessModelsFourFiveSixConsumer] Error | Data: {Exception}", ex);
             return Task.FromResult(false);
         }
         finally
         {
-            Logger.LogInformation("[ProcessFourModel] OnMessage | End");
+            Logger.LogInformation("[ProcessModelsFourFiveSixConsumer] OnMessage | End");
         }
     }
 
@@ -58,7 +59,7 @@ public class ProcessModelsConsumer : BaseKafkaConsumer
 
         var dictionary = await DebitModelFourFiveProcess(model, listUsersGraded, walletRepository, accountServiceAdapter);
         
-        await LeaderBoardModelFourProcess(listUsersGraded, accountServiceAdapter);
+        var treeUsersInformation = await LeaderBoardModelFourProcess(listUsersGraded, accountServiceAdapter);
 
         var leaderBoardModel5 = new List<LeaderBoardModel5>();
         var leaderBoardModel6 = new List<LeaderBoardModel6>();
@@ -70,7 +71,8 @@ public class ProcessModelsConsumer : BaseKafkaConsumer
             walletRepository!,
             dictionary,
             leaderBoardModel5,
-            leaderBoardModel6);
+            leaderBoardModel6,
+            treeUsersInformation);
 
         await LeaderBoardModelFiveProcess(leaderBoardModel5, accountServiceAdapter);
         await LeaderBoardModelSixProcess(leaderBoardModel6, accountServiceAdapter);
@@ -98,8 +100,10 @@ public class ProcessModelsConsumer : BaseKafkaConsumer
         await accountServiceAdapter.AddTreeModel6(leaderBoardModel6);
     }
 
-    private static async Task LeaderBoardModelFourProcess(IEnumerable<UserGradingRequest> listUsersGraded, IAccountServiceAdapter? accountServiceAdapter)
+    private static async Task<ICollection<UserBinaryInformation>> LeaderBoardModelFourProcess(IEnumerable<UserGradingRequest> listUsersGraded, IAccountServiceAdapter? accountServiceAdapter)
     {
+        var result = new List<UserBinaryInformation>();
+        
         var leaderBoardModel4 = listUsersGraded.Select(s => new LeaderBoardModel4()
         {
             AffiliateId   = s.AffiliateId,
@@ -110,8 +114,16 @@ public class ProcessModelsConsumer : BaseKafkaConsumer
         }).ToList();
 
         leaderBoardModel4 = leaderBoardModel4.OrderModel4();
+        
         await accountServiceAdapter!.DeleteTreeModel4();
-        await accountServiceAdapter.AddTreeModel4(leaderBoardModel4);
+        var response = await accountServiceAdapter.AddTreeModel4(leaderBoardModel4);
+        
+        if (string.IsNullOrEmpty(response.Content))
+            return result;
+
+        result = response.Content.ToJsonObject<List<UserBinaryInformation>>();
+        
+        return result!;
     }
     
     private static async Task<Dictionary<int, decimal>> DebitModelFourFiveProcess(
@@ -170,16 +182,15 @@ public class ProcessModelsConsumer : BaseKafkaConsumer
     
 
     private static async Task GradingModel4ToCreateNextModels(
-        ModelFourMessage                model,
-        ICollection<UserGradingRequest> listUsersGraded,
-        IAccountServiceAdapter?         accountServiceAdapter,
-        IWalletRepository               walletRepository,
-        Dictionary<int, decimal>        userDictionary,
-        ICollection<LeaderBoardModel5>  leaderBoardModel5,
-        ICollection<LeaderBoardModel6>  leaderBoardModel6)
+        ModelFourMessage                   model,
+        ICollection<UserGradingRequest>    listUsersGraded,
+        IAccountServiceAdapter?            accountServiceAdapter,
+        IWalletRepository                  walletRepository,
+        Dictionary<int, decimal>           userDictionary,
+        ICollection<LeaderBoardModel5>     leaderBoardModel5,
+        ICollection<LeaderBoardModel6>     leaderBoardModel6,
+        ICollection<UserBinaryInformation> resultPoints)
     {
-        var resultPoints = new List<UserBinaryInformation>();
-        
         var resultOldPoints = await walletRepository!.GetUserModelFour(userDictionary.Select(x => x.Key).ToArray());
         
         foreach (var user in userDictionary)

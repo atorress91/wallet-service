@@ -1,0 +1,17 @@
+namespace WalletService.Data.Database.Models;
+
+public class ResultsModelTwoLevels
+{
+    public int Id { get; set; }
+    public int ResultsModelTwoId { get; set; }
+    public int AffiliateId { get; set; }
+    public string AffiliateName { get; set; }
+    public int Level { get; set; }
+    public decimal PercentageLevel { get; set; }
+    public decimal PaymentAmount { get; set; }
+    public decimal? Points { get; set; }
+    public DateTime? CompletedAt { get; set; }
+    public int BinarySide { get; set; }
+}
+
+

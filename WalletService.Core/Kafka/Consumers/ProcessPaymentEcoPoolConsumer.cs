@@ -36,7 +36,7 @@ public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
         {
             Logger.LogInformation("[ProcessPaymentEcoPoolConsumer] OnMessage | Init");
 
-            return PaymentEcoPoolProcess();
+            return Process();
         }
         catch (Exception ex)
         {
@@ -49,7 +49,7 @@ public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
         }
     }
 
-    private async Task<bool> PaymentEcoPoolProcess()
+    private async Task<bool> Process()
     {
         using var                       scope                    = ServiceScopeFactory.CreateScope();
         var                             resultsEcoPoolRepository = scope.ServiceProvider.GetService<IResultsEcoPoolRepository>();
