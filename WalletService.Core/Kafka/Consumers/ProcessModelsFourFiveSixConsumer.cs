@@ -31,7 +31,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
     {
         try
         {
-            var message = JsonSerializer.Deserialize<ModelFourMessage>(e.Message.Value);
+            var message = JsonSerializer.Deserialize<ModelFourFiveSixMessage>(e.Message.Value);
             Logger.LogInformation("[ProcessModelsFourFiveSixConsumer] OnMessage | Init");
             return message is not null ? Process(message) : Task.FromResult(false);
         }
@@ -46,7 +46,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         }
     }
 
-    private async Task<bool> Process(ModelFourMessage model)
+    private async Task<bool> Process(ModelFourFiveSixMessage model)
     {
         using var scope                 = ServiceScopeFactory.CreateScope();
         var       walletRepository      = scope.ServiceProvider.GetService<IWalletRepository>();
@@ -127,7 +127,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
     }
     
     private static async Task<Dictionary<int, decimal>> DebitModelFourFiveProcess(
-        ModelFourMessage         model,
+        ModelFourFiveSixMessage         model,
         List<UserGradingRequest> listUsersGraded,
         IWalletRepository?       walletRepository,
         IAccountServiceAdapter?  accountServiceAdapter)
@@ -182,7 +182,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
     
 
     private static async Task GradingModel4ToCreateNextModels(
-        ModelFourMessage                   model,
+        ModelFourFiveSixMessage                   model,
         ICollection<UserGradingRequest>    listUsersGraded,
         IAccountServiceAdapter?            accountServiceAdapter,
         IWalletRepository                  walletRepository,
@@ -331,7 +331,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
     
 
     private static async Task<GradingDto?> GradingModelFiveSix(
-        ModelFourMessage           model,
+        ModelFourFiveSixMessage           model,
         IAccountServiceAdapter?    accountServiceAdapter,
         IWalletRepository          walletRepository,
         decimal                    payment,

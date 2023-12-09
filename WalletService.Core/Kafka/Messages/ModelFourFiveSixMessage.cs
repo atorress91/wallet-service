@@ -3,7 +3,7 @@ using WalletService.Models.Requests.UserGradingRequest;
 
 namespace WalletService.Core.Kafka.Messages;
 
-public class ModelFourMessage
+public class ModelFourFiveSixMessage
 {
     public ICollection<GradingDto> Gradings { get; set; }
     public ICollection<UserGradingRequest> UserGradings { get; set; }

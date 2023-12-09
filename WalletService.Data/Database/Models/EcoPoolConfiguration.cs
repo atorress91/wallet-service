@@ -13,6 +13,8 @@ public class EcoPoolConfiguration
 
     public int? Processed { get; set; }
     public int? Totals { get; set; }
+    public int? ModelTwoProcessed { get; set; }
+    public int? ModelTwoTotals { get; set; }
     public DateTime? CompletedAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

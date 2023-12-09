@@ -202,18 +202,45 @@ public class WalletRepository : BaseRepository, IWalletRepository
     }
 
 
-    public async Task<bool> CreateEcoPoolSP(EcoPoolTransactionRequest request)
+    public async Task<bool> CreateModelThreeSP(ModelThreeTransactionRequest request)
     {
         try
         {
             await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
 
-            await using var cmd = new SqlCommand(Constants.CreateEcoPoolSP, sqlConnection);
+            await using var cmd = new SqlCommand(Constants.ModelThreeRequestSP, sqlConnection);
 
             var levelTypeDataTable   = ConvertToDataTable(request.LevelsType);
             var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
 
-            CreateEcoPoolListParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
+            CreateModelThreeParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
+
+            await sqlConnection.OpenAsync();
+            await using var oReader = await cmd.ExecuteReaderAsync();
+
+            await sqlConnection.CloseAsync();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task<bool> CreateModelTwoSP(ModelTwoTransactionRequest request)
+    {
+        try
+        {
+            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+
+            await using var cmd = new SqlCommand(Constants.ModelThreeRequestSP, sqlConnection);
+
+            var levelTypeDataTable   = ConvertToDataTable(request.LevelsType);
+            var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
+
+            // CreateModelThreeParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
 
             await sqlConnection.OpenAsync();
             await using var oReader = await cmd.ExecuteReaderAsync();
@@ -425,7 +452,58 @@ public class WalletRepository : BaseRepository, IWalletRepository
         });
     }
 
-    private void CreateEcoPoolListParameters(EcoPoolTransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
+    private void CreateModelThreeParameters(ModelThreeTransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
+    {
+        cmd.CommandType = CommandType.StoredProcedure;
+
+        cmd.Parameters.Add(new SqlParameter("@EcoPoolConfigurationId", SqlDbType.Int)
+        {
+            Value = request.EcoPoolConfigurationId
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@TotalPercentageLevels", SqlDbType.Decimal)
+        {
+            Value = request.TotalPercentageLevels
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@EcoPoolPercentage", SqlDbType.Decimal)
+        {
+            Value = request.EcoPoolPercentage
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@CompanyPercentage", SqlDbType.Decimal)
+        {
+            Value = request.CompanyPercentage
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@CompanyPercentageLevels", SqlDbType.Decimal)
+        {
+            Value = request.CompanyPercentageLevels
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Case", SqlDbType.Int)
+        {
+            Value = request.Case
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Points", SqlDbType.Int)
+        {
+            Value = request.Points
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Levels", SqlDbType.Structured)
+        {
+            Value    = levels,
+            TypeName = "dbo.LevelsType"
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Pools", SqlDbType.Structured)
+        {
+            Value    = ecoPools,
+            TypeName = "dbo.EcoPoolType"
+        });
+    }
+    private void CreateModelTwoParameters(ModelThreeTransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -519,7 +597,6 @@ public class WalletRepository : BaseRepository, IWalletRepository
         });
     }
 
-
     public Task<List<Wallets>> GetWalletByUserId(int userId)
         => Context.Wallets.Where(x => x.UserId == userId).ToListAsync();
 
@@ -579,12 +656,18 @@ public class WalletRepository : BaseRepository, IWalletRepository
             .ToListAsync();
     }
 
-    public async Task<List<InvoicePacks>> GetDebitsEcoPoolOutsideMonth(DateTime date)
+    public Task<List<InvoicePacks>> GetDebitsEcoPoolOutsideMonth(DateTime date)
     {
-        var list = await Context.InvoicePacks.Include(i => i.Invoice).AsNoTracking()
+        return Context.InvoicePacks.Include(i => i.Invoice).AsNoTracking()
             .Where(x => x.StartDate < date && x.Status == "1" && x.Invoice.Status == true && x.Invoice.CancellationDate == null).ToListAsync();
-
-        return list;
+    }
+    
+    public Task<List<InvoicesDetails>> GetInvoicesDetailsItemsForModelTwo(int month, int year)
+    {
+        return Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
+            .Where(x 
+                => x.PaymentGroupId == 6 && x.PaymentGroupId == 7 && x.CreatedAt.Month == month && 
+                   x.CreatedAt.Year == year && x.Invoice.Status == true && x.Invoice.CancellationDate == null).ToListAsync();
     }
 
     public async Task<bool> CreateTransferBalance(Wallets debitTransaction, Wallets creditTransaction)

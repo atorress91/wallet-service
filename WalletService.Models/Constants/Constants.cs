@@ -35,7 +35,8 @@ public static class Constants
     public const string AdminDebitTransactionSp           = "dbo.Admin_Debit_Transation_SP";
     public const string HandleDebitTransationSP           = "dbo.HandleDebit_Transation_SP";
     public const string CreditTransationSP                = "dbo.Credit_Transation_SP";
-    public const string CreateEcoPoolSP                   = "dbo.CreateEcoPoolSP";
+    public const string ModelThreeRequestSP               = "dbo.CreateEcoPoolSP";
+    public const string ModelTwoRequestSP                 = "dbo.ModelTwoRequestSP";
     public const string RevertDebitTransaction            = "dbo.Revert_Debit_Transaction_SP";
     public const string CoinPaymentRevertTransactions     = "dbo.CoinPaymentsRevertTransactions_SP";
     public const string HandleMembershipTransactions      = "dbo.HandleMembershipTransactionSp";

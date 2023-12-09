@@ -17,10 +17,10 @@ using WalletService.Utility.Extensions;
 
 namespace WalletService.Core.Kafka.Consumers;
 
-public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
+public class ProcessPaymentModelThreeConsumer : BaseKafkaConsumer
 {
 
-    public ProcessPaymentEcoPoolConsumer(
+    public ProcessPaymentModelThreeConsumer(
         ConsumerSettings         consumerSettings,
         ApplicationConfiguration configuration,
         ILogger                  logger,
@@ -115,14 +115,14 @@ public class ProcessPaymentEcoPoolConsumer : BaseKafkaConsumer
             }
         }
 
-        var model = new ModelFourMessage
+        var model = new ModelFourFiveSixMessage
         {
             Gradings     = gradings.Where(x => x.Id > 1).ToList(),
             UserGradings = listGrading.Where(x => x.Grading is { Id: > 1 }).ToList()
         };
 
         _ = Task.Run(async ()
-            => await kafkaProducer!.ProduceAsync(KafkaTopics.ProcessModelFourTopic, model.ToJsonString()));
+            => await kafkaProducer!.ProduceAsync(KafkaTopics.ProcessModelFourFiveSixTopic, model.ToJsonString()));
 
             return true;
     }

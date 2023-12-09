@@ -23,7 +23,7 @@ public class ProcessModelThreeWithInConsumer : BaseKafkaConsumer
 
     protected override Task<bool> OnMessage(ConsumeResult<Ignore, string> e)
     {
-        var message = JsonSerializer.Deserialize<EcoPoolProcessMessage>(e.Message.Value);
+        var message = JsonSerializer.Deserialize<ModelThreeMessage>(e.Message.Value);
         try
         {
             Logger.LogInformation("[ProcessModelThreeWithInConsumer] OnMessage | Init");
@@ -40,15 +40,15 @@ public class ProcessModelThreeWithInConsumer : BaseKafkaConsumer
         }
     }
 
-    private async Task<bool> Process(EcoPoolProcessMessage message)
+    private async Task<bool> Process(ModelThreeMessage message)
     {
         using var scope            = ServiceScopeFactory.CreateScope();
         var       walletRepository = scope.ServiceProvider.GetService<IWalletRepository>();
 
-        var ecoPoolsType = new List<EcoPoolsType>();
-        var levelsType   = new List<LevelsType>();
+        var ecoPoolsType = new List<ModelThreeType>();
+        var levelsType   = new List<ModelThreeLevelsType>();
 
-        var request = new EcoPoolTransactionRequest
+        var request = new ModelThreeTransactionRequest
         {
             EcoPoolConfigurationId  = message.Configuration.Id,
             CompanyPercentageLevels = message.Configuration.CompanyPercentageLevels.ToDecimal(),
@@ -83,7 +83,7 @@ public class ProcessModelThreeWithInConsumer : BaseKafkaConsumer
             var countDays    = message.EndDate.Subtract(firstDate).Days + 1;
             var daysInMonth  = message.EndDate.Subtract(message.StarDate).Days + 1;
 
-            var levelsMapped = affiliate.FamilyTree.Select(s => new LevelsType
+            var levelsMapped = affiliate.FamilyTree.Select(s => new ModelThreeLevelsType
             {
                 Percentage    = message.Configuration.Levels.FirstOrDefault(x => x.Level == s.Level)!.Percentage,
                 Level         = s.Level,
@@ -95,7 +95,7 @@ public class ProcessModelThreeWithInConsumer : BaseKafkaConsumer
 
             var productName = product?.Name ?? string.Empty;
             levelsType.AddRange(levelsMapped);
-            ecoPoolsType.Add(new EcoPoolsType
+            ecoPoolsType.Add(new ModelThreeType
             {
                 AffiliateId       = affiliate.Id,
                 AffiliateUserName = affiliate.UserName,
@@ -112,7 +112,7 @@ public class ProcessModelThreeWithInConsumer : BaseKafkaConsumer
 
         request.LevelsType   = levelsType;
         request.EcoPoolsType = ecoPoolsType;
-        await walletRepository!.CreateEcoPoolSP(request);
+        await walletRepository!.CreateModelThreeSP(request);
         Logger.LogInformation($"[ProcessModelThreeWithInConsumer] | EcoPoolProcess | Batch Completed");
 
         return true;

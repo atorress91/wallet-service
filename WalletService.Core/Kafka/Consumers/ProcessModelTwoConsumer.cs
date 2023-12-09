@@ -23,7 +23,7 @@ public class ProcessModelTwoConsumer : BaseKafkaConsumer
 
     protected override Task<bool> OnMessage(ConsumeResult<Ignore, string> e)
     {
-        var message = JsonSerializer.Deserialize<EcoPoolProcessMessage>(e.Message.Value);
+        var message = JsonSerializer.Deserialize<ModelTwoMessage>(e.Message.Value);
         try
         {
             Logger.LogInformation("[ProcessModelTwoConsumer] OnMessage | Init");
@@ -40,54 +40,46 @@ public class ProcessModelTwoConsumer : BaseKafkaConsumer
         }
     }
 
-    private async Task<bool> Process(EcoPoolProcessMessage message)
+    private async Task<bool> Process(ModelTwoMessage message)
     {
         using var scope            = ServiceScopeFactory.CreateScope();
         var       walletRepository = scope.ServiceProvider.GetService<IWalletRepository>();
 
-        var ecoPoolsType = new List<EcoPoolsType>();
-        var levelsType   = new List<LevelsType>();
+        var ecoPoolsType = new List<ModelTwoType>();
+        var levelsType   = new List<ModelTwoLevelsType>();
 
-        var request = new EcoPoolTransactionRequest
+        var request = new ModelTwoTransactionRequest
         {
-            EcoPoolConfigurationId  = message.Configuration.Id,
-            CompanyPercentageLevels = message.Configuration.CompanyPercentageLevels.ToDecimal(),
-            CompanyPercentage       = message.Configuration.CompanyPercentage.ToDecimal(),
-            EcoPoolPercentage       = message.Configuration.EcoPoolPercentage.ToDecimal(),
-            Points                  = message.Points,
-            Case                    = message.Configuration.Case,
-            TotalPercentageLevels   = message.Configuration.Levels.Sum(x => x.Percentage)
+            EcoPoolConfigurationId = message.Configuration.Id,
+            Percentage             = message.Configuration.CompanyPercentageLevels.ToDecimal(),
+            Case                   = message.Configuration.Case,
+            TotalPercentageLevels  = message.Configuration.Levels.Sum(x => x.Percentage)
         };
+        
         Logger.LogInformation($"[ProcessModelTwoConsumer] | EcoPoolProcess | Data: {request.ToJsonString()}");
 
-        foreach (var pool in message.Pools)
+        foreach (var item in message.EducatedCourses)
         {
-            var affiliate = message.ListResultAccounts.FirstOrDefault(x => x.Id == pool.Invoice.AffiliateId);
-            var product   = message.ListResultProducts.FirstOrDefault(x => x.Id == pool.ProductId);
-            var daysDelay = product?.DaysWait ?? 0;
-
+            var affiliate = message.ListResultAccounts.FirstOrDefault(x => x.Id == item.Invoice.AffiliateId);
+            var product   = message.ListResultProducts.FirstOrDefault(x => x.Id == item.ProductId);
+ 
             if (affiliate is null)
             {
                 Logger.LogWarning($"[ProcessModelTwoConsumer] | EcoPoolProcess | Affiliate: {affiliate.ToJsonString()}");
                 continue;
             }
 
-            if (pool.Invoice.Date is null)
+            if (item.Invoice.Date is null)
             {
                 Logger.LogWarning($"[ProcessModelTwoConsumer] | EcoPoolProcess | Date wrong");
                 continue;
             }
-
-            var datePoolTemp = pool.Invoice.Date!.Value.AddDays(daysDelay);
-            var firstDate    = new DateTime(datePoolTemp.Year, datePoolTemp.Month, datePoolTemp.Day, 00, 00, 00);
-            var countDays    = message.EndDate.Subtract(firstDate).Days + 1;
-            var daysInMonth  = message.EndDate.Subtract(message.StarDate).Days + 1;
-
-            var levelsMapped = affiliate.FamilyTree.Select(s => new LevelsType
+            
+            var levelsMapped = affiliate.FamilyTree.Select(s => new ModelTwoLevelsType
             {
                 Percentage    = message.Configuration.Levels.FirstOrDefault(x => x.Level == s.Level)!.Percentage,
                 Level         = s.Level,
-                PoolId        = pool.Id,
+                PoolId        = item.Id,
                 AffiliateId   = s.Id,
                 AffiliateName = s.UserName,
                 Side          = s.Side
@@ -95,24 +87,21 @@ public class ProcessModelTwoConsumer : BaseKafkaConsumer
 
             var productName = product?.Name ?? string.Empty;
             levelsType.AddRange(levelsMapped);
-            ecoPoolsType.Add(new EcoPoolsType
+            ecoPoolsType.Add(new ModelTwoType
             {
                 AffiliateId       = affiliate.Id,
                 AffiliateUserName = affiliate.UserName,
-                PoolId            = pool.Id,
-                CountDays         = countDays,
-                DaysInMonth       = daysInMonth,
-                Amount            = pool.BaseAmount,
+                PoolId            = item.Id,
+                Amount            = (decimal)item.BaseAmount!,
                 LastDayDate       = message.Configuration.DateEnd,
-                PaymentDate       = firstDate,
-                ProductExternalId = pool.ProductId,
+                ProductExternalId = item.ProductId,
                 ProductName       = productName
             });
         }
 
         request.LevelsType   = levelsType;
         request.EcoPoolsType = ecoPoolsType;
-        await walletRepository!.CreateEcoPoolSP(request);
+        await walletRepository!.CreateModelTwoSP(request);
         Logger.LogInformation($"[ProcessModelTwoConsumer] | EcoPoolProcess | Batch Completed");
 
         return true;
