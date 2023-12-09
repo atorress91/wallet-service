@@ -56,6 +56,27 @@ public class WireTransferStrategy : IWireTransferStrategy
 
         return pdfContents;
     }
+    
+    private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
+    {
+        Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
+
+        var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        var separator        = Path.DirectorySeparatorChar;
+        
+        var pdfDirectory = $"{workingDirectory}{separator}Assets{separator}TradingAcademy";
+        
+        var pdfFiles = Directory.GetFiles(pdfDirectory, "*.pdf");
+
+        foreach (var pdfFile in pdfFiles)
+        {
+            var fileName   = Path.GetFileName(pdfFile);
+            var pdfContent = await File.ReadAllBytesAsync(pdfFile);
+            pdfContents[fileName] = pdfContent;
+        }
+
+        return pdfContents;
+    }
 
     public async Task<bool> ExecuteEcoPoolPayment(WalletRequest request)
     {
@@ -284,19 +305,27 @@ public class WireTransferStrategy : IWireTransferStrategy
             invoices          = invoiceDetails,
         };
 
+        var hasCourse  = await _invoiceRepository.GetInvoicesForTradingAcademyPurchases(request.AffiliateId);
         var spResponse = await _invoiceRepository.HandleDebitTransactionForCourse(debitTransactionRequest);
-
+        
         if (spResponse is null)
             return false;
-
+    
+        Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>();
         var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+
+        allPdfData["Invoice.pdf"] = invoicePdf;
         
-        Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
+        if (!hasCourse && invoicePdf.Length != 0)
         {
-            ["Invoice.pdf"] = invoicePdf
-        };
-        
-        if (invoicePdf.Length != 0)
+            var pdfContents = await GetPdfContentForTradingAcademy();
+            foreach (var pdf in pdfContents)
+            {
+                allPdfData[pdf.Key] = pdf.Value;
+            }
+            await _brevoEmailService.SendEmailPurchaseConfirmForAcademy(userInfoResponse!, allPdfData, spResponse);
+        }
+        else if (invoicePdf.Length != 0)
         {
             await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
         }

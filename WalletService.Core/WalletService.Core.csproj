@@ -77,6 +77,42 @@
     <None Update="Assets\EcoPooles\eco_pool_tiburon.pdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\TradingAcademy\1.- ¿Qué es el Calendario económico_compressed.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\TradingAcademy\2.- PAGINAS INFORMATIVAS_compressed.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\TradingAcademy\3.-  Sesiones de trading_compressed.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\TradingAcademy\4.- Velas Japonesas_compressed.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\TradingAcademy\5.- Apalancamiento_compressed.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\TradingAcademy\7.- Spread_compressed.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\TradingAcademy\8.- Soportes y Resistencias_compressed.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\TradingAcademy\9.- Medias Móviles_compressed.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\TradingAcademy\10.- Medias moviles avanzadas_compressed.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\TradingAcademy\6.- Pip.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\confirm-purchase-academy.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+
+
+
   </ItemGroup>
 
 

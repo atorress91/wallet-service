@@ -241,4 +241,10 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
     public Task<List<Invoices>> GetInvoicesByReceiptNumber(ICollection<string> transactionIds)
         => Context.Invoices.Where(e => e.ReceiptNumber != null && transactionIds.Contains(e.ReceiptNumber))
                 .ToListAsync();
+    
+    public Task<bool> GetInvoicesForTradingAcademyPurchases(int affiliateId)
+        => Context.Invoices
+            .Include(x => x.InvoiceDetail)
+            .AnyAsync(x => x.AffiliateId == affiliateId && x.InvoiceDetail.Any(d => d.PaymentGroupId == 6));
+    
 }
