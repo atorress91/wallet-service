@@ -1,7 +1,7 @@
 
 {
     "region" : "us-east-1",
-    "profile" : "Jeff",
+    "profile" : "HeroSystem",
     "configuration" : "Release",
     "image-tag"     : "walletserviceapi:latest",
     "docker-build-working-dir" : "",
@@ -11,7 +11,7 @@
     "launch-security-groups"   : "sg-048dd9540c345d66f",
     "assign-public-ip"         : true,
     "task-definition-name"     : "WalletServiceApiProd",
-    "task-cpu"                 : "2048",
+    "task-cpu"                 : "1024",
     "task-memory"              : "8192",
     "platform-version"         : "LATEST",
     "task-definition-task-role" : "arn:aws:iam::948104088074:role/ecsTaskExecutionRole",

@@ -5,7 +5,8 @@ namespace WalletService.Core.PaymentStrategies.IPaymentStrategies;
 
 public interface IBalancePaymentStrategy
 {
-    Task<bool> ExecuteEcoPoolPayment(WalletRequest      request);
-    Task<bool> ExecuteAdminPayment(WalletRequest request);
+    Task<bool> ExecuteEcoPoolPayment(WalletRequest request);
+    Task<bool> ExecuteAdminPayment(WalletRequest   request);
     Task<bool> ExecutePaymentCourses(WalletRequest request);
+    Task<bool> ExecuteCustomPayment(WalletRequest  request);
 }
