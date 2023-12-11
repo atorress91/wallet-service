@@ -43,6 +43,9 @@ public class UserModelTwoThreeResponse
     [JsonPropertyName("side")]
     public int Side { get; set; }
     
+    [JsonPropertyName("createdAt")]
+    public DateTime UserCreatedAt { get; set; }
+    
     [JsonPropertyName("familyTree")]
     public List<UserLevel> FamilyTree { get; set; }
 }
@@ -72,4 +75,6 @@ public class UserLevel
     
     [JsonPropertyName("side")]
     public int Side { get; set; }
+    [JsonPropertyName("createdAt")]
+    public DateTime UserCreatedAt { get; set; }
 }

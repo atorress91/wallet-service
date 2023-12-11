@@ -8,6 +8,7 @@ using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Constants;
+using WalletService.Models.DTO.InvoiceDetailDto;
 using WalletService.Models.DTO.InvoiceDto;
 using WalletService.Models.DTO.ProcessGradingDto;
 using WalletService.Models.DTO.ProductWalletDto;
@@ -53,39 +54,42 @@ public class ProcessGradingService : BaseService, IProcessGradingService
 
         var starDate = new DateTime(configuration.DateInit.Year, configuration.DateInit.Month, configuration.DateInit.Day, 00, 00, 00);
         var endDate  = new DateTime(configuration.DateEnd.Year, configuration.DateEnd.Month, configuration.DateEnd.Day, 23, 59, 59);
-        var today    = DateTime.Today;
+        var lastMonth    = DateTime.Today.AddMonths(-2);
 
         var poolsWithinMoth  = await _walletRepository.GetDebitsEcoPoolWithinMonth(starDate, configuration.DateEnd);
         var poolsOutsideMoth = await _walletRepository.GetDebitsEcoPoolOutsideMonth(starDate);
-        var itemForModelTwo  = await _walletRepository.GetInvoicesDetailsItemsForModelTwo(today.Month, today.Year);
+        var itemForModelTwo  = await _walletRepository.GetInvoicesDetailsItemsForModelTwo(lastMonth.Month, lastMonth.Year);
 
         var accountsModelThree = poolsWithinMoth.Union(poolsOutsideMoth).Select(x => x.Invoice.AffiliateId).Distinct().ToArray();
         var productsModelThree = poolsWithinMoth.Union(poolsOutsideMoth).Select(x => x.ProductId).Distinct().ToArray();
+        
         var accountsModelTwo   = itemForModelTwo.Select(x => x.Invoice.AffiliateId).Distinct().ToArray();
         var productsModelTwo   = itemForModelTwo.Select(x => x.ProductId).Distinct().ToArray();
 
         var accounts = accountsModelThree.Union(accountsModelTwo).Distinct().ToArray();
-        var products = productsModelThree.Union(productsModelTwo).Distinct().ToArray();
+        var products = productsModelThree.Union(productsModelTwo).Distinct().ToArray();        
 
+        var listResultProducts = await GetListProducts(products);
         var listResultAccounts         = await GetListAccount(accounts, configuration);
-        var listResultProducts         = await GetListProducts(products);
         var pointConfigurationResponse = await _configurationAdapter.GetPointsConfiguration();
         var points                     = pointConfigurationResponse.Content?.ToDecimal();
-        configuration.Totals = poolsWithinMoth.Count + poolsOutsideMoth.Count;
+        configuration.Totals         = poolsWithinMoth.Count + poolsOutsideMoth.Count;
+        configuration.ModelTwoTotals = itemForModelTwo.Count;
 
         await _configurationRepository.UpdateConfiguration(configuration);
         var configurationMapped    = Mapper.Map<EcoPoolConfigurationDto>(configuration);
         var poolsWithinMothMapped  = Mapper.Map<ICollection<InvoicePackDto>>(poolsWithinMoth);
         var poolsWithoutMothMapped = Mapper.Map<ICollection<InvoicePackDto>>(poolsOutsideMoth);
+        var itemForModelTwoMapped = Mapper.Map<ICollection<InvoiceDetailDto>>(itemForModelTwo);
 
-        await SendModelTwoProcess(itemForModelTwo, configurationMapped, listResultAccounts, listResultProducts,
+        await SendModelTwoProcess(itemForModelTwoMapped, configurationMapped, listResultAccounts, listResultProducts,
             KafkaTopics.ProcessModelTwoTopic);
         
-        // await SendModelThreeProcess(poolsWithinMothMapped, configurationMapped, points, endDate, starDate, listResultAccounts, listResultProducts,
-        //     KafkaTopics.ProcessModelThreeWithInTopic);
-        //
-        // await SendModelThreeProcess(poolsWithoutMothMapped, configurationMapped, points, endDate, starDate, listResultAccounts,
-        //     listResultProducts, KafkaTopics.ProcessModelThreeWithOutTopic);
+        await SendModelThreeProcess(poolsWithinMothMapped, configurationMapped, points, endDate, starDate, listResultAccounts, listResultProducts,
+            KafkaTopics.ProcessModelThreeWithInTopic);
+        
+        await SendModelThreeProcess(poolsWithoutMothMapped, configurationMapped, points, endDate, starDate, listResultAccounts,
+            listResultProducts, KafkaTopics.ProcessModelThreeWithOutTopic);
     }
 
     private Task SendModelThreeProcess(
@@ -122,7 +126,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
     }
     
     private Task SendModelTwoProcess(
-        ICollection<InvoicesDetails>           itemsModelTwo,
+        ICollection<InvoiceDetailDto>           itemsModelTwo,
         EcoPoolConfigurationDto                configuration,
         ICollection<UserModelTwoThreeResponse> listResultAccounts,
         ICollection<ProductWalletDto>          listResultProducts,
@@ -153,25 +157,33 @@ public class ProcessGradingService : BaseService, IProcessGradingService
         IReadOnlyCollection<int> accounts,
         EcoPoolConfiguration     configuration)
     {
-        const int limit          = 500;
-        var       batchesAccount = (decimal)accounts.Count / 500;
+        const int limit          = 100;
+        var       batchesAccount = (decimal)accounts.Count / limit;
 
         var listResultAccounts = new List<UserModelTwoThreeResponse>();
 
         for (var i = 0; i < batchesAccount; i++)
         {
-            var batchList = accounts.Skip(i * limit).Take(limit).ToArray();
-            var accountResponse = await _accountServiceAdapter
-                .GetAccountsToEcoPool(batchList, configuration.Levels.Count);
+            try
+            {
+                var batchList = accounts.Skip(i * limit).Take(limit).ToArray();
+                var accountResponse = await _accountServiceAdapter
+                    .GetAccountsToEcoPool(batchList, configuration.Levels.Count);
 
-            if (!accountResponse.IsSuccessful)
-                continue;
+                if (!accountResponse.IsSuccessful)
+                    continue;
 
-            if (accountResponse.Content is null)
-                continue;
+                if (accountResponse.Content is null)
+                    continue;
 
-            var response = JsonSerializer.Deserialize<GetAccountsEcoPoolResponse>(accountResponse.Content);
-            listResultAccounts.AddRange(response!.Data);
+                var response = JsonSerializer.Deserialize<GetAccountsEcoPoolResponse>(accountResponse.Content);
+                listResultAccounts.AddRange(response!.Data);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         return listResultAccounts;
@@ -180,8 +192,8 @@ public class ProcessGradingService : BaseService, IProcessGradingService
     private async Task<ICollection<ProductWalletDto>> GetListProducts(
         IReadOnlyCollection<int> products)
     {
-        const int limit          = 500;
-        var       batchesProduct = (decimal)products.Count / 500;
+        const int limit          = 100;
+        var       batchesProduct = (decimal)products.Count / limit;
 
         var listResultProducts = new List<ProductWalletDto>();
 

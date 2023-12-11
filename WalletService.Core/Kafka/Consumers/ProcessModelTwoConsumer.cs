@@ -51,7 +51,7 @@ public class ProcessModelTwoConsumer : BaseKafkaConsumer
         var request = new ModelTwoTransactionRequest
         {
             EcoPoolConfigurationId = message.Configuration.Id,
-            Percentage             = message.Configuration.CompanyPercentageLevels.ToDecimal(),
+            Percentage             = message.Configuration.PercentageModelTwo,
             Case                   = message.Configuration.Case,
             TotalPercentageLevels  = message.Configuration.Levels.Sum(x => x.Percentage)
         };
@@ -82,7 +82,8 @@ public class ProcessModelTwoConsumer : BaseKafkaConsumer
                 PoolId        = item.Id,
                 AffiliateId   = s.Id,
                 AffiliateName = s.UserName,
-                Side          = s.Side
+                Side          = s.Side,
+                UserCreatedAt = s.UserCreatedAt
             }).ToList();
 
             var productName = product?.Name ?? string.Empty;
@@ -92,10 +93,12 @@ public class ProcessModelTwoConsumer : BaseKafkaConsumer
                 AffiliateId       = affiliate.Id,
                 AffiliateUserName = affiliate.UserName,
                 PoolId            = item.Id,
-                Amount            = (decimal)item.BaseAmount!,
+                Amount            = product!.ModelTwoPercentage ?? 0,
                 LastDayDate       = message.Configuration.DateEnd,
+                PaymentDate       = DateTime.Now,
                 ProductExternalId = item.ProductId,
-                ProductName       = productName
+                ProductName       = productName,
+                UserCreatedAt     = affiliate.UserCreatedAt
             });
         }
 

@@ -44,6 +44,7 @@ public class MapperProfile : Profile
         CreateMap<WalletsWithdrawals, WalletWithDrawalDto>();
         CreateMap<WalletsRequests, WalletRequestDto>();
         CreateMap<Invoices, InvoiceDto>();
+        CreateMap<Invoices, InvoiceDTO>();
         CreateMap<InvoicesDetails, InvoiceDetailDto>();
         CreateMap<EcoPoolConfiguration, EcoPoolConfigurationDto>();
         CreateMap<EcoPoolLevels, EcoPoolLevelDto>();

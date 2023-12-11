@@ -46,12 +46,20 @@ public class KafkaProducer
 
     public async Task<DeliveryResult<string, string>> ProduceWithKeyAsync<T>(string topic, T source, string key)
     {
-        var       value    = source as string ?? source.ToJsonString();
-        using var producer = new ProducerBuilder<string, string>(_producerConfig).Build();
-        return await producer.ProduceAsync(topic, new Message<string, string>
+        try
         {
-            Value = value,
-            Key   = key
-        });
+            var       value    = source as string ?? source.ToJsonString();
+            using var producer = new ProducerBuilder<string, string>(_producerConfig).Build();
+            return await producer.ProduceAsync(topic, new Message<string, string>
+            {
+                Value = value,
+                Key   = key
+            });
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }

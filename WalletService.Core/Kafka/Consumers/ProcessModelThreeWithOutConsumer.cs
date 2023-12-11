@@ -86,7 +86,8 @@ public class ProcessModelThreeWithOutConsumer : BaseKafkaConsumer
                 AffiliateId   = s.Id,
                 PoolId        = pool.Id,
                 AffiliateName = s.UserName,
-                Side          = s.Side
+                Side          = s.Side,
+                UserCreatedAt = s.UserCreatedAt
             }).ToList();
 
             var productName = product?.Name ?? string.Empty;
@@ -102,7 +103,8 @@ public class ProcessModelThreeWithOutConsumer : BaseKafkaConsumer
                 LastDayDate       = lastDayInMonth,
                 PaymentDate       = firstDayInMonth,
                 ProductExternalId = pool.ProductId,
-                ProductName       = productName
+                ProductName       = productName,
+                UserCreatedAt     = affiliate.UserCreatedAt
             });
         }
 

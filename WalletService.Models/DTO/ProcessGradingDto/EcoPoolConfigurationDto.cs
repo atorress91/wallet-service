@@ -5,6 +5,7 @@ public class EcoPoolConfigurationDto
     public int Id { get; set; }
     public double CompanyPercentage { get; set; }
     public double CompanyPercentageLevels { get; set; }
+    public decimal PercentageModelTwo { get; set; }
     public double EcoPoolPercentage { get; set; }
     public double MaxGainLimit { get; set; }
     public DateTime DateInit { get; set; }

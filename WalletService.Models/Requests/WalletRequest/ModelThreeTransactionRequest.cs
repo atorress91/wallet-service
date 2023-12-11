@@ -21,6 +21,7 @@ public class ModelThreeLevelsType
     public string AffiliateName { get; set; }
     public int PoolId { get; set; }
     public int Side { get; set; }
+    public DateTime? UserCreatedAt { get; set; }
     
 }
 
@@ -36,4 +37,5 @@ public class ModelThreeType
     public DateTime LastDayDate { get; set; }
     public DateTime PaymentDate { get; set; }
     public int PoolId { get; set; }
+    public DateTime? UserCreatedAt { get; set; }
 }

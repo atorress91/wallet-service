@@ -48,56 +48,104 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
 
     private async Task<bool> Process(ModelFourFiveSixMessage model)
     {
-        using var scope                 = ServiceScopeFactory.CreateScope();
-        var       walletRepository      = scope.ServiceProvider.GetService<IWalletRepository>();
-        var       accountServiceAdapter = scope.ServiceProvider.GetService<IAccountServiceAdapter>();
+        try
+        {
+            using var scope                 = ServiceScopeFactory.CreateScope();
+            var       walletRepository      = scope.ServiceProvider.GetService<IWalletRepository>();
+            var       accountServiceAdapter = scope.ServiceProvider.GetService<IAccountServiceAdapter>();
 
-        var listUsersGraded = model.UserGradings.Where(x => x.Grading!.ScopeLevel >= Constants.CustomerModel4Scope[0]).ToList();
+            var listUsersGraded = model.UserGradings.Where(x => x.Grading!.ScopeLevel >= Constants.CustomerModel4Scope[0]).ToList();
 
-        if (listUsersGraded is { Count: 0 })
-            return false;
+            if (listUsersGraded is { Count: 0 })
+                return false;
 
-        var dictionary = await DebitModelFourFiveProcess(model, listUsersGraded, walletRepository, accountServiceAdapter);
+            var dictionary = await DebitModelFourFiveProcess(model, listUsersGraded, walletRepository, accountServiceAdapter);
         
-        var treeUsersInformation = await LeaderBoardModelFourProcess(listUsersGraded, accountServiceAdapter);
+            var treeUsersInformation = await LeaderBoardModelFourProcess(listUsersGraded, accountServiceAdapter);
 
-        var leaderBoardModel5 = new List<LeaderBoardModel5>();
-        var leaderBoardModel6 = new List<LeaderBoardModel6>();
+            var leaderBoardModel5 = new List<LeaderBoardModel5>();
+            var leaderBoardModel6 = new List<LeaderBoardModel6>();
 
-        await GradingModel4ToCreateNextModels(
-            model,
-            listUsersGraded,
-            accountServiceAdapter,
-            walletRepository!,
-            dictionary,
-            leaderBoardModel5,
-            leaderBoardModel6,
-            treeUsersInformation);
+            await GradingModel4ToCreateNextModels(
+                model,
+                listUsersGraded,
+                accountServiceAdapter,
+                walletRepository!,
+                dictionary,
+                leaderBoardModel5,
+                leaderBoardModel6,
+                treeUsersInformation);
 
-        await LeaderBoardModelFiveProcess(leaderBoardModel5, accountServiceAdapter);
-        await LeaderBoardModelSixProcess(leaderBoardModel6, accountServiceAdapter);
+            await LeaderBoardModelFiveProcess(leaderBoardModel5, accountServiceAdapter, walletRepository!, model.Gradings);
+            await LeaderBoardModelSixProcess(leaderBoardModel6, accountServiceAdapter, walletRepository!, model.Gradings);
 
-        return true;
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+
     }
 
     private static async Task LeaderBoardModelFiveProcess(
-        List<LeaderBoardModel5> leaderBoardModel5,
-        IAccountServiceAdapter? accountServiceAdapter)
+        List<LeaderBoardModel5>         leaderBoardModel5,
+        IAccountServiceAdapter?         accountServiceAdapter,
+        IWalletRepository               walletRepository,
+        ICollection<GradingDto> gradings)
     {
 
         leaderBoardModel5 = leaderBoardModel5.OrderModel5();
         await accountServiceAdapter!.DeleteTreeModel5();
         await accountServiceAdapter.AddTreeModel5(leaderBoardModel5);
-        
+
+        foreach (var item in leaderBoardModel5)
+        {
+            var paymentGroup = leaderBoardModel5.Where(x => x.FatherModel5 == item.AffiliateId).ToList();
+            if(paymentGroup is {Count:0})
+                continue;
+            
+            var totalAmount = leaderBoardModel5.Where(x => x.FatherModel5 == item.AffiliateId).Sum(s => s.Amount);
+            var grading     = gradings.First(x => x.Id == item.GradingId);
+            await CreateCreditPayment(
+                walletRepository,
+                item.AffiliateId,
+                item.UserName,
+                (double)totalAmount,
+                string.Format(Constants.ConceptCommissionModelFivePayment, totalAmount, grading.Name),
+                WalletConceptType.model_four_payment.ToString()
+            );
+        }
     }
     
     private static async Task LeaderBoardModelSixProcess(
         List<LeaderBoardModel6> leaderBoardModel6,
-        IAccountServiceAdapter? accountServiceAdapter)
+        IAccountServiceAdapter? accountServiceAdapter,
+        IWalletRepository       walletRepository,
+        ICollection<GradingDto> gradings)
     {
         leaderBoardModel6 = leaderBoardModel6.OrderModel6();
         await accountServiceAdapter!.DeleteTreeModel6();
         await accountServiceAdapter.AddTreeModel6(leaderBoardModel6);
+        
+        foreach (var item in leaderBoardModel6)
+        {
+            var paymentGroup = leaderBoardModel6.Where(x => x.FatherModel6 == item.AffiliateId).ToList();
+            if(paymentGroup is {Count:0})
+                continue;
+            
+            var totalAmount = leaderBoardModel6.Where(x => x.FatherModel6 == item.AffiliateId).Sum(s => s.Amount);
+            var grading     = gradings.First(x => x.Id == item.GradingId);
+            await CreateCreditPayment(
+                walletRepository,
+                item.AffiliateId,
+                item.UserName,
+                (double)totalAmount,
+                string.Format(Constants.ConceptCommissionModelSixPayment, totalAmount, grading.Name),
+                WalletConceptType.model_four_payment.ToString()
+            );
+        }
     }
 
     private static async Task<ICollection<UserBinaryInformation>> LeaderBoardModelFourProcess(IEnumerable<UserGradingRequest> listUsersGraded, IAccountServiceAdapter? accountServiceAdapter)
@@ -109,8 +157,8 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             AffiliateId   = s.AffiliateId,
             Amount        = (decimal)s.Commissions,
             UserName      = s.UserName,
-            CreatedAt     = new DateTime(),
-            UserCreatedAt = new DateTime(),
+            CreatedAt     = DateTime.Now,
+            UserCreatedAt = s.UserCreatedAt,
         }).ToList();
 
         leaderBoardModel4 = leaderBoardModel4.OrderModel4();
@@ -149,13 +197,14 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
 
                 userDictionary[item.AffiliateId] = model4Grading.PurchasesNetwork;
                 
+                var description = item.Grading!.ScopeLevel > Constants.CustomerModel5Scope ? Constants.ConceptModelSixPayment : Constants.ConceptModelFivePayment;
                 if (walletRepository is not null)
                     await CreateDebitPayment(
                         walletRepository,
                         item.AffiliateId,
                         item.UserName,
                         item.Grading.PersonalPurchases,
-                        string.Format(Constants.ConceptModelFivePayment, item.Grading.PersonalPurchases, item.Grading.Name),
+                        string.Format(description, item.Grading.PersonalPurchases, item.Grading.Name),
                         WalletConceptType.model_five_payment.ToString());
                 
                 await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
@@ -233,7 +282,8 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                         AffiliateId = user.Key,
                         Amount      = points,
                         UserName    = userInformation.UserName,
-                        CreatedAt   = DateTime.Now
+                        CreatedAt   = DateTime.Now,
+                        GradingId   = grading.Id
                     });
                 }
 
@@ -244,7 +294,8 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                         AffiliateId = user.Key,
                         Amount      = points,
                         UserName    = userInformation.UserName,
-                        CreatedAt   = DateTime.Now
+                        CreatedAt   = DateTime.Now,
+                        GradingId = grading.Id
                     });
                 }
                 
@@ -348,12 +399,13 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         if (grading is null)
             return null;
         
+        var description = userInformation.Grading!.ScopeLevel > Constants.CustomerModel5Scope ? Constants.ConceptCommissionModelSixPayment : Constants.ConceptCommissionModelFivePayment;
         await CreateDebitPayment(
             walletRepository,
             user.Key,
             userInformation.UserName,
             grading!.PersonalPurchases,
-            string.Format(Constants.ConceptCommissionModelSixPayment, grading.PersonalPurchases, grading.Name),
+            string.Format(description, grading.PersonalPurchases, grading.Name),
             WalletConceptType.model_six_payment.ToString());
         await accountServiceAdapter!.UpdateGradingByUser(user.Key, grading.Id);
 
@@ -394,7 +446,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         if (payment <= 0)
             return Task.CompletedTask;
         
-        // return Task.CompletedTask;
+        return Task.CompletedTask;
 
         var creditTransaction = new DebitTransactionRequest
         {
@@ -421,6 +473,8 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
+        return Task.CompletedTask;
+
 
         var creditTransaction = new CreditTransactionRequest
         {

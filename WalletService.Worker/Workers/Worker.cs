@@ -94,7 +94,7 @@ public class Worker : BackgroundService
             
             for (var i = 0; i < consumerCountSettings.ConsumersProcessPaymentCount; i++)
             {
-                _consumers.Add(new ProcessPaymentModelThreeConsumer(new ConsumerSettings
+                _consumers.Add(new ProcessPaymentModel2TwoThreeConsumer(new ConsumerSettings
                 {
                     Topics          = new[] { KafkaTopics.ProcessPaymentModelTwoThreeTopic },
                     GroupId         = $"{ KafkaTopics.ProcessPaymentModelTwoThreeTopic }-group",

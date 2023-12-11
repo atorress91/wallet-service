@@ -2,7 +2,6 @@
 
 public static class Constants
 {
-    public const int    OriginNormalPurchase              = 1;
     public const int    OriginEcoPoolPurchase             = 2;
     public const string EcoPoolProductCategory            = "Pool Adquisitivo";
     public const string EcoPoolProductCategoryForAdmin    = "Pool Adquisitivo por AdminEcosystem";
@@ -36,25 +35,25 @@ public static class Constants
     public const string HandleDebitTransationSP           = "dbo.HandleDebit_Transation_SP";
     public const string CreditTransationSP                = "dbo.Credit_Transation_SP";
     public const string ModelThreeRequestSP               = "dbo.CreateEcoPoolSP";
-    public const string ModelTwoRequestSP                 = "dbo.ModelTwoRequestSP";
+    public const string ModelTwoRequestSP                 = "dbo.CreateModel2ResultsSP";
     public const string RevertDebitTransaction            = "dbo.Revert_Debit_Transaction_SP";
     public const string CoinPaymentRevertTransactions     = "dbo.CoinPaymentsRevertTransactions_SP";
     public const string HandleMembershipTransactions      = "dbo.HandleMembershipTransactionSp";
     public const string MembershipDebitTransactions       = "dbo.MembershipDebit_Transation_SP";
     public const string GetTotalPurchasesInMyNetworkSp    = "dbo.sp_GetTotalPurchasesInMyNetworkByAffiliate";
     public const string TypeTableAffiliateId              = "dbo.TypeTableAffiliateId";
-    public const string ActiveEcoPoolsGreaterThan25       = "dbo.sp_GetInvoicePacksByAffiliateCount";
     public const string BulkAdministrativeDebitSp         = "dbo.Bulk_Administrative_Debit_Sp";
-    public const string CommissionPoolDescription         = "Comisión del pool por {0}, nivel {1}";
-    public const string CommissionPoolDescriptionNormal   = "Comisión del pool";
+    public const string CommissionModelTwoDescription     = "Comisión Modelo 3 por {0}, nivel {1}";
+    public const string CommissionModelTwoDescriptionNormal   = "Comisión Modelo 3";
+    public const string CommissionModelThreeDescription     = "Comisión Modelo 2 por {0}, nivel {1}";
+    public const string CommissionModelThreeDescriptionNormal   = "Comisión Modelo 2";
     public const string CommissionMembership              = "Comisión de membresía por";
-    public const string ConceptRecurringPayment           = "Pago recurrente - ${0} - Calificacion {1}";
-    public const string ConceptBinaryPayment              = "Pago modelo 4 - ${0} - Calificacion {1}";
-    public const string ConceptModelFivePayment           = "Pago modelo 5 - ${0} - Calificacion {1}";
-    public const string ConceptModelSixPayment            = "Pago modelo 6 - ${0} - Calificacion {1}";
-    public const string ConceptCommissionBinaryPayment    = "Comisión modelo 4 - ${0} - Calificacion {1}";
-    public const string ConceptCommissionModelFivePayment = "Comisión modelo 5 - ${0} - Calificacion {1}";
-    public const string ConceptCommissionModelSixPayment  = "Comisión modelo 6 - ${0} - Calificacion {1}";
+    public const string ConceptBinaryPayment              = "Pago Modelo 4 - ${0} - Calificacion {1}";
+    public const string ConceptModelFivePayment           = "Pago Modelo 5 - ${0} - Calificacion {1}";
+    public const string ConceptModelSixPayment            = "Pago Modelo 6 - ${0} - Calificacion {1}";
+    public const string ConceptCommissionBinaryPayment    = "Comisión Modelo 4 - ${0} - Calificacion {1}";
+    public const string ConceptCommissionModelFivePayment = "Comisión Modelo 5 - ${0} - Calificacion {1}";
+    public const string ConceptCommissionModelSixPayment  = "Comisión Modelo 6 - ${0} - Calificacion {1}";
     public const string DefaultWithdrawalZone             = "Central America Standard Time";
     public const int    UsdtIdCurrency                    = 19;
     public const int    UsdtIdNetwork                     = 99;

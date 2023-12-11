@@ -14,4 +14,7 @@ public class ResultsModelTwo
     public string Points { get; set; }
     public DateTime PeriodPool { get; set; }
     public DateTime? CompletedAt { get; set; }
+    public DateTime? UserCreatedAt { get; set; }
+    
+    public virtual ICollection<ResultsModelTwoLevels> ResultsModelTwoLevels { get; set; }
 }

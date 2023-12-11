@@ -34,6 +34,8 @@ public class WalletServiceDbContext : DbContext
     public virtual DbSet<PaymentTransaction> PaymentTransaction { get; set; }
     public virtual DbSet<ModelFourStatistics> ModelFourStatistics { get; set; }
     public virtual DbSet<Commissions> Commissions { get; set; }
+    public virtual DbSet<ResultsModelTwo> ResultsModelTwo { get; set; }
+    public virtual DbSet<ResultsModelTwoLevels> ResultsModelTwoLevels { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<InvoicesSpResponse>(entity => entity.HasNoKey());
@@ -464,6 +466,7 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.EcoPoolPercentage).IsRequired().HasColumnType("decimal(10,2)");
             entity.Property(e => e.CompanyPercentageLevels).IsRequired().HasColumnType("decimal(10,2)");
             entity.Property(e => e.MaxGainLimit).IsRequired().HasColumnType("decimal(10,2)");
+            entity.Property(e => e.PercentageModelTwo).HasColumnType("decimal(10,2)");
             entity.Property(e => e.DateInit).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.DateEnd).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.Case).IsRequired();
@@ -515,6 +518,7 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.CasePool).IsRequired().HasMaxLength(50).HasColumnType("varchar(50)");
             entity.Property(e => e.PeriodPool).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.CompletedAt).HasColumnType("datetime");
+            entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
             
             entity.HasOne(d => d.EcoPoolConfiguration)
                 .WithMany(p => p.ResultsEcoPools)
@@ -536,6 +540,7 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.Points).HasColumnType("decimal(10,5)");
             entity.Property(e => e.CompletedAt).HasColumnType("datetime");
             entity.Property(e => e.BinarySide).IsRequired().HasColumnType("int");
+            entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.ResultsEcoPool)
                 .WithMany(p => p.ResultEcoPoolLevels)
@@ -651,6 +656,8 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.TotalPercentage).HasColumnType("decimal(10,2)");
             entity.Property(e => e.PaymentAmount).HasColumnType("decimal(10,5)");
             entity.Property(e => e.Points).HasColumnType("varchar(50)");
+            entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
+            
         });
         
         modelBuilder.Entity<ResultsModelTwoLevels>(entity =>
@@ -665,6 +672,11 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.Points).HasColumnType("decimal(10,5)");
             entity.Property(e => e.CompletedAt).HasColumnType("datetime");
             entity.Property(e => e.BinarySide).IsRequired();
+            entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
+    
+            entity.HasOne(d => d.ResultsModelTwo)
+                .WithMany(p => p.ResultsModelTwoLevels)
+                .HasForeignKey(d => d.ResultsModelTwoId);
         });
     }
 }

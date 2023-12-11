@@ -235,12 +235,12 @@ public class WalletRepository : BaseRepository, IWalletRepository
         {
             await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
 
-            await using var cmd = new SqlCommand(Constants.ModelThreeRequestSP, sqlConnection);
+            await using var cmd = new SqlCommand(Constants.ModelTwoRequestSP, sqlConnection);
 
             var levelTypeDataTable   = ConvertToDataTable(request.LevelsType);
             var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
 
-            // CreateModelThreeParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
+            CreateModelTwoParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
 
             await sqlConnection.OpenAsync();
             await using var oReader = await cmd.ExecuteReaderAsync();
@@ -503,10 +503,15 @@ public class WalletRepository : BaseRepository, IWalletRepository
             TypeName = "dbo.EcoPoolType"
         });
     }
-    private void CreateModelTwoParameters(ModelThreeTransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
+    private void CreateModelTwoParameters(ModelTwoTransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
 
+        cmd.Parameters.Add(new SqlParameter("@Percentage", SqlDbType.Int)
+        {
+            Value = request.Percentage
+        });
+        
         cmd.Parameters.Add(new SqlParameter("@EcoPoolConfigurationId", SqlDbType.Int)
         {
             Value = request.EcoPoolConfigurationId
@@ -516,39 +521,14 @@ public class WalletRepository : BaseRepository, IWalletRepository
         {
             Value = request.TotalPercentageLevels
         });
-
-        cmd.Parameters.Add(new SqlParameter("@EcoPoolPercentage", SqlDbType.Decimal)
-        {
-            Value = request.EcoPoolPercentage
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@CompanyPercentage", SqlDbType.Decimal)
-        {
-            Value = request.CompanyPercentage
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@CompanyPercentageLevels", SqlDbType.Decimal)
-        {
-            Value = request.CompanyPercentageLevels
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@Case", SqlDbType.Int)
-        {
-            Value = request.Case
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@Points", SqlDbType.Int)
-        {
-            Value = request.Points
-        });
-
+        
         cmd.Parameters.Add(new SqlParameter("@Levels", SqlDbType.Structured)
         {
             Value    = levels,
             TypeName = "dbo.LevelsType"
         });
 
-        cmd.Parameters.Add(new SqlParameter("@Pools", SqlDbType.Structured)
+        cmd.Parameters.Add(new SqlParameter("@ItemsModelTwo", SqlDbType.Structured)
         {
             Value    = ecoPools,
             TypeName = "dbo.EcoPoolType"
@@ -666,7 +646,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         return Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
             .Where(x 
-                => x.PaymentGroupId == 6 && x.PaymentGroupId == 7 && x.CreatedAt.Month == month && 
+                => (x.PaymentGroupId == 6 || x.PaymentGroupId == 5) && x.CreatedAt.Month == month && 
                    x.CreatedAt.Year == year && x.Invoice.Status == true && x.Invoice.CancellationDate == null).ToListAsync();
     }
 
