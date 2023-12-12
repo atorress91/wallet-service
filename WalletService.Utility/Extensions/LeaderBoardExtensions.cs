@@ -95,7 +95,10 @@ public static class LeaderBoardExtensions
                 user.PositionX    = childrenCount; 
                 user.PositionY    = father.Level + 1;
                 user.Level        = father.Level + 1;
+                levelsCount++;
             }
+            else
+                return orderedUsers;
 
             queue.Enqueue(user); 
         }
@@ -111,6 +114,7 @@ public static class LeaderBoardExtensions
 
         var queue         = new Queue<LeaderBoardModel6>();
         var childrenCount = 0;
+        var levelsCount   = 0;
 
         if (orderedUsers.Count > 0)
         {
@@ -134,7 +138,7 @@ public static class LeaderBoardExtensions
                 user.PositionY    = father.Level + 1;
                 user.Level        = father.Level + 1;
             }
-            else 
+            else if(levelsCount < Constants.LevelsLimitModel6)
             {
                 queue.Dequeue();
                 father            = queue.Peek(); 
@@ -143,7 +147,10 @@ public static class LeaderBoardExtensions
                 user.PositionX    = childrenCount; 
                 user.PositionY    = father.Level + 1;
                 user.Level        = father.Level + 1;
+                levelsCount++;
             }
+            else
+                return orderedUsers;
 
             queue.Enqueue(user); 
         }
