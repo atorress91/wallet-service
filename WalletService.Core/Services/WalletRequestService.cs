@@ -1,5 +1,7 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using AutoMapper;
+using WalletService.Core.Factory;
+using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.Models;
@@ -16,22 +18,24 @@ namespace WalletService.Core.Services;
 
 public class WalletRequestService : BaseService, IWalletRequestService
 {
-    private readonly IAccountServiceAdapter _accountServiceAdapter;
-    private readonly IInvoiceDetailRepository _invoiceDetailRepository;
-    private readonly IInvoiceRepository _invoiceRepository;
-    private readonly IWalletPeriodRepository _walletPeriodRepository;
-    private readonly IWalletRepository _walletRepository;
     private readonly IWalletRequestRepository _walletRequestRepository;
+    private readonly IAccountServiceAdapter   _accountServiceAdapter;
+    private readonly IInvoiceRepository       _invoiceRepository;
+    private readonly IInvoiceDetailRepository _invoiceDetailRepository;
+    private readonly IWalletRepository        _walletRepository;
+    private readonly IWalletPeriodRepository  _walletPeriodRepository;
+    private readonly IPaymentStrategyFactory        _paymentStrategyFactory;
 
 
     public WalletRequestService(
         IMapper                  mapper,
         IWalletRequestRepository walletRequestRepository,
         IAccountServiceAdapter   accountServiceAdapter,
-        IInvoiceRepository       invoiceRepository,
-        IInvoiceDetailRepository invoicesDetails,
-        IWalletRepository        walletRepository,
-        IWalletPeriodRepository  walletPeriodRepository) : base(mapper)
+        IInvoiceRepository       invoiceRepository, 
+        IInvoiceDetailRepository invoicesDetails, 
+        IWalletRepository walletRepository,
+        IWalletPeriodRepository walletPeriodRepository, 
+        IPaymentStrategyFactory paymentStrategyFactory) : base(mapper)
     {
         _walletRequestRepository = walletRequestRepository;
         _accountServiceAdapter   = accountServiceAdapter;
@@ -39,6 +43,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         _invoiceDetailRepository = invoicesDetails;
         _walletRepository        = walletRepository;
         _walletPeriodRepository  = walletPeriodRepository;
+        _paymentStrategyFactory  = paymentStrategyFactory;
     }
 
     public async Task<IEnumerable<WalletRequestDto>> GetAllWalletsRequests()
@@ -173,13 +178,16 @@ public class WalletRequestService : BaseService, IWalletRequestService
     {
         var response         = await _invoiceRepository.GetInvoiceById(request.InvoiceId);
         var userInfoResponse = await _accountServiceAdapter.GetUserInfo(response!.AffiliateId);
+        
+        var amountReverted = response.TotalInvoice * (decimal?)0.90;
+        var leftOverBalance = response.TotalInvoice - amountReverted;
 
         var creditRequest = new CreditTransactionRequest
         {
             AffiliateId       = request.AffiliateId,
             UserId            = Constants.AdminUserId,
             Concept           = Constants.RevertEcoPoolConcept + $" Factura# {request.InvoiceId}",
-            Credit            = Convert.ToDouble(response.TotalInvoice),
+            Credit            = Convert.ToDouble(amountReverted),
             AffiliateUserName = userInfoResponse!.UserName,
             AdminUserName     = Constants.AdminEcosystemUserName,
             ConceptType       = WalletConceptType.revert_pool.ToString()
@@ -210,6 +218,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         {
             await DeleteInvoiceAndDetails(request.InvoiceId);
             await _walletRepository.CreditTransaction(creditRequest);
+            await CreateCustomEcoPool(userInfoResponse, leftOverBalance);
             walletMovement.Status = WalletRequestStatus.approved.ToByte();
             await UpdateWalletRequestAsync(walletMovement);
         }
@@ -218,6 +227,61 @@ public class WalletRequestService : BaseService, IWalletRequestService
         return Mapper.Map<WalletRequestDto>(walletRequest);
     }
 
+    private async Task<bool> CreateCustomEcoPool(UserInfoResponse user, decimal? leftOverBalance)
+    {
+        var payment =  _paymentStrategyFactory.GetBalancePaymentStrategy();
+
+        if (user is null)
+            return false;
+        
+        var walletRequest = new WalletRequest
+        {
+         AffiliateId       = user.Id,
+         AffiliateUserName = user.UserName!,
+         PurchaseFor       = 0,
+         Bank              = Constants.WalletBalance,
+         PaymentMethod     = 0,
+         SecretKey         = null,
+         ReceiptNumber     = leftOverBalance.ToString(),
+         ProductsList      = new List<ProductsRequests>
+         {
+             new ProductsRequests
+             {
+                 Count = 1,
+                 IdProduct = 23
+             }
+         },
+        };
+        
+        return await payment.ExecuteCustomPayment(walletRequest);
+    }
+
+    private async Task<bool> DeleteInvoiceAndDetails(int invoiceNumber)
+    {
+        try
+        {
+            var invoiceResponse       = await _invoiceRepository.GetInvoiceById(invoiceNumber);
+            var invoiceDetailResponse = await _invoiceDetailRepository.GetInvoiceDetailByInvoiceIdAsync(invoiceNumber);
+
+            if (invoiceResponse is null || invoiceDetailResponse.Any() == false)
+                return false;
+
+            await _invoiceRepository.DeleteInvoiceAsync(invoiceResponse);
+            await _invoiceDetailRepository.DeleteBulkInvoiceDetailAsync(invoiceDetailResponse);
+
+            return true;
+        }
+        
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+    private async Task UpdateWalletRequestAsync(WalletsRequests walletRequest)
+    {
+        walletRequest.AttentionDate = DateTime.Now;
+        await _walletRequestRepository.UpdateWalletRequestsAsync(walletRequest);
+    }
     public async Task<bool> AdministrativePaymentAsync(WalletsRequests[] requests)
     {
         if (requests.Length is 0)
@@ -317,32 +381,5 @@ public class WalletRequestService : BaseService, IWalletRequestService
             return false;
 
         return true;
-    }
-
-    private async Task<bool> DeleteInvoiceAndDetails(int invoiceNumber)
-    {
-        try
-        {
-            var invoiceResponse       = await _invoiceRepository.GetInvoiceById(invoiceNumber);
-            var invoiceDetailResponse = await _invoiceDetailRepository.GetInvoiceDetailByInvoiceIdAsync(invoiceNumber);
-
-            if (invoiceResponse is null || invoiceDetailResponse.Any() == false)
-                return false;
-
-            await _invoiceRepository.DeleteInvoiceAsync(invoiceResponse);
-            await _invoiceDetailRepository.DeleteBulkInvoiceDetailAsync(invoiceDetailResponse);
-
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-    }
-
-    private async Task UpdateWalletRequestAsync(WalletsRequests walletRequest)
-    {
-        walletRequest.AttentionDate = DateTime.Now;
-        await _walletRequestRepository.UpdateWalletRequestsAsync(walletRequest);
     }
 }

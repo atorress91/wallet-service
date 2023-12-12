@@ -1,13 +1,14 @@
-﻿namespace WalletService.Models.DTO.CoinPaymentTransactionDto;
+﻿namespace WalletService.Models.DTO.PaymentTransactionDto;
 
 public class PaymentTransactionDto
 {
     public int Id { get; set; }
+    public string? UserName { get; set; } = string.Empty;
     public string IdTransaction { get; set; } = string.Empty;
     public int AffiliateId { get; set; }
     public decimal Amount { get; set; }
     public decimal AmountReceived { get; set; }
-    public string Products { get; set; }= string.Empty;
+    public string Products { get; set; } = string.Empty;
     public int Status { get; set; }
     public bool Acredited { get; set; }
     public DateTime CreatedAt { get; set; }

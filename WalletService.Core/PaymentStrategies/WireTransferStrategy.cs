@@ -4,14 +4,14 @@ using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Repositories.IRepositories;
+using WalletService.Models.Constants;
 using WalletService.Models.Enums;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
-using Constants = WalletService.Models.Constants.Constants;
 
 namespace WalletService.Core.PaymentStrategies;
 
-public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
+public class WireTransferStrategy : IWireTransferStrategy
 {
     private readonly IInvoiceRepository       _invoiceRepository;
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
@@ -19,8 +19,9 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
     private readonly IMediatorPdfService      _mediatorPdfService;
     private readonly IBrevoEmailService       _brevoEmailService;
 
-    public CoinPaymentsPaymentStrategy(IInvoiceRepository invoiceRepository,     IInventoryServiceAdapter inventoryServiceAdapter,
-        IAccountServiceAdapter                            accountServiceAdapter, IBrevoEmailService       brevoEmailService, IMediatorPdfService mediatorPdfService)
+    public WireTransferStrategy(IInvoiceRepository invoiceRepository, IInventoryServiceAdapter inventoryServiceAdapter,
+        IAccountServiceAdapter                     accountServiceAdapter, IBrevoEmailService brevoEmailService,
+        IMediatorPdfService                        mediatorPdfService)
     {
         _invoiceRepository       = invoiceRepository;
         _inventoryServiceAdapter = inventoryServiceAdapter;
@@ -28,22 +29,22 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
         _brevoEmailService       = brevoEmailService;
         _mediatorPdfService      = mediatorPdfService;
     }
-    
+
     private async Task<Dictionary<string, byte[]>> GetPdfContentFromProductIds(int[] productIds)
     {
         Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
 
         var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        var separator = Path.DirectorySeparatorChar;
+        var separator        = Path.DirectorySeparatorChar;
 
-        foreach(var id in productIds)
+        foreach (var id in productIds)
         {
             if (Enum.IsDefined(typeof(ProductPdfs), id))
             {
                 var enumValue = (ProductPdfs)id;
-                var pdfName = $"{enumValue}.pdf";
-                var path = $"{workingDirectory}{separator}Assets{separator}EcoPooles{separator}{enumValue}.pdf";
-                
+                var pdfName   = $"{enumValue}.pdf";
+                var path      = $"{workingDirectory}{separator}Assets{separator}EcoPooles{separator}{enumValue}.pdf";
+
                 var pdfContent = await File.ReadAllBytesAsync(path);
                 pdfContents[pdfName] = pdfContent;
             }
@@ -52,9 +53,10 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
                 Console.WriteLine($"The product ID {{id}} does not have an associated PDF.");
             }
         }
+
         return pdfContents;
     }
-
+    
     private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
     {
         Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
@@ -167,8 +169,8 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
             Points            = points,
             Concept           = Constants.EcoPoolProductCategory,
             Commissionable    = commissionable,
-            Bank              = Constants.CoinPayments,
-            PaymentMethod     = Constants.CoinPayments,
+            Bank              = Constants.WireTransfer,
+            PaymentMethod     = Constants.WireTransfer,
             Origin            = origin,
             Level             = 0,
             AffiliateUserName = request.AffiliateUserName,
@@ -184,8 +186,9 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
         if (spResponse is null)
             return false;
 
-        var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
-        
+        var invoicePdf =
+            await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+
         var productPdfsContents = await GetPdfContentFromProductIds(productIds);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
@@ -197,6 +200,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
         {
             allPdfData[pdfDataEntry.Key] = pdfDataEntry.Value;
         }
+
         if (result.Data.Find(dto => dto.ProductType) != null)
         {
             await _brevoEmailService.SendEmailWelcome(userInfoResponse!, spResponse);
@@ -210,9 +214,9 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
         return true;
     }
 
-    public async Task<bool> ExecuteCoursePayment(WalletRequest request)
+    public async Task<bool> ExecutePaymentCourses(WalletRequest request)
     {
-        var  debit          = 0m;
+        var  debit          = 0;
         var  points         = 0m;
         var  commissionable = 0m;
         byte origin         = 0;
@@ -240,7 +244,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
         {
             var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
             var tax     = item.Tax;
-            debit          += (item.SalePrice * product!.Count) * (1 + (tax / 100));
+            debit          += (int)((item.SalePrice * product!.Count) * (1 + (tax / 100)));
             points         += item.BinaryPoints * product.Count;
             commissionable += item.CommissionableValue * product.Count;
             if (item.CategoryId == 2)
@@ -289,8 +293,8 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
             Points            = points,
             Concept           = Constants.EcoPoolProductCategory,
             Commissionable    = commissionable,
-            Bank              = Constants.CoinPayments,
-            PaymentMethod     = Constants.CoinPayments,
+            Bank              = Constants.WireTransfer,
+            PaymentMethod     = Constants.WireTransfer,
             Origin            = origin,
             Level             = 0,
             AffiliateUserName = request.AffiliateUserName,
@@ -300,7 +304,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
         };
-        
+
         var hasCourse  = await _invoiceRepository.GetInvoicesForTradingAcademyPurchases(request.AffiliateId);
         var spResponse = await _invoiceRepository.HandleDebitTransactionForCourse(debitTransactionRequest);
         

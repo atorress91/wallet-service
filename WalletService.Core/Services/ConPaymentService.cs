@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Globalization;
+using Microsoft.IdentityModel.Tokens;
 using WalletService.Core.Factory;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -36,25 +37,27 @@ public class ConPaymentService : BaseService, IConPaymentService
     private readonly IWalletRepository                 _walletRepository;
     private readonly IBrevoEmailService                _brevoEmailService;
     private readonly IWalletRequestRepository          _walletRequestRepository;
-    private readonly IWalletWithDrawalRepository       _walletWithDrawalRepository;
+    private readonly IInventoryServiceAdapter          _inventoryServiceAdapter;
+
 
     public ConPaymentService(
-        IMapper      mapper, IOptions<ApplicationConfiguration> appSettings, 
-        IPaymentStrategyFactory paymentStrategyFactory,
-        ICoinPaymentTransactionRepository coinPaymentTransactionRepository, 
-        IInvoiceRepository invoiceRepository, 
-        ILogger<ConPaymentService> logger, 
-        IAccountServiceAdapter  accountServiceAdapter, 
+        IMapper                           mapper, IOptions<ApplicationConfiguration> appSettings,
+        IPaymentStrategyFactory           paymentStrategyFactory,
+        ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
+        IInvoiceRepository                invoiceRepository,
+        ILogger<ConPaymentService>        logger,
+        IAccountServiceAdapter            accountServiceAdapter,
         IWalletRepository                 walletRepository,
         IBrevoEmailService                brevoEmailService,
-        IWalletRequestRepository walletRequestRepository,
-        IWalletWithDrawalRepository walletWithDrawalRepository
-        ) : base(mapper)
+        IWalletRequestRepository          walletRequestRepository,
+        IInventoryServiceAdapter          inventoryServiceAdapter
+    ) : base(mapper)
     {
-        _paymentStrategyFactory           = paymentStrategyFactory;
-        _invoiceRepository                = invoiceRepository;
-        _appSettings                      = appSettings.Value;
-        _conPaymentsApi                   = new ConPaymentsApi.ConPaymentsApi(_appSettings.ConPayments!.Secret, _appSettings.ConPayments.Key);
+        _paymentStrategyFactory = paymentStrategyFactory;
+        _invoiceRepository      = invoiceRepository;
+        _appSettings            = appSettings.Value;
+        _conPaymentsApi =
+            new ConPaymentsApi.ConPaymentsApi(_appSettings.ConPayments!.Secret, _appSettings.ConPayments.Key);
         _merchantId                       = _appSettings.ConPayments.MerchantId;
         _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
         _logger                           = logger;
@@ -62,13 +65,13 @@ public class ConPaymentService : BaseService, IConPaymentService
         _walletRepository                 = walletRepository;
         _brevoEmailService                = brevoEmailService;
         _walletRequestRepository          = walletRequestRepository;
-        _walletWithDrawalRepository       = walletWithDrawalRepository;
+        _inventoryServiceAdapter          = inventoryServiceAdapter;
     }
 
     public async Task<GetPayByNameProfileResponse> GetPayByNameProfile(string nameTag)
     {
-		_logger.LogInformation($"[ConPaymentService] | GetPayByNameProfile | Start | nameTag: {nameTag}");
-		SortedList<string, string> parms = new SortedList<string, string>
+        _logger.LogInformation($"[ConPaymentService] | GetPayByNameProfile | Start | nameTag: {nameTag}");
+        SortedList<string, string> parms = new SortedList<string, string>
         {
             { "pbntag", nameTag }
         };
@@ -77,14 +80,14 @@ public class ConPaymentService : BaseService, IConPaymentService
 
         _logger.LogInformation($"[ConPaymentService] | GetPayByNameProfile | Response: {restResponse.ToJsonString()}");
 
-		if (restResponse.IsSuccessful)
+        if (restResponse.IsSuccessful)
         {
             var result = JsonConvert.DeserializeObject<GetPayByNameProfileResponse>(restResponse.Content!)!;
             return result;
         }
         else
         {
-			throw new Exception($"Error calling API: {restResponse.StatusDescription}");
+            throw new Exception($"Error calling API: {restResponse.StatusDescription}");
         }
     }
 
@@ -127,19 +130,19 @@ public class ConPaymentService : BaseService, IConPaymentService
         {
             throw new Exception($"Error calling API: {restResponse.StatusDescription}");
         }
-
     }
 
     public async Task<CreateConPaymentsTransactionResponse?> CreatePayment(ConPaymentRequest request)
     {
-		_logger.LogInformation($"[ConPaymentService] | CreatePayment | Start | request: {request.ToJsonString()}");
-		SetRequestDefaults(request);
+        _logger.LogInformation($"[ConPaymentService] | CreatePayment | Start | request: {request.ToJsonString()}");
+        SetRequestDefaults(request);
         SortedList<string, string> parms = ConfigureParms(request);
 
         IRestResponse restResponse = await CallApiAsync("create_transaction", parms);
-		_logger.LogInformation($"[ConPaymentService] | CreatePayment | Response Api | response: {restResponse.ToJsonString()}");
+        _logger.LogInformation(
+            $"[ConPaymentService] | CreatePayment | Response Api | response: {restResponse.ToJsonString()}");
 
-		if (!restResponse.IsSuccessful)
+        if (!restResponse.IsSuccessful)
         {
             throw new Exception($"Error calling API: {restResponse.StatusDescription}");
         }
@@ -188,7 +191,8 @@ public class ConPaymentService : BaseService, IConPaymentService
         return await _conPaymentsApi.CallApi(endpoint, parms);
     }
 
-    private async Task<CreateConPaymentsTransactionResponse> HandleSuccessfulResponse(IRestResponse restResponse, ConPaymentRequest request)
+    private async Task<CreateConPaymentsTransactionResponse> HandleSuccessfulResponse(IRestResponse restResponse,
+        ConPaymentRequest                                                                           request)
     {
         var result = JsonConvert.DeserializeObject<CreateConPaymentsTransactionResponse>(restResponse.Content!);
 
@@ -238,17 +242,20 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     public async Task<string> ProcessIpnAsync(IpnRequest ipnRequest, IHeaderDictionary headers)
     {
-		_logger.LogInformation($"[ConPaymentService] | ProcessIpnAsync | IpnRequest: {ipnRequest.ToJsonString()} | headers: {headers.ToJsonString()}");
-		if (!IsRequestValid(ipnRequest, headers))
+        _logger.LogInformation(
+            $"[ConPaymentService] | ProcessIpnAsync | IpnRequest: {ipnRequest.ToJsonString()} | headers: {headers.ToJsonString()}");
+        if (!IsRequestValid(ipnRequest, headers))
             return "Invalid IPN Request";
 
-        var transactionResult = await _coinPaymentTransactionRepository.GetCoinPaymentTransactionByIdTransaction(ipnRequest.txn_id);
-		if (transactionResult is null)
+        var transactionResult =
+            await _coinPaymentTransactionRepository.GetCoinPaymentTransactionByIdTransaction(ipnRequest.txn_id);
+        if (transactionResult is null)
             return "Transaction not found";
 
-		_logger.LogInformation($"[ConPaymentService] | ProcessIpnAsync | transactionResult: {transactionResult.ToJsonString()}");
+        _logger.LogInformation(
+            $"[ConPaymentService] | ProcessIpnAsync | transactionResult: {transactionResult.ToJsonString()}");
 
-		if (transactionResult.Status == 100)
+        if (transactionResult.Status == 100)
             return "Transaction cannot be updated";
 
         transactionResult.Status         = ipnRequest.status;
@@ -256,54 +263,98 @@ public class ConPaymentService : BaseService, IConPaymentService
 
         if (ipnRequest.status == -1)
         {
-            await HandleCancelledTransaction(transactionResult, ipnRequest, transactionResult.Products);
+            await HandleCancelledTransaction(transactionResult, ipnRequest, transactionResult.Products!);
             return "Transaction is delete";
         }
+
         if (!transactionResult.Acredited)
         {
             await HandlePaymentTransaction(transactionResult, ipnRequest);
         }
-        if(ipnRequest.status == 100)
+
+        if (ipnRequest.status == 100)
         {
-            await GrantWelcomeBonus(transactionResult.AffiliateId, transactionResult.Products);
+            await GrantWelcomeBonus(transactionResult.AffiliateId, transactionResult.Products!);
         }
 
         await _coinPaymentTransactionRepository.UpdateCoinPaymentTransactionAsync(transactionResult);
         return "IPN OK";
     }
 
-    private async Task HandleCancelledTransaction(PaymentTransaction transactionResult, IpnRequest ipnRequest, string products)
+    private async Task HandleCancelledTransaction(PaymentTransaction transactionResult, IpnRequest ipnRequest,
+        string                                                       products)
     {
-		_logger.LogInformation($"[ConPaymentService] | HandleCancelledTransaction | transactionResult: {transactionResult.ToJsonString()}");
-		await _coinPaymentTransactionRepository.UpdateCoinPaymentTransactionAsync(transactionResult);
+        _logger.LogInformation(
+            $"[ConPaymentService] | HandleCancelledTransaction | transactionResult: {transactionResult.ToJsonString()}");
+        await _coinPaymentTransactionRepository.UpdateCoinPaymentTransactionAsync(transactionResult);
 
         await RevertUnconfirmedOrUnpaidTransactions(ipnRequest.txn_id, products);
     }
 
     private async Task HandlePaymentTransaction(PaymentTransaction transactionResult, IpnRequest ipnRequest)
     {
-		_logger.LogInformation($"[ConPaymentService] | HandlePaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
+        _logger.LogInformation(
+            $"[ConPaymentService] | HandlePaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
         var walletRequest = BuildWalletRequest(ipnRequest);
 
         var products = JsonConvert.DeserializeObject<List<ProductRequest>>(transactionResult.Products!);
         if (products is null) return;
 
-        var isMembership = products.Any(p => p.ProductId == 1);
+        _logger.LogInformation($"[ConPaymentService] | HandlePaymentTransaction | products: {products.ToJsonString()}");
 
-		_logger.LogInformation($"[ConPaymentService] | HandlePaymentTransaction | products: {products.ToJsonString()}");
+        var isExists    = await _invoiceRepository.InvoiceExistsByReceiptNumber(transactionResult.IdTransaction!);
+        var productType = await GetProductType(products);
 
-        var isExists = await _invoiceRepository.InvoiceExistsByReceiptNumber(transactionResult.IdTransaction!);
-
-		if (!isExists && isMembership && (ipnRequest.status == 1 || ipnRequest.status == 100))
+        if (!isExists && (ipnRequest.status == 1 || ipnRequest.status == 100))
         {
-			transactionResult.Acredited = true;
-			await ExecuteMembershipPayment(walletRequest, products);
+            transactionResult.Acredited = true;
+
+            switch (productType)
+            {
+                case ProductType.Membership:
+                    await ExecuteMembershipPayment(walletRequest, products);
+                    break;
+                case ProductType.EcoPool:
+                    await ExecuteEcoPoolPayment(walletRequest, products);
+                    break;
+                case ProductType.Course:
+                    await ExecuteCoursePayment(walletRequest, products);
+                    break;
+            }
+        }
+    }
+
+    private async Task<ProductType> GetProductType(List<ProductRequest> request)
+    {
+        if (request == null || !request.Any())
+        {
+            throw new ArgumentException("The request cannot be empty.");
         }
 
-        if (!isExists && !isMembership && (ipnRequest.status == 1 || ipnRequest.status == 100))
+        var productIds   = request.Select(p => p.ProductId).ToArray();
+        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds);
+
+        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content!);
+
+        int firstProductCategory;
+
+        if (!result!.Data.IsNullOrEmpty())
         {
-			transactionResult.Acredited = true;
-			await ExecutePayment(walletRequest, products);
+            firstProductCategory = result.Data.First().PaymentGroup;
+        }
+        else
+        {
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(productIds.First());
+            var productResult    = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
+            firstProductCategory = productResult!.Data.PaymentGroup;
+        }
+
+        switch (firstProductCategory)
+        {
+            case 1: return ProductType.Membership;
+            case 2: return ProductType.EcoPool;
+            default:
+                return ProductType.Course;
         }
     }
 
@@ -342,34 +393,47 @@ public class ConPaymentService : BaseService, IConPaymentService
         };
     }
 
-    private async Task ExecutePayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
+    private async Task ExecuteEcoPoolPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
     {
-        var paymentStrategy = _paymentStrategyFactory.GetStrategy(PaymentType.CoinPayments);
+        var paymentStrategy = _paymentStrategyFactory.GetCoinPaymentStrategy();
 
-		walletRequest.ProductsList = products.Select(product => new ProductsRequests
-		{
-			IdProduct = product.ProductId,
-			Count = product.Quantity
-		}).ToList();
+        walletRequest.ProductsList = products.Select(product => new ProductsRequests
+        {
+            IdProduct = product.ProductId,
+            Count     = product.Quantity
+        }).ToList();
 
-		await paymentStrategy.ExecutePayment(walletRequest);
-	}
-    
+        await paymentStrategy.ExecuteEcoPoolPayment(walletRequest);
+    }
+
+    private async Task ExecuteCoursePayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
+    {
+        var paymentStrategy = _paymentStrategyFactory.GetCoinPaymentStrategy();
+
+        walletRequest.ProductsList = products.Select(product => new ProductsRequests
+        {
+            IdProduct = product.ProductId,
+            Count     = product.Quantity
+        }).ToList();
+
+        await paymentStrategy.ExecuteCoursePayment(walletRequest);
+    }
+
     private async Task GrantWelcomeBonus(int userId, string productsInfo)
     {
         var products = JsonConvert.DeserializeObject<List<ProductRequest>>(productsInfo);
         if (products is null) return;
 
         var isMembership = products.Any(p => p.ProductId == 1);
-        if(!isMembership)
+        if (!isMembership)
             return;
-        
+
         var userInfo = await _accountServiceAdapter.GetUserInfo(userId);
-        if(userInfo is null)
+        if (userInfo is null)
             return;
-        
+
         var affiliateBonusWinner = await _accountServiceAdapter.GetUserInfo(userInfo.Father);
-        
+
         var creditTransactionForWinningBonus = new CreditTransactionRequest
         {
             AffiliateId       = affiliateBonusWinner!.Id,
@@ -390,14 +454,14 @@ public class ConPaymentService : BaseService, IConPaymentService
     }
 
     private async Task ExecuteMembershipPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
-    { 
-        var                   paymentStrategy = _paymentStrategyFactory.GetMembershipStrategy();
+    {
+        var paymentStrategy = _paymentStrategyFactory.GetMembershipStrategy();
 
-		walletRequest.ProductsList = products.Select(product => new ProductsRequests
+        walletRequest.ProductsList = products.Select(product => new ProductsRequests
         {
-			IdProduct = product.ProductId,
-			Count = product.Quantity
-		}).ToList();
+            IdProduct = product.ProductId,
+            Count     = product.Quantity
+        }).ToList();
 
         await paymentStrategy.ExecuteMembershipPayment(walletRequest);
     }
@@ -416,21 +480,24 @@ public class ConPaymentService : BaseService, IConPaymentService
             InvoiceNumberValue = invoicesResult.Id
         };
 
-		var products = JsonConvert.DeserializeObject<List<ProductRequest>>(productsInfo);
-		if (products is null) return false;
+        var products = JsonConvert.DeserializeObject<List<ProductRequest>>(productsInfo);
+        if (products is null) return false;
 
-		bool isMembership = products.Any(p => p.ProductId == 1);
-		_logger.LogInformation($"[ConPaymentService] | RevertUnconfirmedOrUnpaidTransactions | idTransaction: {idTransaction} | products: {products.ToJsonString()}");
+        bool isMembership = products.Any(p => p.ProductId == 1);
+        _logger.LogInformation(
+            $"[ConPaymentService] | RevertUnconfirmedOrUnpaidTransactions | idTransaction: {idTransaction} | products: {products.ToJsonString()}");
 
         if (isMembership)
-			await _accountServiceAdapter.RevertActivationUser(invoicesResult.AffiliateId);
+            await _accountServiceAdapter.RevertActivationUser(invoicesResult.AffiliateId);
 
-		await _invoiceRepository.RevertCoinPaymentTransactions(new List<InvoiceNumber> { invoiceNumber });
-		return true;
+        await _invoiceRepository.RevertCoinPaymentTransactions(new List<InvoiceNumber> { invoiceNumber });
+        return true;
     }
+
     public async Task<CoinPaymentWithdrawalResponse?> CreateMassWithdrawal(WalletsRequests[] requests)
     {
-        _logger.LogInformation($"[CoinPaymentService] | CreateMassWithdrawal | Start | requests: {requests.ToJsonString()}");
+        _logger.LogInformation(
+            $"[CoinPaymentService] | CreateMassWithdrawal | Start | requests: {requests.ToJsonString()}");
 
         var withdrawals = await GetAddressesByAffiliateId(requests);
 
@@ -440,12 +507,12 @@ public class ConPaymentService : BaseService, IConPaymentService
         };
 
         int count = 1;
-        var tax = Constants.CoinPaymentTax;
+        var tax   = Constants.CoinPaymentTax;
 
         foreach (var withdrawal in withdrawals)
         {
-            decimal amountAfterTax = withdrawal.Amount - tax; 
-            string prefix = $"wd[wd{count}]";
+            decimal amountAfterTax = withdrawal.Amount - tax;
+            string  prefix         = $"wd[wd{count}]";
             parms.Add($"{prefix}[amount]", amountAfterTax.ToString(CultureInfo.InvariantCulture));
             parms.Add($"{prefix}[address]", withdrawal.Address);
             parms.Add($"{prefix}[currency]", withdrawal.Currency);
@@ -453,7 +520,8 @@ public class ConPaymentService : BaseService, IConPaymentService
         }
 
         var restResponse = await CallApiAsync("create_mass_withdrawal", parms);
-        _logger.LogInformation($"[CoinPaymentService] | CreateMassWithdrawal | Response Api | response: {restResponse.ToJsonString()}");
+        _logger.LogInformation(
+            $"[CoinPaymentService] | CreateMassWithdrawal | Response Api | response: {restResponse.ToJsonString()}");
 
         if (!restResponse.IsSuccessful)
         {
@@ -465,57 +533,37 @@ public class ConPaymentService : BaseService, IConPaymentService
         if (withdrawalResults?.Result != null)
         {
             var successfulRequests = new List<WalletsRequests>();
-        
+
             int index = 0;
             foreach (var key in withdrawalResults.Result.Keys)
             {
                 var withdrawalInfo = withdrawalResults.Result[key];
-            
+
                 if (withdrawalInfo.Error == "ok")
                 {
                     successfulRequests.Add(requests[index]);
                 }
+
                 index++;
             }
-            
-            foreach (var successfulRequest in successfulRequests)
-            {
-                var relatedWithdrawalInfo = withdrawalResults?.Result?.FirstOrDefault(x => x.Key == successfulRequest.Id.ToString()).Value;
-    
-                var successfulWithdrawal = new WalletsWithdrawals
-                {
-                    AffiliateId = successfulRequest.AffiliateId,
-                    AffiliateUserName = successfulRequest.AdminUserName!, 
-                    Observation = successfulRequest.Concept,
-                    AdminObservation = relatedWithdrawalInfo?.Id, 
-                    Amount = successfulRequest.Amount, 
-                    Date = DateTime.Now, 
-                    ResponseDate = DateTime.Now, 
-                    RetentionPercentage = 0, 
-                    Status = true, 
-                    IsProcessed = true,
-                    CreatedAt = DateTime.Now
-                };
 
-                await _walletWithDrawalRepository.CreateWalletWithdrawalAsync(successfulWithdrawal);
-            }
-            
             await CreateDebitTransaction(successfulRequests.ToArray());
             await UpdateWithdrawals(successfulRequests.ToArray());
         }
 
         return withdrawalResults;
     }
+
     private async Task<List<CoinPaymentMassWithdrawalRequest>> GetAddressesByAffiliateId(WalletsRequests[] requests)
     {
         List<CoinPaymentMassWithdrawalRequest> withdrawals = new List<CoinPaymentMassWithdrawalRequest>();
-    
+
         foreach (var request in requests)
         {
             var response = await _accountServiceAdapter.GetAffiliateBtcByAffiliateId(request.AffiliateId);
 
             if (response.Content is null)
-                continue; 
+                continue;
 
             var userInfo = JsonSerializer.Deserialize<AffiliateBtcResponse>(response.Content);
 
@@ -523,35 +571,37 @@ public class ConPaymentService : BaseService, IConPaymentService
                 continue;
 
             var btcAddress = userInfo.Data.Address;
-    
+
             if (string.IsNullOrEmpty(btcAddress))
-                continue;  
+                continue;
 
             var withdrawal = new CoinPaymentMassWithdrawalRequest
             {
-                Amount = request.Amount,
-                Address = btcAddress,
+                Amount   = request.Amount,
+                Address  = btcAddress,
                 Currency = Constants.ConPaymentCurrency
             };
 
             withdrawals.Add(withdrawal);
         }
+
         return withdrawals;
     }
+
     private async Task<bool> CreateDebitTransaction(WalletsRequests[] requests)
     {
         if (requests.Length is 0)
             return false;
-        
+
         List<Wallets> walletsList = new List<Wallets>();
-        var today = DateTime.Now;
-        
+        var           today       = DateTime.Now;
+
         foreach (var request in requests)
         {
             var walletEntry = new Wallets
             {
-                AffiliateId       = request.AffiliateId, 
-                AffiliateUserName = request.AdminUserName,    
+                AffiliateId       = request.AffiliateId,
+                AffiliateUserName = request.AdminUserName,
                 AdminUserName     = Constants.AdminEcosystemUserName,
                 UserId            = Constants.AdminUserId,
                 Credit            = Constants.None,
@@ -565,7 +615,7 @@ public class ConPaymentService : BaseService, IConPaymentService
                 Compression       = false,
                 Detail            = null,
                 CreatedAt         = today,
-                UpdatedAt         = today, 
+                UpdatedAt         = today,
                 DeletedAt         = null
             };
 
@@ -573,25 +623,26 @@ public class ConPaymentService : BaseService, IConPaymentService
         }
 
         var result = await _walletRepository.BulkAdministrativeDebitTransaction(walletsList.ToArray());
-        
+
         if (!result)
             return false;
-        
+
         return result;
     }
+
     private async Task UpdateWithdrawals(WalletsRequests[] requests)
     {
         List<WalletsRequests> withdrawalList = requests.ToList();
 
         DateTime today = DateTime.Now;
-    
+
         Parallel.ForEach(withdrawalList, item =>
         {
             item.AttentionDate = today;
             item.UpdatedAt     = today;
             item.Status        = WalletRequestStatus.approved.ToByte();
         });
-        
+
         await _walletRequestRepository.UpdateBulkWalletRequestsAsync(withdrawalList);
     }
 }

@@ -21,7 +21,7 @@ public class CoinPaymentTransactionRepository : BaseRepository, ICoinPaymentTran
     public Task<PaymentTransaction?> GetCoinPaymentTransactionByIdTransaction(string idTransaction)
         => Context.PaymentTransaction.FirstOrDefaultAsync(e => e.IdTransaction == idTransaction);
 
-    public async Task<PaymentTransaction> CreateCoinPaymentTransaction(PaymentTransaction request)
+    public async Task<PaymentTransaction?> CreateCoinPaymentTransaction(PaymentTransaction request)
     {
         var today = DateTime.Now;
         request.CreatedAt = today;
@@ -33,7 +33,7 @@ public class CoinPaymentTransactionRepository : BaseRepository, ICoinPaymentTran
         return request;
     }
 
-    public async Task<PaymentTransaction> UpdateCoinPaymentTransactionAsync(PaymentTransaction request)
+    public async Task<PaymentTransaction?> UpdateCoinPaymentTransactionAsync(PaymentTransaction request)
     {
         var today = DateTime.Now;
         request.UpdatedAt = today;
@@ -49,4 +49,11 @@ public class CoinPaymentTransactionRepository : BaseRepository, ICoinPaymentTran
             .Where(e => e.Status != 100 && DateTime.Now > e.CreatedAt.AddHours(3)).AsNoTracking()
             .ToListAsync();
     }
+
+    public Task<List<PaymentTransaction>> GetAllWireTransfer()
+    => Context.PaymentTransaction.Where(x=>x.PaymentMethod == "wire_transfer").AsNoTracking().ToListAsync();
+    
+    public Task<PaymentTransaction?>GetPaymentTransactionById(int id)
+    => Context.PaymentTransaction.FirstOrDefaultAsync(x=>x.Id == id);
+    
 }

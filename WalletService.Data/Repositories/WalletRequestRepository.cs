@@ -45,7 +45,7 @@ public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
     public Task<WalletsRequests?> GetWalletRequestsByInvoiceNumber(int id)
         => Context.WalletsRequests.FirstOrDefaultAsync(x => x.InvoiceNumber == id);
 
-    public async Task<WalletsRequests> CreateWalletRequestAsync(WalletsRequests request)
+    public async Task<WalletsRequests?> CreateWalletRequestAsync(WalletsRequests request)
     {
         var today = DateTime.Now;
         request.CreatedAt = today;

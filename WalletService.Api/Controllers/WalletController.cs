@@ -164,5 +164,21 @@ public class WalletController : BaseController
         return Ok(Success(result));
     }
 
+    [HttpPost("createCreditAdmin")]
+    public async Task<IActionResult> CreateCreditAdmin(CreditTransactionAdminRequest request)
+    {
+        var result = await _walletService.CreateBalanceAdmin(request);
+
+        return  Ok(result);
+    }
+    
+    [HttpPost("payWithMyBalanceCourses")]
+    public async Task<IActionResult> PayWithMyBalanceCourses([FromBody] WalletRequest request)
+    {
+        var response = await _walletService.CoursePaymentHandler(request);
+
+        return response is false ? Ok(Fail("The payment could not be processed")) : Ok(Success(response));
+    }
+
     #endregion
 }

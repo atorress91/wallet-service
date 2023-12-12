@@ -20,7 +20,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
 {
     private readonly ApplicationConfiguration _appSettings;
 
-    public WalletRepository(IOptions<ApplicationConfiguration> appSettings, WalletServiceDbContext context) : base(context)
+    public WalletRepository(IOptions<ApplicationConfiguration> appSettings, WalletServiceDbContext context) :
+        base(context)
         => _appSettings = appSettings.Value;
 
     public Task<List<Wallets>> GetWalletByAffiliateId(int affiliateId)
@@ -40,7 +41,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         var list = await Context.Wallets
             .Where(x => x.Status == true)
             .GroupBy(x => x.AffiliateId)
-            .Select(g => new AffiliateBalance 
+            .Select(g => new AffiliateBalance
             {
                 AffiliateId = g.Key,
                 AffiliateUserName = g.FirstOrDefault()!.AffiliateUserName,
@@ -69,7 +70,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
             .SumAsync();
 
         var totalDebits = await Context.Wallets
-            .Where(x => x.AffiliateId == affiliateId && x.ConceptType == WalletConceptType.purchase_with_reverse_balance.ToString())
+            .Where(x => x.AffiliateId == affiliateId &&
+                        x.ConceptType == WalletConceptType.purchase_with_reverse_balance.ToString())
             .Select(x => x.Debit)
             .SumAsync();
 
@@ -108,37 +110,10 @@ public class WalletRepository : BaseRepository, IWalletRepository
             CreateDebitListParameters(request, invoicesDetails, cmd);
 
             await sql.OpenAsync();
-            await using var oReader    = await cmd.ExecuteReaderAsync();
-            var             dd         = oReader.ToDynamicList();
-            var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
-
-
-            await sql.CloseAsync();
-
-            return response;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }    
-    
-    public async Task<InvoicesSpResponse?> DebitEcoPoolTransactionSP(DebitTransactionRequest request)
-    {
-        try
-        {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
-            await using var cmd = new SqlCommand(Constants.DebitEcoPoolTransationSP, sql);
-            
-            CreateDebitEcoPoolListParameters(request, cmd);
-
-            await sql.OpenAsync();
-            await using var oReader    = await cmd.ExecuteReaderAsync();
-            var             dd         = oReader.ToDynamicList();
-            var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+            await using var oReader = await cmd.ExecuteReaderAsync();
+            var dd = oReader.ToDynamicList();
+            var jsonString = dd.FirstOrDefault()!.ToJsonString();
+            var response = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
 
 
             await sql.CloseAsync();
@@ -151,6 +126,63 @@ public class WalletRepository : BaseRepository, IWalletRepository
             throw;
         }
     }
+
+    public async Task<InvoicesSpResponse?> CoursesDebitTransaction(DebitTransactionRequest request)
+    {
+        try
+        {
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var cmd = new SqlCommand(Constants.CoursesDebitTransactionSP, sql);
+
+            var invoicesDetails = ConvertToDataTable(request.invoices);
+
+            CreateDebitListParameters(request, invoicesDetails, cmd);
+
+            await sql.OpenAsync();
+            await using var oReader = await cmd.ExecuteReaderAsync();
+            var dd = oReader.ToDynamicList();
+            var jsonString = dd.FirstOrDefault()!.ToJsonString();
+            var response = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+
+
+            await sql.CloseAsync();
+
+            return response;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task<InvoicesSpResponse?> DebitEcoPoolTransactionSP(DebitTransactionRequest request)
+    {
+        try
+        {
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var cmd = new SqlCommand(Constants.DebitEcoPoolTransationSP, sql);
+
+            CreateDebitEcoPoolListParameters(request, cmd);
+
+            await sql.OpenAsync();
+            await using var oReader = await cmd.ExecuteReaderAsync();
+            var dd = oReader.ToDynamicList();
+            var jsonString = dd.FirstOrDefault()!.ToJsonString();
+            var response = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+
+
+            await sql.CloseAsync();
+
+            return response;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
     public async Task<InvoicesSpResponse?> AdminDebitTransaction(DebitTransactionRequest request)
     {
         try
@@ -163,10 +195,10 @@ public class WalletRepository : BaseRepository, IWalletRepository
             CreateDebitListParameters(request, invoicesDetails, cmd);
 
             await sql.OpenAsync();
-            await using var oReader    = await cmd.ExecuteReaderAsync();
-            var             dd         = oReader.ToDynamicList();
-            var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+            await using var oReader = await cmd.ExecuteReaderAsync();
+            var dd = oReader.ToDynamicList();
+            var jsonString = dd.FirstOrDefault()!.ToJsonString();
+            var response = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
 
 
             await sql.CloseAsync();
@@ -179,6 +211,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             throw;
         }
     }
+
     public async Task<bool> CreditTransaction(CreditTransactionRequest request)
     {
         try
@@ -210,7 +243,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
             await using var cmd = new SqlCommand(Constants.ModelThreeRequestSP, sqlConnection);
 
-            var levelTypeDataTable   = ConvertToDataTable(request.LevelsType);
+            var levelTypeDataTable = ConvertToDataTable(request.LevelsType);
             var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
 
             CreateModelThreeParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
@@ -256,7 +289,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         }
     }
 
-        private void CreateDebitEcoPoolListParameters(DebitTransactionRequest request, SqlCommand cmd)
+    private void CreateDebitEcoPoolListParameters(DebitTransactionRequest request, SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
         cmd.Parameters.Add(new SqlParameter("@AffiliateId", SqlDbType.Int)
@@ -272,7 +305,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         cmd.Parameters.Add(new SqlParameter("@Concept", SqlDbType.VarChar)
         {
             Value = request.Concept,
-            Size  = 255
+            Size = 255
         });
 
         cmd.Parameters.Add(new SqlParameter("@Points", SqlDbType.Decimal)
@@ -287,15 +320,15 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         cmd.Parameters.Add(new SqlParameter("@Bank", SqlDbType.VarChar)
         {
-            Value      = string.IsNullOrEmpty(request.Bank) ? null : request.Bank,
+            Value = string.IsNullOrEmpty(request.Bank) ? null : request.Bank,
             IsNullable = true,
-            Size       = 250
+            Size = 250
         });
 
         cmd.Parameters.Add(new SqlParameter("@PaymentMethod", SqlDbType.VarChar)
         {
             Value = request.PaymentMethod,
-            Size  = 50
+            Size = 50
         });
 
         cmd.Parameters.Add(new SqlParameter("@Origin", SqlDbType.TinyInt)
@@ -316,20 +349,20 @@ public class WalletRepository : BaseRepository, IWalletRepository
         cmd.Parameters.Add(new SqlParameter("@AffiliateUserName", SqlDbType.VarChar)
         {
             Value = request.AffiliateUserName,
-            Size  = 50
+            Size = 50
         });
 
         cmd.Parameters.Add(new SqlParameter("@AdminUserName", SqlDbType.VarChar)
         {
             Value = request.AdminUserName,
-            Size  = 50
+            Size = 50
         });
 
         cmd.Parameters.Add(new SqlParameter("@ReceiptNumber", SqlDbType.VarChar)
         {
-            Value      = string.IsNullOrEmpty(request.ReceiptNumber) ? null : request.ReceiptNumber,
+            Value = string.IsNullOrEmpty(request.ReceiptNumber) ? null : request.ReceiptNumber,
             IsNullable = true,
-            Size       = 100
+            Size = 100
         });
 
         cmd.Parameters.Add(new SqlParameter("@Type", SqlDbType.Bit)
@@ -339,15 +372,15 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         cmd.Parameters.Add(new SqlParameter("@SecretKey", SqlDbType.VarChar)
         {
-            Value      = string.IsNullOrEmpty(request.SecretKey) ? null : request.SecretKey,
+            Value = string.IsNullOrEmpty(request.SecretKey) ? null : request.SecretKey,
             IsNullable = true,
-            Size       = 40
+            Size = 40
         });
 
         cmd.Parameters.Add(new SqlParameter("@ConceptType", SqlDbType.VarChar)
         {
             Value = request.ConceptType,
-            Size  = 50
+            Size = 50
         });
     }
 
@@ -367,7 +400,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         cmd.Parameters.Add(new SqlParameter("@Concept", SqlDbType.VarChar)
         {
             Value = request.Concept,
-            Size  = 255
+            Size = 255
         });
 
         cmd.Parameters.Add(new SqlParameter("@Points", SqlDbType.Decimal)
@@ -382,15 +415,15 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         cmd.Parameters.Add(new SqlParameter("@Bank", SqlDbType.VarChar)
         {
-            Value      = string.IsNullOrEmpty(request.Bank) ? null : request.Bank,
+            Value = string.IsNullOrEmpty(request.Bank) ? null : request.Bank,
             IsNullable = true,
-            Size       = 250
+            Size = 250
         });
 
         cmd.Parameters.Add(new SqlParameter("@PaymentMethod", SqlDbType.VarChar)
         {
             Value = request.PaymentMethod,
-            Size  = 50
+            Size = 50
         });
 
         cmd.Parameters.Add(new SqlParameter("@Origin", SqlDbType.TinyInt)
@@ -411,20 +444,20 @@ public class WalletRepository : BaseRepository, IWalletRepository
         cmd.Parameters.Add(new SqlParameter("@AffiliateUserName", SqlDbType.VarChar)
         {
             Value = request.AffiliateUserName,
-            Size  = 50
+            Size = 50
         });
 
         cmd.Parameters.Add(new SqlParameter("@AdminUserName", SqlDbType.VarChar)
         {
             Value = request.AdminUserName,
-            Size  = 50
+            Size = 50
         });
 
         cmd.Parameters.Add(new SqlParameter("@ReceiptNumber", SqlDbType.VarChar)
         {
-            Value      = string.IsNullOrEmpty(request.ReceiptNumber) ? null : request.ReceiptNumber,
+            Value = string.IsNullOrEmpty(request.ReceiptNumber) ? null : request.ReceiptNumber,
             IsNullable = true,
-            Size       = 100
+            Size = 100
         });
 
         cmd.Parameters.Add(new SqlParameter("@Type", SqlDbType.Bit)
@@ -434,20 +467,20 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         cmd.Parameters.Add(new SqlParameter("@SecretKey", SqlDbType.VarChar)
         {
-            Value      = string.IsNullOrEmpty(request.SecretKey) ? null : request.SecretKey,
+            Value = string.IsNullOrEmpty(request.SecretKey) ? null : request.SecretKey,
             IsNullable = true,
-            Size       = 40
+            Size = 40
         });
 
         cmd.Parameters.Add(new SqlParameter("@ConceptType", SqlDbType.VarChar)
         {
             Value = request.ConceptType,
-            Size  = 50
+            Size = 50
         });
 
         cmd.Parameters.Add(new SqlParameter("@InvoicesDetails", SqlDbType.Structured)
         {
-            Value    = dataTableDetails,
+            Value = dataTableDetails,
             TypeName = "dbo.InvoicesDetailsType"
         });
     }
@@ -493,13 +526,13 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         cmd.Parameters.Add(new SqlParameter("@Levels", SqlDbType.Structured)
         {
-            Value    = levels,
+            Value = levels,
             TypeName = "dbo.LevelsType"
         });
 
         cmd.Parameters.Add(new SqlParameter("@Pools", SqlDbType.Structured)
         {
-            Value    = ecoPools,
+            Value = ecoPools,
             TypeName = "dbo.EcoPoolType"
         });
     }
@@ -550,7 +583,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         cmd.Parameters.Add(new SqlParameter("@Concept", SqlDbType.VarChar)
         {
             Value = request.Concept,
-            Size  = 255
+            Size = 255
         });
 
         cmd.Parameters.Add(new SqlParameter("@Credit", SqlDbType.Decimal)
@@ -561,19 +594,19 @@ public class WalletRepository : BaseRepository, IWalletRepository
         cmd.Parameters.Add(new SqlParameter("@AffiliateUserName", SqlDbType.VarChar)
         {
             Value = request.AffiliateUserName,
-            Size  = 50
+            Size = 50
         });
 
         cmd.Parameters.Add(new SqlParameter("@AdminUserName", SqlDbType.VarChar)
         {
             Value = request.AdminUserName,
-            Size  = 50
+            Size = 50
         });
 
         cmd.Parameters.Add(new SqlParameter("@ConceptType", SqlDbType.VarChar)
         {
             Value = request.ConceptType,
-            Size  = 50
+            Size = 50
         });
     }
 
@@ -590,7 +623,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
     public Task<List<ModelFourStatistics>> GetUserModelFour(int[] affiliateIds)
     {
-        return Context.ModelFourStatistics.AsNoTracking().Where(x 
+        return Context.ModelFourStatistics.AsNoTracking().Where(x
             => affiliateIds.Contains(x.AffiliateId)).ToListAsync();
     }
 
@@ -632,7 +665,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
     public Task<List<InvoicePacks>> GetDebitsEcoPoolWithinMonth(DateTime from, DateTime to)
     {
         return Context.InvoicePacks.Include(i => i.Invoice).AsNoTracking()
-            .Where(x => x.Status == "1" && x.Invoice.Status == true && x.Invoice.CancellationDate == null && x.StartDate >= from && x.StartDate <= to)
+            .Where(x => x.Status == "1" && x.Invoice.Status == true && x.Invoice.CancellationDate == null &&
+                        x.StartDate >= from && x.StartDate <= to)
             .ToListAsync();
     }
 
@@ -653,11 +687,11 @@ public class WalletRepository : BaseRepository, IWalletRepository
     public async Task<bool> CreateTransferBalance(Wallets debitTransaction, Wallets creditTransaction)
     {
         await using var transaction = await Context.Database.BeginTransactionAsync();
-        var             today       = DateTime.Now;
+        var today = DateTime.Now;
         try
         {
-            debitTransaction.CreatedAt  = today;
-            debitTransaction.UpdatedAt  = today;
+            debitTransaction.CreatedAt = today;
+            debitTransaction.UpdatedAt = today;
             creditTransaction.CreatedAt = today;
             creditTransaction.UpdatedAt = today;
             Context.Wallets.Add(debitTransaction);
@@ -694,7 +728,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
     public async Task<bool> IsActivePoolGreaterThanOrEqualTo25(int affiliateId)
     {
         var result = await Context.InvoicePacks.Include(x => x.Invoice)
-            .Where(x => x.Status == "1" && x.Invoice.AffiliateId == affiliateId && x.Invoice.Status == true && x.Invoice.CancellationDate == null).ToListAsync();
+            .Where(x => x.Status == "1" && x.Invoice.AffiliateId == affiliateId && x.Invoice.Status == true &&
+                        x.Invoice.CancellationDate == null).ToListAsync();
 
         if (result is { Count: 0 })
             return false;
@@ -714,10 +749,10 @@ public class WalletRepository : BaseRepository, IWalletRepository
             CreateDebitListParameters(request, invoicesDetails, cmd);
 
             await sql.OpenAsync();
-            await using var oReader    = await cmd.ExecuteReaderAsync();
-            var             dd         = oReader.ToDynamicList();
-            var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+            await using var oReader = await cmd.ExecuteReaderAsync();
+            var dd = oReader.ToDynamicList();
+            var jsonString = dd.FirstOrDefault()!.ToJsonString();
+            var response = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
 
 
             await sql.CloseAsync();
@@ -743,10 +778,10 @@ public class WalletRepository : BaseRepository, IWalletRepository
             CreateDebitListParameters(request, invoicesDetails, cmd);
 
             await sql.OpenAsync();
-            await using var oReader    = await cmd.ExecuteReaderAsync();
-            var             dd         = oReader.ToDynamicList();
-            var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+            await using var oReader = await cmd.ExecuteReaderAsync();
+            var dd = oReader.ToDynamicList();
+            var jsonString = dd.FirstOrDefault()!.ToJsonString();
+            var response = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
 
 
             await sql.CloseAsync();
@@ -762,7 +797,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
     private DataTable ConvertToWalletsDataTable(Wallets[] requests)
     {
-        var today     = DateTime.Now;
+        var today = DateTime.Now;
         var dataTable = new DataTable();
         dataTable.Columns.Add("AffiliateId", typeof(int));
         dataTable.Columns.Add("UserId", typeof(int));
@@ -792,6 +827,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         return dataTable;
     }
+
     public async Task<bool> BulkAdministrativeDebitTransaction(Wallets[] requests)
     {
         try
@@ -804,10 +840,10 @@ public class WalletRepository : BaseRepository, IWalletRepository
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.Add(new SqlParameter("@WalletsData", SqlDbType.Structured)
             {
-                Value    = walletsDataTable,
+                Value = walletsDataTable,
                 TypeName = "dbo.WalletType"
             });
-            
+
             SqlParameter successParameter = new SqlParameter("@Success", SqlDbType.Bit)
             {
                 Direction = ParameterDirection.Output
@@ -835,16 +871,16 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         var debit = new ModelFourStatistics()
         {
-            AffiliateId        = affiliateId,
-            Concept            = string.Empty,
+            AffiliateId = affiliateId,
+            Concept = string.Empty,
             AffiliateNetworkId = affiliateId,
-            DebitLeft          = debitLeft,
-            DebitRight         = debitRight,
-            CreditLeft         = creditLeft,
-            CreditRight        = creditRight,
-            Compression        = false,
-            Date               = DateTime.Now,
-            InvoiceId          = 0
+            DebitLeft = debitLeft,
+            DebitRight = debitRight,
+            CreditLeft = creditLeft,
+            CreditRight = creditRight,
+            Compression = false,
+            Date = DateTime.Now,
+            InvoiceId = 0
         };
         Context.ModelFourStatistics.Add(debit);
         return Context.SaveChangesAsync();

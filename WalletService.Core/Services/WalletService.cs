@@ -176,14 +176,30 @@ public class WalletService : BaseService, IWalletService
         }
 
         if (paymentStrategy != null)
+        {
             return await paymentStrategy.ExecutePayment(request);
-        if (balancePaymentStrategy != null)
-            return await balancePaymentStrategy.ExecutePayment(request);
-        if (membershipPaymentStrategy != null)
+        }
+        else if (balancePaymentStrategy != null)
+        {
+            return await balancePaymentStrategy.ExecuteEcoPoolPayment(request);
+        }
+        else if (membershipPaymentStrategy != null)
+        {
             return await membershipPaymentStrategy.ExecutePayment(request);
-        throw new InvalidOperationException("No valid payment strategy was determined.");
+        }
+        else
+        {
+            throw new InvalidOperationException("No valid payment strategy was determined.");
+        }
     }
+    
+    public async Task<bool> CoursePaymentHandler(WalletRequest request)
+    {
+        IBalancePaymentStrategy balancePaymentStrategy = _paymentStrategyFactory.GetBalancePaymentStrategy();
 
+        return await balancePaymentStrategy.ExecutePaymentCourses(request);
+    }
+    
     public async Task<bool> AdminPaymentHandler(WalletRequest request)
     {
         var balancePaymentStrategy = _paymentStrategyFactory.GetBalancePaymentStrategy();
@@ -272,38 +288,38 @@ public class WalletService : BaseService, IWalletService
         return confirmPurchase;
     }
 
-    public async Task<bool> TransferBalance(string encrypted)
+    public async Task<ServicesResponse> TransferBalance(string encrypted)
     {
         var data = CommonExtensions.DecryptObject<TransferBalanceRequest>(encrypted);
-
-        var today        = DateTime.Now;
-        var amount       = data.Amount;
-        var currentUser  = await _accountServiceAdapter.GetAffiliateByUserName(data.FromUserName);
-        var userInfo     = await _accountServiceAdapter.GetAffiliateByUserName(data.ToUserName);
-        var isActivePool = await _walletRepository.IsActivePoolGreaterThanOrEqualTo25(data.FromAffiliateId);
-
+        
+        var today               = DateTime.Now;
+        var amount               = data.Amount;
+        var currentUser      = await _accountServiceAdapter.GetAffiliateByUserName(data.FromUserName);
+        var userInfo         = await _accountServiceAdapter.GetAffiliateByUserName(data.ToUserName);
+        var isActivePool                 = await _walletRepository.IsActivePoolGreaterThanOrEqualTo25(data.FromAffiliateId);
+        
         if (!isActivePool)
-            return false;
+            return new ServicesResponse { Success = false, Message = "No tiene un Pool activo", Code = 400 };
 
         if (!userInfo.IsSuccessful)
-            return false;
+            return new ServicesResponse { Success = false, Message = "Error", Code = 400 };
 
         if (string.IsNullOrEmpty(userInfo.Content))
-            return false;
+            return new ServicesResponse { Success = false, Message = "Error", Code = 400 };
 
         var currentUserResult = JsonSerializer.Deserialize<UserAffiliateResponse>(currentUser.Content!);
         var result            = JsonSerializer.Deserialize<UserAffiliateResponse>(userInfo.Content!);
         var userBalance       = await GetBalanceInformationByAffiliateId(data.FromAffiliateId);
 
         if (currentUserResult?.Data?.VerificationCode != data.SecurityCode)
-            return false;
-
+            return new ServicesResponse { Success = false, Message = "El código de seguridad no coincidec.", Code = 400 };
+        
         if (amount > userBalance.AvailableBalance)
-            return false;
+            return new ServicesResponse { Success = false, Message = "El monto es mayor al saldo disponible.", Code = 400 };
 
         if (result?.Data?.Status != 1)
-            return false;
-
+            return new ServicesResponse { Success = false, Message = "El estatus del afiliado a transferir es inactivo.", Code = 400 };
+        
         var debitTransaction = new WalletTransactionRequest
         {
             Debit             = amount,
@@ -344,8 +360,11 @@ public class WalletService : BaseService, IWalletService
         var creditWallet = Mapper.Map<Wallets>(creditTransaction);
 
         var success = await _walletRepository.CreateTransferBalance(debitWallet, creditWallet);
+        
+        if(!success)
+            return new ServicesResponse { Success = false, Message = "No se pudo crear la transferencia.", Code = 400 };
 
-        return success;
+        return new ServicesResponse { Success = true, Message = "La transferencia se ha creado correctamente.", Code = 200 };
     }
 
     public async Task<bool> HandleWalletRequestRevertTransactionAsync(int option, int invoiceId)
@@ -493,7 +512,34 @@ public class WalletService : BaseService, IWalletService
 
         return result;
     }
+    public async Task<bool> CreateBalanceAdmin(CreditTransactionAdminRequest request)
+    {
+        if (request.Amount == 0)
+            return false;
 
+        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+
+        if (user is null)
+            return false;
+
+        var credit = new CreditTransactionRequest
+        {
+            AdminUserName     = Constants.AdminEcosystemUserName,
+            AffiliateId       = user.Id,
+            Concept           = Constants.AdminCredit,
+            Credit            = request.Amount,
+            AffiliateUserName = user.UserName,
+            ConceptType       = WalletConceptType.balance_transfer.ToString(),
+            UserId            = Constants.AdminUserId
+        };
+        
+        var result = await _walletRepository.CreditTransaction(credit);
+        if (!result)
+            return false;
+
+        return true;
+    }
+    
     #endregion
 
 }

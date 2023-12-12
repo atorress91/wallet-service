@@ -10,7 +10,10 @@ public static class Constants
     public const string RevertEcoPoolConcept              = "Devolucion Pool Adquisitivo";
     public const string AdminEcosystemUserName            = "adminecosystem";
     public const int    AdminUserId                       = 1;
+    public const string AdminCredit                    = "Crédito Administrativo";
+    public const string HandleDebitTransactionCourse   = "dbo.HandleDebit_Transation_For_Courses_SP";
     public const string WalletBalance                     = "Saldo de billetera";
+    public const string CoursesDebitTransactionSP      = "dbo.Courses_Debit_Transaction_SP";
     public const string AdminPayment                      = "Administrativo";
     public const string ReverseBalance                    = "Saldo revertido";
     public const string PurchasingPoolFor                 = "Pool Adquisitivo para";
@@ -80,6 +83,7 @@ public static class Constants
         "Subdirector",
         "Director"
     };
-    public static string[] PartitionKeys    =
+    public const string WireTransfer                   = "Transferencia bancaria";
+    public static string[] PartitionKeys =
         { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "12", "13", "14", "18", "29", "30" };
 }

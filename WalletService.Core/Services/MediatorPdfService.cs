@@ -38,7 +38,7 @@ public class MediatorPdfService : IMediatorPdfService
                             row.RelativeItem().Column(col =>
                             {
                                 col.Item().AlignRight().Background("#257272").Border(1).BorderColor("#257272").AlignCenter()
-                                    .Text($"Factura #{spResponse.InvoiceNumber}")
+                                    .Text($"Factura #{spResponse.Id}")
                                     .FontColor("#fff");
 
                                 col.Item().AlignRight().Text("Razón Social: Ecosystem Sharing Evolution S.A.").FontSize(10);
@@ -132,18 +132,17 @@ public class MediatorPdfService : IMediatorPdfService
                                 {
                                     var conceptName = item.ProductName;
                                     var quantity    = item.ProductQuantity;
-                                    var price       = item.ProductPrice;
+                                    var price       = item.ProductPrice; 
                                     var tax         = item.ProductIva;
                                     var discount    = item.ProductDiscount * quantity;
-                                    var total       = quantity * price;
+                                    var total       = quantity * price; 
 
                                     tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text(conceptName).FontSize(10);
                                     tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text(quantity.ToString()).FontSize(10);
-                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text($"$ {price}").FontSize(10);
-                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text($"$ {discount}").FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text($"$ {price.ToString("0.##")}").FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text($"$ {discount.ToString("0.##")}").FontSize(10);
                                     tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2)
-                                        .Text($"$ {Convert.ToInt32(total * (1 + (tax / 100)))}")
-                                        .FontSize(10);
+                                        .Text($"$ {total.ToString("0.##")}").FontSize(10);
 
                                     subTotal      += total;
                                     totalDiscount += discount;
@@ -156,7 +155,7 @@ public class MediatorPdfService : IMediatorPdfService
                                 row.RelativeItem().Column(col2 =>
                                 {
                                     col2.Item().AlignRight().Text("Monto pagado").Bold().FontSize(16);
-                                    col2.Item().AlignRight().Text($"Total + iva incl.: ${Convert.ToInt32(invoice.Debit)}").FontSize(18).FontColor("30A2FF");
+                                    col2.Item().AlignRight().Text($"Total + iva incl.: ${invoice.Debit.ToString("0.00")}").FontSize(18).FontColor("30A2FF");
                                     col2.Item().AlignRight().Text("Fecha de pago:").FontSize(12);
                                     col2.Item().AlignRight().Text(date).FontSize(12);
                                 });
