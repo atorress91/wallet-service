@@ -27,7 +27,8 @@ public static class CommonExtensions
         if (day is >= DayOfWeek.Monday and <= DayOfWeek.Wednesday)
             time = time.AddDays(3);
 
-        return CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(time, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+        return CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(time, CalendarWeekRule.FirstFourDayWeek,
+            DayOfWeek.Monday);
     }
 
     #endregion
@@ -111,7 +112,8 @@ public static class CommonExtensions
         PropertyInfo[] properties = typeof(T).GetProperties();
         foreach (PropertyInfo property in properties)
         {
-            dataTable.Columns.Add(property.Name, Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType);
+            dataTable.Columns.Add(property.Name,
+                Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType);
         }
 
         foreach (T item in collection)
@@ -131,7 +133,7 @@ public static class CommonExtensions
     public static T DecryptObject<T>(string encryptedData)
     {
         string keyEncrypted = "0e4897fd799d9aca629d0036b3a4e524d9d200ab9f7e276933903add694a100f";
-        string iv                = "f74dc6fdc72a2828f74dc6fdc72a2828";
+        string iv           = "f74dc6fdc72a2828f74dc6fdc72a2828";
 
         byte[] keyBytes = StringToByteArray(keyEncrypted);
         byte[] ivBytes  = StringToByteArray(iv);
@@ -152,7 +154,7 @@ public static class CommonExtensions
 
         byte[] decryptedBytes = memoryStream.ToArray();
         string decryptedData  = Encoding.UTF8.GetString(decryptedBytes);
-        
+
         var objectDeserialize = JsonConvert.DeserializeObject<T>(decryptedData);
 
         return objectDeserialize!;
@@ -166,12 +168,71 @@ public static class CommonExtensions
             bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
         return bytes;
     }
+    
+   private static DateTime CalculateStartDate(DateTime purchaseDate, TimeZoneInfo timeZone)
+    {
+        DateTime startDate;
+        var purchaseDateInTimeZone = TimeZoneInfo.ConvertTime(purchaseDate, timeZone);
 
+        switch (purchaseDateInTimeZone.DayOfWeek)
+        {
+            case DayOfWeek.Monday:
+                startDate = purchaseDateInTimeZone.AddDays(7);
+                break;
+            case DayOfWeek.Tuesday:
+                startDate = purchaseDateInTimeZone.AddDays(6);
+                break;
+            case DayOfWeek.Wednesday:
+                startDate = purchaseDateInTimeZone.AddDays(5);
+                break;
+            case DayOfWeek.Thursday:
+                startDate = purchaseDateInTimeZone.AddDays(4);
+                break;
+            case DayOfWeek.Friday:
+                startDate = purchaseDateInTimeZone.AddDays(3);
+                break;
+            case DayOfWeek.Saturday:
+                startDate = purchaseDateInTimeZone.AddDays(2);
+                break;
+            case DayOfWeek.Sunday:
+                if(purchaseDateInTimeZone.Hour >= 17)
+                {
+                    startDate = purchaseDateInTimeZone.AddDays(8);
+                }
+                else
+                {
+                    startDate = purchaseDateInTimeZone.AddDays(1);
+                }
+                break;
+            default:
+                throw new InvalidOperationException("Day of week is not valid");
+        }
 
+        return startDate;
+    }
 
+    public static (DateTime StartDate, DateTime EndDate) CalculateWeeklyCourseDates(DateTime purchaseDate)
+    {
+        var costaRicaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time");
+        var startDate = CalculateStartDate(purchaseDate, costaRicaTimeZone);
+        var endDate = startDate.AddDays(4); 
+        return (startDate, endDate);
+    }
 
-
-
+    public static (DateTime StartDate, DateTime EndDate) CalculateMonthlyCourseDates(DateTime purchaseDate)
+    {
+        var costaRicaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time");
+        var startDate = CalculateStartDate(purchaseDate, costaRicaTimeZone);
+        var endDate = startDate.AddDays(28);
+        return (startDate, endDate);
+    }
+    public static DateTime CalculateNextMonday(DateTime currentDate)
+    {
+        int daysUntilMonday = ((int)DayOfWeek.Monday - (int)currentDate.DayOfWeek + 7) % 7;
+        if (daysUntilMonday == 0) 
+            daysUntilMonday = 7;
+        return currentDate.AddDays(daysUntilMonday);
+    }
 
     #region ..Assigned..
 
@@ -231,7 +292,7 @@ public static class CommonExtensions
             KeyValuePair<object, string> pair => pair.Assigned(),
             KeyValuePair<string, object> pair => pair.Assigned(),
             KeyValuePair<string, string> pair => pair.Assigned(),
-            _ => false
+            _                                 => false
         };
     }
 
@@ -306,7 +367,7 @@ public static class CommonExtensions
             KeyValuePair<object, string> pair => pair.NotAssigned(),
             KeyValuePair<string, object> pair => pair.NotAssigned(),
             KeyValuePair<string, string> pair => pair.NotAssigned(),
-            _ => true
+            _                                 => true
         };
     }
 

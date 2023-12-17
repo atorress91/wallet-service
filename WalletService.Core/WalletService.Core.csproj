@@ -110,6 +110,9 @@
     <None Update="EmailTemplates\confirm-purchase-academy.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="EmailTemplates\invitation-trading-academy.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
 
 
 

@@ -8,6 +8,7 @@ public static class Constants
     public const string EcoPoolProductCategoryForAdmin = "Pool Adquisitivo por AdminEcosystem";
     public const string SubjectConfirmPurchase         = "Confirmación de compra";
     public const string SubjectConfirmAffiliation      = "Membresía activa";
+    public const string SubjectInvitationForAcademy    = "Invitación al curso de trading";
     public const string RevertEcoPoolConcept           = "Devolucion Pool Adquisitivo";
     public const string AdminEcosystemUserName         = "adminecosystem";
     public const int    AdminUserId                    = 1;
@@ -40,6 +41,7 @@ public static class Constants
     public const string HandleDebitTransactionCourse   = "dbo.HandleDebit_Transation_For_Courses_SP";
     public const string CreditTransationSP             = "dbo.Credit_Transation_SP";
     public const string CreateEcoPoolSP                = "dbo.CreateEcoPoolSP";
+    public const string GetTradingAcademyDetailsSp     = "GetTradingAcademyInvoiceDetails";  
     public const string RevertDebitTransaction         = "dbo.Revert_Debit_Transaction_SP";
     public const string CoinPaymentRevertTransactions  = "dbo.CoinPaymentsRevertTransactions_SP";
     public const string HandleMembershipTransactions   = "dbo.HandleMembershipTransactionSp";
@@ -62,6 +64,8 @@ public static class Constants
     public const int    UsdtIdCurrency                  = 19;
     public const int    UsdtIdNetwork                   = 99;
     public const int    CoinPayIdWallet                 = 46616;
+    public const int    ForMonth                        = 31;
+    public const int    ForWeek                         = 32;
 
 
     public static string[] PartitionKeys =

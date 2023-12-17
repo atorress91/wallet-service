@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using WalletService.Data.Database.CustomModels;
 using WalletService.Data.Database.Models;
 using WalletService.Models.DTO.CoinPaymentTransactionDto;
 using WalletService.Models.DTO.InvoiceDetailDto;
@@ -52,6 +53,7 @@ public class MapperProfile : Profile
         CreateMap<ResultsEcoPool, ResultsEcoPoolDto>();
         CreateMap<ResultEcoPoolLevels, ResultEcoPoolLevelsDto>();
         CreateMap<PaymentTransaction, PaymentTransactionDto>();
+        CreateMap<InvoicesTradingAcademyResponse, InvoiceTradingAcademyDto>();
      
 
         CreateMap<WalletRequestRequest, WalletsRequests>()
