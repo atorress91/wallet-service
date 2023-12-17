@@ -18,4 +18,5 @@ public interface IInvoiceRepository
     Task<bool>                InvoiceExistsByReceiptNumber(string                     idTransaction);
     Task<InvoicesSpResponse?> HandleDebitTransactionForCourse(DebitTransactionRequest request);
     Task<bool>                GetInvoicesForTradingAcademyPurchases(int               affiliateId);
+    Task<List<InvoicesTradingAcademyResponse>?> GetAllInvoicesForTradingAcademyPurchases();
 }

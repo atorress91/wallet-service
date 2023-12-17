@@ -14,4 +14,6 @@ public interface IBrevoEmailService
 
     Task<bool> SendEmailPurchaseConfirmForAcademy(UserInfoResponse user, Dictionary<string, byte[]> pdfDataDict,
         InvoicesSpResponse                                         spResponse);
+
+    Task<bool> SendInvitationsForTradingAcademy(UserAffiliateResponse user, string link, string code);
 }

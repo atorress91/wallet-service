@@ -10,6 +10,7 @@ using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Configuration;
 using WalletService.Models.Constants;
+using WalletService.Models.DTO.InvoiceDto;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Utility.Extensions;
 using static WalletService.Utility.Extensions.CommonExtensions;
@@ -247,4 +248,29 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             .Include(x => x.InvoiceDetail)
             .AnyAsync(x => x.AffiliateId == affiliateId && x.InvoiceDetail.Any(d => d.PaymentGroupId == 6));
     
+    public async Task<List<InvoicesTradingAcademyResponse>?> GetAllInvoicesForTradingAcademyPurchases()
+    {
+        await using var command = Context.Database.GetDbConnection().CreateCommand();
+        command.CommandText = Constants.GetTradingAcademyDetailsSp;
+        command.CommandType = CommandType.StoredProcedure;
+
+        await Context.Database.OpenConnectionAsync();
+
+        await using var result             = await command.ExecuteReaderAsync();
+        var       invoiceDetailsList = new List<InvoicesTradingAcademyResponse>();
+
+        while (await result.ReadAsync())
+        {
+            invoiceDetailsList.Add(new InvoicesTradingAcademyResponse
+            {
+                ProductId    = (int)result["ProductId"],
+                UserName     = result["UserName"].ToString() ?? "",
+                InvoiceId    = (int)result["InvoiceId"],
+                ProductName  = result["ProductName"].ToString() ?? "",
+                ProductPrice = (decimal)result["ProductPrice"],
+                CreatedAt    = (DateTime)result["CreatedAt"]
+            });
+        }
+        return invoiceDetailsList;
+    }
 }
