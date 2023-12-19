@@ -157,11 +157,6 @@ public class ReversedBalancePaymentStrategy : IPaymentStrategy
             allPdfData[pdfDataEntry.Key] = pdfDataEntry.Value;
         }
         
-        if (result.Data.Find(dto => dto.ProductType) != null)
-        {
-            await _brevoEmailService.SendEmailWelcome(userInfoResponse!, spResponse);
-        }
-
         if (invoicePdf.Length != 0)
         {
             await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);

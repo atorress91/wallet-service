@@ -12,7 +12,7 @@
     "assign-public-ip"         : true,
     "task-definition-name"     : "WalletServiceApiProd",
     "task-cpu"                 : "1024",
-    "task-memory"              : "8192",
+    "task-memory"              : "4096",
     "platform-version"         : "LATEST",
     "task-definition-task-role" : "arn:aws:iam::948104088074:role/ecsTaskExecutionRole",
     "task-execution-role"       : "ecsTaskExecutionRole",

@@ -16,8 +16,7 @@ public static class Constants
     public const string AdminPayment                   = "Administrativo";
     public const string AdminCredit                    = "Crédito Administrativo";
     public const string ReverseBalance                 = "Saldo revertido";
-    public const string PurchasingPoolFor              = "Pool Adquisitivo para";
-    public const string PurchasingPoolTo               = "Pool Adquisitivo de";
+    public const string PurchasingPoolRevertBalance    = "Pool Adquisitivo con saldo revertido";
     public const string ConPaymentAddress              = "THiJ78d6DHm1575GfFyfe1K6k2Fp6Bq5pP";
     public const string ConPaymentCurrency             = "USDT.TRC20";
     public const int    MembershipBonus                = 5;
