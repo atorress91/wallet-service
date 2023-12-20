@@ -213,7 +213,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                         string.Format(description, item.Grading.PersonalPurchases, item.Grading.Name),
                         WalletConceptType.model_five_payment.ToString());
                 
-                // await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
+                await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
             }
             else
             {
@@ -228,7 +228,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                     );
                 userDictionary[item.AffiliateId] = item.Grading.PurchasesNetwork;
                 
-                // await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
+                await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
             }
         }
 
@@ -474,7 +474,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         if (payment <= 0)
             return Task.CompletedTask;
         
-        return Task.CompletedTask;
+        // return Task.CompletedTask;
 
         var creditTransaction = new DebitTransactionRequest
         {
@@ -501,7 +501,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        return Task.CompletedTask;
+        // return Task.CompletedTask;
 
 
         var creditTransaction = new CreditTransactionRequest

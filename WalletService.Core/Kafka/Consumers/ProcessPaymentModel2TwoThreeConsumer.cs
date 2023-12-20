@@ -61,8 +61,9 @@ public class ProcessPaymentModel2TwoThreeConsumer : BaseKafkaConsumer
         ICollection<UserGradingRequest> listGrading              = new List<UserGradingRequest>();
         var                             responseGradings         = new GradingResponse();
         var                             listEcoPools             = await resultsEcoPoolRepository!.GetResultsEcoPoolToPayment();
-        var                             listModelTwoResults      = await resultsEcoPoolRepository!.GetResultsModelTwoToPayment();
-        var                             dictionaryPointsModelTwo = new Dictionary<int, double>();
+        
+        var listModelTwoResults      = await resultsEcoPoolRepository!.GetResultsModelTwoToPayment();
+        var dictionaryPointsModelTwo = new Dictionary<int, double>();
         var dictionary = listEcoPools.GroupBy(x
             => x.AffiliateId).ToDictionary(group => group.Key, group => group.ToList());
         var dictionaryModelTwo = listModelTwoResults.GroupBy(x
@@ -261,7 +262,7 @@ public class ProcessPaymentModel2TwoThreeConsumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        return Task.CompletedTask;
+        // return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {
