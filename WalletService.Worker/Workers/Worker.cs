@@ -52,14 +52,27 @@ public class Worker : BackgroundService
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var consumerCountSettings = _configuration.ConsumersSetting;
+            
+            for (var i = 0; i < consumerCountSettings!.ConsumersCount; i++)
+            {
+                _consumers.Add(new ProcessModelTwoConsumer(new ConsumerSettings
+                {
+                    Topics          = new[] { KafkaTopics.ProcessModelTwoTopic },
+                    GroupId         = $"{ KafkaTopics.ProcessModelTwoTopic }-group",
+                    GroupInstanceId = $"{ KafkaTopics.ProcessModelTwoTopic }-group-instance-{i}"
+                }, _configuration, _logger, _serviceScopeFactory)
+                {
+                    ConsumerIndex = i
+                });
+            }
 
             for (var i = 0; i < consumerCountSettings!.ConsumersCount; i++)
             {
-                _consumers.Add(new ProcessEcoPoolWithInConsumer(new ConsumerSettings
+                _consumers.Add(new ProcessModelThreeWithInConsumer(new ConsumerSettings
                 {
-                    Topics            = new[] { KafkaTopics.ProcessEcoPoolWithInTopic },
-                    GroupId           = $"{ KafkaTopics.ProcessEcoPoolWithInTopic }-group",
-                    GroupInstanceId   = $"{ KafkaTopics.ProcessEcoPoolWithInTopic }-group-instance-{i}"
+                    Topics            = new[] { KafkaTopics.ProcessModelThreeWithInTopic },
+                    GroupId           = $"{ KafkaTopics.ProcessModelThreeWithInTopic }-group",
+                    GroupInstanceId   = $"{ KafkaTopics.ProcessModelThreeWithInTopic }-group-instance-{i}"
                 }, _configuration, _logger, _serviceScopeFactory)
                 {
                     ConsumerIndex = i
@@ -68,11 +81,11 @@ public class Worker : BackgroundService
 
             for (var i = 0; i < consumerCountSettings.ConsumersCount; i++)
             {
-                _consumers.Add(new ProcessEcoPoolWithOutConsumer(new ConsumerSettings
+                _consumers.Add(new ProcessModelThreeWithOutConsumer(new ConsumerSettings
                 {
-                    Topics          = new[] { KafkaTopics.ProcessEcoPoolWithOutTopic },
-                    GroupId         = $"{ KafkaTopics.ProcessEcoPoolWithOutTopic }-group",
-                    GroupInstanceId = $"{ KafkaTopics.ProcessEcoPoolWithOutTopic }-group-instance-{i}"
+                    Topics          = new[] { KafkaTopics.ProcessModelThreeWithOutTopic },
+                    GroupId         = $"{ KafkaTopics.ProcessModelThreeWithOutTopic }-group",
+                    GroupInstanceId = $"{ KafkaTopics.ProcessModelThreeWithOutTopic }-group-instance-{i}"
                 }, _configuration, _logger, _serviceScopeFactory)
                 {
                     ConsumerIndex = i
@@ -81,11 +94,11 @@ public class Worker : BackgroundService
             
             for (var i = 0; i < consumerCountSettings.ConsumersProcessPaymentCount; i++)
             {
-                _consumers.Add(new ProcessPaymentEcoPoolConsumer(new ConsumerSettings
+                _consumers.Add(new ProcessPaymentModel2TwoThreeConsumer(new ConsumerSettings
                 {
-                    Topics          = new[] { KafkaTopics.ProcessEcoPoolPaymentTopic },
-                    GroupId         = $"{ KafkaTopics.ProcessEcoPoolPaymentTopic }-group",
-                    GroupInstanceId = $"{ KafkaTopics.ProcessEcoPoolPaymentTopic }-group-instance-{i}"
+                    Topics          = new[] { KafkaTopics.ProcessPaymentModelTwoThreeTopic },
+                    GroupId         = $"{ KafkaTopics.ProcessPaymentModelTwoThreeTopic }-group",
+                    GroupInstanceId = $"{ KafkaTopics.ProcessPaymentModelTwoThreeTopic }-group-instance-{i}"
                 }, _configuration, _logger, _serviceScopeFactory)
                 {
                     ConsumerIndex = i
@@ -94,11 +107,11 @@ public class Worker : BackgroundService
             
             for (var i = 0; i < consumerCountSettings.ConsumersProcessPaymentCount; i++)
             {
-                _consumers.Add(new ProcessFourModelConsumer(new ConsumerSettings
+                _consumers.Add(new ProcessModelsFourFiveSixConsumer(new ConsumerSettings
                 {
-                    Topics          = new[] { KafkaTopics.ProcessModelFourTopic },
-                    GroupId         = $"{ KafkaTopics.ProcessModelFourTopic }-group",
-                    GroupInstanceId = $"{ KafkaTopics.ProcessModelFourTopic }-group-instance-{i}"
+                    Topics          = new[] { KafkaTopics.ProcessModelFourFiveSixTopic },
+                    GroupId         = $"{ KafkaTopics.ProcessModelFourFiveSixTopic }-group",
+                    GroupInstanceId = $"{ KafkaTopics.ProcessModelFourFiveSixTopic }-group-instance-{i}"
                 }, _configuration, _logger, _serviceScopeFactory)
                 {
                     ConsumerIndex = i

@@ -8,7 +8,7 @@ public class GetAccountsEcoPoolResponse
     public bool Success { get; set; }
     
     [JsonPropertyName("data")]
-    public List<UserEcoPoolResponse> Data { get; set; }
+    public List<UserModelTwoThreeResponse> Data { get; set; }
     
     [JsonPropertyName("message")]
     public string Message { get; set; }
@@ -17,7 +17,7 @@ public class GetAccountsEcoPoolResponse
     public int Code { get; set; }
 }
 
-public class UserEcoPoolResponse
+public class UserModelTwoThreeResponse
 {
     [JsonPropertyName("id")]
     public int Id { get; set; }
@@ -42,6 +42,9 @@ public class UserEcoPoolResponse
     
     [JsonPropertyName("side")]
     public int Side { get; set; }
+    
+    [JsonPropertyName("createdAt")]
+    public DateTime UserCreatedAt { get; set; }
     
     [JsonPropertyName("familyTree")]
     public List<UserLevel> FamilyTree { get; set; }
@@ -72,4 +75,6 @@ public class UserLevel
     
     [JsonPropertyName("side")]
     public int Side { get; set; }
+    [JsonPropertyName("createdAt")]
+    public DateTime UserCreatedAt { get; set; }
 }

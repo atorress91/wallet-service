@@ -7,4 +7,5 @@ public interface IResultsEcoPoolRepository
 {
     Task<List<ResultsEcoPool>> GetAllResultsEcoPool();
     Task<List<ResultsEcoPool>> GetResultsEcoPoolToPayment();
+    Task<List<ResultsModelTwo>> GetResultsModelTwoToPayment();
 }

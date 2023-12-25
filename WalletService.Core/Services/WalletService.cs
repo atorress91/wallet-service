@@ -1,5 +1,5 @@
-﻿using AutoMapper;
-using System.Text.Json;
+﻿using System.Text.Json;
+using AutoMapper;
 using WalletService.Core.Factory;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
@@ -7,6 +7,7 @@ using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.CustomModels;
 using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
+using WalletService.Models.Constants;
 using WalletService.Models.DTO.BalanceInformationDto;
 using WalletService.Models.DTO.WalletDto;
 using WalletService.Models.Enums;
@@ -15,25 +16,27 @@ using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Requests.WalletTransactionRequest;
 using WalletService.Models.Responses;
 using WalletService.Utility.Extensions;
-using Constants = WalletService.Models.Constants.Constants;
-
 
 namespace WalletService.Core.Services;
 
 public class WalletService : BaseService, IWalletService
 {
-    private readonly IWalletRepository          _walletRepository;
-    private readonly IWalletRequestRepository   _walletRequestRepository;
-    private readonly IInvoiceRepository         _invoiceRepository;
-    private readonly IInvoiceDetailRepository   _invoiceDetailRepository;
-    private readonly IAccountServiceAdapter     _accountServiceAdapter;
-    private readonly IPaymentStrategyFactory    _paymentStrategyFactory;
+    private readonly IAccountServiceAdapter _accountServiceAdapter;
+    private readonly IInvoiceDetailRepository _invoiceDetailRepository;
+    private readonly IInvoiceRepository _invoiceRepository;
     private readonly INetworkPurchaseRepository _networkPurchaseRepository;
+    private readonly IPaymentStrategyFactory _paymentStrategyFactory;
+    private readonly IWalletRepository _walletRepository;
+    private readonly IWalletRequestRepository _walletRequestRepository;
 
     public WalletService(
-        IMapper                    mapper, IWalletRepository walletRepository, IWalletRequestRepository walletRequestRepository
-        , IAccountServiceAdapter   accountServiceAdapter,
-        IInvoiceRepository         invoiceRepository, IInvoiceDetailRepository invoiceDetailRepository, IPaymentStrategyFactory paymentStrategyFactory,
+        IMapper                    mapper,
+        IWalletRepository          walletRepository,
+        IWalletRequestRepository   walletRequestRepository,
+        IAccountServiceAdapter     accountServiceAdapter,
+        IInvoiceRepository         invoiceRepository,
+        IInvoiceDetailRepository   invoiceDetailRepository,
+        IPaymentStrategyFactory    paymentStrategyFactory,
         INetworkPurchaseRepository networkPurchaseRepository) :
         base(mapper)
     {
@@ -110,7 +113,7 @@ public class WalletService : BaseService, IWalletService
         {
             AvailableBalance     = availableBalance,
             ReverseBalance       = reverseBalance ?? 0,
-            TotalAcquisitions    = Math.Round((totalAcquisitions ?? 0), 2),
+            TotalAcquisitions    = Math.Round(totalAcquisitions ?? 0, 2),
             TotalCommissionsPaid = totalCommissionsPaid ?? 0
         };
 
@@ -147,6 +150,7 @@ public class WalletService : BaseService, IWalletService
 
         return information;
     }
+
     public async Task<bool> PaymentHandler(WalletRequest request)
     {
         IPaymentStrategy?           paymentStrategy           = null;
@@ -198,16 +202,16 @@ public class WalletService : BaseService, IWalletService
     
     public async Task<bool> AdminPaymentHandler(WalletRequest request)
     {
-        IBalancePaymentStrategy balancePaymentStrategy = _paymentStrategyFactory.GetBalancePaymentStrategy();
+        var balancePaymentStrategy = _paymentStrategyFactory.GetBalancePaymentStrategy();
 
         return await balancePaymentStrategy.ExecuteAdminPayment(request);
     }
 
     public async Task<bool> TransferBalanceForNewAffiliate(TransferBalanceRequest request)
     {
-        var today          = DateTime.Now;
-        var amount         = 10;
-        var userInfo       = await _accountServiceAdapter.GetAffiliateByUserName(request.ToUserName);
+        var today       = DateTime.Now;
+        var amount      = 10;
+        var userInfo    = await _accountServiceAdapter.GetAffiliateByUserName(request.ToUserName);
         var currentUser = await _accountServiceAdapter.GetAffiliateByUserName(request.FromUserName);
 
         if (!userInfo.IsSuccessful)
@@ -219,10 +223,10 @@ public class WalletService : BaseService, IWalletService
         var result      = JsonSerializer.Deserialize<UserAffiliateResponse>(userInfo.Content!);
         var userResult  = JsonSerializer.Deserialize<UserAffiliateResponse>(currentUser.Content!);
         var userBalance = await GetBalanceInformationByAffiliateId(request.FromAffiliateId);
-        
+
         if (userResult?.Data?.VerificationCode != request.SecurityCode)
             return false;
-        
+
         if (amount > userBalance.AvailableBalance)
             return false;
 
@@ -304,8 +308,8 @@ public class WalletService : BaseService, IWalletService
             return new ServicesResponse { Success = false, Message = "Error", Code = 400 };
 
         var currentUserResult = JsonSerializer.Deserialize<UserAffiliateResponse>(currentUser.Content!);
-        var result      = JsonSerializer.Deserialize<UserAffiliateResponse>(userInfo.Content!);
-        var userBalance = await GetBalanceInformationByAffiliateId(data.FromAffiliateId);
+        var result            = JsonSerializer.Deserialize<UserAffiliateResponse>(userInfo.Content!);
+        var userBalance       = await GetBalanceInformationByAffiliateId(data.FromAffiliateId);
 
         if (currentUserResult?.Data?.VerificationCode != data.SecurityCode)
             return new ServicesResponse { Success = false, Message = "El código de seguridad no coincidec.", Code = 400 };
@@ -431,6 +435,7 @@ public class WalletService : BaseService, IWalletService
             return false;
         }
     }
+
     private async Task UpdateWalletRequestAsync(WalletsRequests walletRequest)
     {
         walletRequest.AttentionDate = DateTime.Now;
@@ -443,16 +448,12 @@ public class WalletService : BaseService, IWalletService
         var networkResult = await _accountServiceAdapter.GetPersonalNetwork(affiliateId);
 
         if (networkResult.Content == null || !networkResult.Content.Any())
-        {
             return null;
-        }
 
         var result = JsonSerializer.Deserialize<UserPersonalNetworkResponse>(networkResult.Content!);
 
         if (result?.Data == null || !result.Data.Any())
-        {
             return null;
-        }
 
         var idsInMyNetwork = new HashSet<int>(result.Data.Select(affiliate => affiliate.id));
 
@@ -477,33 +478,34 @@ public class WalletService : BaseService, IWalletService
 
         return (currentYearPurchases ?? new List<PurchasesPerMonthDto>(), previousYearPurchases ?? new List<PurchasesPerMonthDto>());
     }
-    
+
     private async Task<bool> PurchaseMembershipForNewAffiliates(WalletTransactionRequest request)
     {
-        var membershipPaymentStrategy  =  _paymentStrategyFactory.GetMembershipStrategy(); 
-        
+        var membershipPaymentStrategy = _paymentStrategyFactory.GetMembershipStrategy();
+
         var membership = new ProductsRequests
         {
             IdProduct = 1,
-            Count = 1
+            Count     = 1
         };
 
         var walletRequest = new WalletRequest
         {
-            AffiliateId = request.AffiliateId,
+            AffiliateId       = request.AffiliateId,
             AffiliateUserName = request.AffiliateUserName!,
-            PurchaseFor = Constants.None,
-            Bank = Constants.WalletBalance,
-            PaymentMethod = 0,
-            SecretKey = null,
-            ReceiptNumber = null,
-            ProductsList = new List<ProductsRequests>{membership},
+            PurchaseFor       = Constants.None,
+            Bank              = Constants.WalletBalance,
+            PaymentMethod     = 0,
+            SecretKey         = null,
+            ReceiptNumber     = null,
+            ProductsList      = new List<ProductsRequests> { membership }
         };
-        
+
         await membershipPaymentStrategy.ExecutePayment(walletRequest);
-        
+
         return true;
     }
+
     public async Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance()
     {
         var result = await _walletRepository.GetAllAffiliatesWithPositiveBalance();
@@ -539,4 +541,5 @@ public class WalletService : BaseService, IWalletService
     }
     
     #endregion
+
 }

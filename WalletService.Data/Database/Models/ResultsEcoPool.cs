@@ -24,6 +24,7 @@ public class ResultsEcoPool
     public string CasePool { get; set; } = string.Empty;
     public DateTime PeriodPool { get; set; }
     public DateTime? CompletedAt { get; set; }
+    public DateTime? UserCreatedAt { get; set; }
     public virtual ICollection<ResultEcoPoolLevels> ResultEcoPoolLevels { get; set; }
     public virtual EcoPoolConfiguration EcoPoolConfiguration { get; set; }
 }

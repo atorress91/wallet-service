@@ -235,18 +235,45 @@ public class WalletRepository : BaseRepository, IWalletRepository
     }
 
 
-    public async Task<bool> CreateEcoPoolSP(EcoPoolTransactionRequest request)
+    public async Task<bool> CreateModelThreeSP(ModelThreeTransactionRequest request)
     {
         try
         {
             await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
 
-            await using var cmd = new SqlCommand(Constants.CreateEcoPoolSP, sqlConnection);
+            await using var cmd = new SqlCommand(Constants.ModelThreeRequestSP, sqlConnection);
 
             var levelTypeDataTable = ConvertToDataTable(request.LevelsType);
             var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
 
-            CreateEcoPoolListParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
+            CreateModelThreeParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
+
+            await sqlConnection.OpenAsync();
+            await using var oReader = await cmd.ExecuteReaderAsync();
+
+            await sqlConnection.CloseAsync();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task<bool> CreateModelTwoSP(ModelTwoTransactionRequest request)
+    {
+        try
+        {
+            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+
+            await using var cmd = new SqlCommand(Constants.ModelTwoRequestSP, sqlConnection);
+
+            var levelTypeDataTable   = ConvertToDataTable(request.LevelsType);
+            var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
+
+            CreateModelTwoParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
 
             await sqlConnection.OpenAsync();
             await using var oReader = await cmd.ExecuteReaderAsync();
@@ -458,8 +485,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         });
     }
 
-    private void CreateEcoPoolListParameters(EcoPoolTransactionRequest request, DataTable levels, DataTable ecoPools,
-        SqlCommand cmd)
+    private void CreateModelThreeParameters(ModelThreeTransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -510,7 +536,37 @@ public class WalletRepository : BaseRepository, IWalletRepository
             TypeName = "dbo.EcoPoolType"
         });
     }
+    private void CreateModelTwoParameters(ModelTwoTransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
+    {
+        cmd.CommandType = CommandType.StoredProcedure;
 
+        cmd.Parameters.Add(new SqlParameter("@Percentage", SqlDbType.Int)
+        {
+            Value = request.Percentage
+        });
+        
+        cmd.Parameters.Add(new SqlParameter("@EcoPoolConfigurationId", SqlDbType.Int)
+        {
+            Value = request.EcoPoolConfigurationId
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@TotalPercentageLevels", SqlDbType.Decimal)
+        {
+            Value = request.TotalPercentageLevels
+        });
+        
+        cmd.Parameters.Add(new SqlParameter("@Levels", SqlDbType.Structured)
+        {
+            Value    = levels,
+            TypeName = "dbo.LevelsType"
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@ItemsModelTwo", SqlDbType.Structured)
+        {
+            Value    = ecoPools,
+            TypeName = "dbo.EcoPoolType"
+        });
+    }
     private void CreateCreditListParameters(CreditTransactionRequest request, SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
@@ -553,7 +609,6 @@ public class WalletRepository : BaseRepository, IWalletRepository
             Size = 50
         });
     }
-
 
     public Task<List<Wallets>> GetWalletByUserId(int userId)
         => Context.Wallets.Where(x => x.UserId == userId).ToListAsync();
@@ -615,13 +670,18 @@ public class WalletRepository : BaseRepository, IWalletRepository
             .ToListAsync();
     }
 
-    public async Task<List<InvoicePacks>> GetDebitsEcoPoolOutsideMonth(DateTime date)
+    public Task<List<InvoicePacks>> GetDebitsEcoPoolOutsideMonth(DateTime date)
     {
-        var list = await Context.InvoicePacks.Include(i => i.Invoice).AsNoTracking()
-            .Where(x => x.StartDate < date && x.Status == "1" && x.Invoice.Status == true &&
-                        x.Invoice.CancellationDate == null).ToListAsync();
-
-        return list;
+        return Context.InvoicePacks.Include(i => i.Invoice).AsNoTracking()
+            .Where(x => x.StartDate < date && x.Status == "1" && x.Invoice.Status == true && x.Invoice.CancellationDate == null).ToListAsync();
+    }
+    
+    public Task<List<InvoicesDetails>> GetInvoicesDetailsItemsForModelTwo(int month, int year)
+    {
+        return Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
+            .Where(x 
+                => (x.PaymentGroupId == 6 || x.PaymentGroupId == 5) && x.CreatedAt.Month == month && 
+                   x.CreatedAt.Year == year && x.Invoice.Status == true && x.Invoice.CancellationDate == null).ToListAsync();
     }
 
     public async Task<bool> CreateTransferBalance(Wallets debitTransaction, Wallets creditTransaction)
@@ -793,8 +853,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
             await sql.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
 
-            bool isSuccess = (bool)successParameter.Value;
-
+            var isSuccess = (bool)successParameter.Value;  
+        
             await sql.CloseAsync();
 
             return isSuccess;
@@ -822,8 +882,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             Date = DateTime.Now,
             InvoiceId = 0
         };
-        // Context.ModelFourStatistics.Add(debit);
-        // return Context.SaveChangesAsync();
-        return Task.CompletedTask;
+        Context.ModelFourStatistics.Add(debit);
+        return Context.SaveChangesAsync();
     }
 }

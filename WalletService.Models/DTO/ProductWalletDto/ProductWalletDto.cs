@@ -11,6 +11,7 @@ public class ProductWalletDto
     [JsonPropertyName("binaryPoints")] public decimal BinaryPoints { get; set; }
     [JsonPropertyName("valuePoints")] public int ValuePoints { get; set; }
     [JsonPropertyName("tax")] public decimal Tax { get; set; }
+    [JsonPropertyName("modelTwoPercentage")] public decimal? ModelTwoPercentage { get; set; }
     [JsonPropertyName("paymentGroup")] public int PaymentGroup { get; set; }
     [JsonPropertyName("acumCompMin")] public bool AcumCompMin { get; set; }
     [JsonPropertyName("productType")] public bool ProductType { get; set; }

@@ -153,6 +153,7 @@ public static class IocExtensionApp
         services.AddScoped<IResultsEcoPoolRepository, ResultsEcoPoolRepository>();
         services.AddScoped<IApiClientRepository, ApiClientRepository>();
         services.AddScoped<ICoinPaymentTransactionRepository, CoinPaymentTransactionRepository>();
+        
     }
 
     private static void InjectAdapters(IServiceCollection services)
