@@ -262,7 +262,7 @@ public class ProcessPaymentModel2TwoThreeConsumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        // return Task.CompletedTask;
+        return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {

@@ -17,9 +17,7 @@ public class ProcessModelThreeWithInConsumer : BaseKafkaConsumer
         ApplicationConfiguration configuration,
         ILogger                  logger,
         IServiceScopeFactory     serviceScopeFactory
-    ) : base(consumerSettings, configuration, logger, serviceScopeFactory)
-    {
-    }
+    ) : base(consumerSettings, configuration, logger, serviceScopeFactory) { }
 
     protected override Task<bool> OnMessage(ConsumeResult<Ignore, string> e)
     {

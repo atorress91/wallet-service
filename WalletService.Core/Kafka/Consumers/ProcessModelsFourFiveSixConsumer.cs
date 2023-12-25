@@ -169,7 +169,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         }).ToList();
 
         leaderBoardModel4 = leaderBoardModel4.OrderModel4();
-        
+        var test = leaderBoardModel4.ToJsonString();
         await accountServiceAdapter!.DeleteTreeModel4();
         var response = await accountServiceAdapter.AddTreeModel4(leaderBoardModel4);
         
@@ -213,7 +213,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                         string.Format(description, item.Grading.PersonalPurchases, item.Grading.Name),
                         WalletConceptType.model_five_payment.ToString());
                 
-                await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
+                // await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
             }
             else
             {
@@ -228,7 +228,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                     );
                 userDictionary[item.AffiliateId] = item.Grading.PurchasesNetwork;
                 
-                await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
+                // await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
             }
         }
 
@@ -271,6 +271,16 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             {
                 leftPoints  = oldLeftPoints + userPointsInformation.PointsLeft;
                 rightPoints = oldRightPoints + userPointsInformation.PointsRight;
+            }
+
+            if (user.Key is 1049 or 1008  or 1035 or 1053 or 1088 or 1961)
+            {
+                Console.WriteLine("here");
+            }
+            
+            if (user.Key is 1000 or 1001 or 1002 or 1003 or 1004)
+            {
+                Console.WriteLine("here");
             }
 
             if (leftPoints == rightPoints && leftPoints > 0)
@@ -474,7 +484,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         if (payment <= 0)
             return Task.CompletedTask;
         
-        // return Task.CompletedTask;
+        return Task.CompletedTask;
 
         var creditTransaction = new DebitTransactionRequest
         {
@@ -501,7 +511,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        // return Task.CompletedTask;
+        return Task.CompletedTask;
 
 
         var creditTransaction = new CreditTransactionRequest

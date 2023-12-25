@@ -54,7 +54,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
 
         var starDate = new DateTime(configuration.DateInit.Year, configuration.DateInit.Month, configuration.DateInit.Day, 00, 00, 00);
         var endDate  = new DateTime(configuration.DateEnd.Year, configuration.DateEnd.Month, configuration.DateEnd.Day, 23, 59, 59);
-        var lastMonth    = DateTime.Today.AddMonths(-2);
+        var lastMonth    = DateTime.Today.AddMonths(-1);
 
         var poolsWithinMoth  = await _walletRepository.GetDebitsEcoPoolWithinMonth(starDate, configuration.DateEnd);
         var poolsOutsideMoth = await _walletRepository.GetDebitsEcoPoolOutsideMonth(starDate);
