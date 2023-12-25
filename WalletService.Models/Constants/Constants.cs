@@ -83,7 +83,23 @@ public static class Constants
         "Subdirector",
         "Director"
     };
+    public const int    OriginNormalPurchase           = 1;
+    public const string SubjectInvitationForAcademy    = "Invitación al curso de trading";
+    public const string PurchasingPoolRevertBalance    = "Pool Adquisitivo con saldo revertido";
     public const string WireTransfer                   = "Transferencia bancaria";
+    public const string CreateEcoPoolSP                = "dbo.CreateEcoPoolSP";
+    public const string GetTradingAcademyDetailsSp     = "GetTradingAcademyInvoiceDetails";  
+    public const string ActiveEcoPoolsGreaterThan25    = "dbo.sp_GetInvoicePacksByAffiliateCount";
+      
+    public const string CommissionPoolDescription       = "Comisión del pool por {0}, nivel {1}";
+    public const string CommissionPoolDescriptionNormal = "Comisión del pool";
+    public const string FirstModel4Level                      = "Cliente";
+    public const string SecondModel4Level                      ="Colaborador";
+    public const string ConceptRecurringPayment         = "Pago recurrente - ${0} - Calificacion {1}";
+
+    public const int    ForMonth                        = 31;
+    public const int    ForWeek                         = 32;
+    
     public static string[] PartitionKeys =
         { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "12", "13", "14", "18", "29", "30" };
 }

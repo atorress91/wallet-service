@@ -467,7 +467,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
     public async Task<bool> ExecuteCustomPayment(WalletRequest request)
     {
-        var  debit          = 0;
+        var  debit          = 0m;
         var  points         = 0m;
         var  commissionable = 0m;
         byte origin         = 0;
@@ -499,9 +499,9 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             item.BaseAmount = item.SalePrice;
             item.Name       = "CustomEcoPool";
                 
-            debit           += (int)((item.SalePrice * product!.Count) * (1 + (tax / 100)));
-            points          += item.BinaryPoints * product.Count;
-            commissionable  += item.CommissionableValue * product.Count;
+            debit           = item.BaseAmount;
+            points         += item.BinaryPoints * product.Count;
+            commissionable += item.CommissionableValue * product.Count;
             if (item.CategoryId == 2)
             {
                 origin = 1;
