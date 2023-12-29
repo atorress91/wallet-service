@@ -83,13 +83,14 @@ public static class Constants
         "Subdirector",
         "Director"
     };
-    public const int    OriginNormalPurchase           = 1;
-    public const string SubjectInvitationForAcademy    = "Invitación al curso de trading";
-    public const string PurchasingPoolRevertBalance    = "Pool Adquisitivo con saldo revertido";
-    public const string WireTransfer                   = "Transferencia bancaria";
-    public const string CreateEcoPoolSP                = "dbo.CreateEcoPoolSP";
-    public const string GetTradingAcademyDetailsSp     = "GetTradingAcademyInvoiceDetails";  
-    public const string ActiveEcoPoolsGreaterThan25    = "dbo.sp_GetInvoicePacksByAffiliateCount";
+    public const int    OriginNormalPurchase        = 1;
+    public const string SubjectInvitationForAcademy = "Invitación al curso de trading";
+    public const string PurchasingPoolRevertBalance = "Pool Adquisitivo con saldo revertido";
+    public const string WireTransfer                = "Transferencia bancaria";
+    public const string CreateEcoPoolSP             = "dbo.CreateEcoPoolSP";
+    public const string GetTradingAcademyDetailsSp  = "GetTradingAcademyInvoiceDetails";
+    public const string GetAllDetailsModelOneAndTwo = "GetAllDetailsModelOneAndTwo";
+    public const string ActiveEcoPoolsGreaterThan25 = "dbo.sp_GetInvoicePacksByAffiliateCount";
       
     public const string CommissionPoolDescription       = "Comisión del pool por {0}, nivel {1}";
     public const string CommissionPoolDescriptionNormal = "Comisión del pool";

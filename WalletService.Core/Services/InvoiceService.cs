@@ -154,4 +154,12 @@ public class InvoiceService : BaseService, IInvoiceService
         var results = await Task.WhenAll(tasks);
         return results.Where(user => user != null).Select(user => user!); 
     }
+    
+    public async Task<IEnumerable<InvoiceModelOneAndTwoDto>>GetAllInvoicesModelOneAndTwo()
+    {
+        var response = await _invoiceRepository.GetAllInvoicesModelOneAndTwo();
+        var mappedList = Mapper.Map<IEnumerable<InvoiceModelOneAndTwoDto>>(response);
+       
+        return mappedList;
+    }
 }

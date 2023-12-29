@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Options;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Models.Configuration;
-using WalletService.Models.DTO.AffiliateInformation;
 using WalletService.Models.DTO.LeaderBoardDto;
 using WalletService.Models.Requests.RequestValidationCode;
 using WalletService.Models.Responses;
