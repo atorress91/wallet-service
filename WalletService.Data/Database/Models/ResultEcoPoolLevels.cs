@@ -15,5 +15,7 @@ public class ResultEcoPoolLevels
     public decimal? Points { get; set; }
     public DateTime? CompletedAt { get; set; }
     public int BinarySide { get; set; }
+    public DateTime? UserCreatedAt { get; set; }
+    
     public virtual ResultsEcoPool ResultsEcoPool { get; set; }
 }

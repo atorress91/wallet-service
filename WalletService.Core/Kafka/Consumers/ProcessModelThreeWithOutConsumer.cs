@@ -10,44 +10,42 @@ using WalletService.Utility.Extensions;
 
 namespace WalletService.Core.Kafka.Consumers;
 
-public class ProcessEcoPoolWithOutConsumer : BaseKafkaConsumer
+public class ProcessModelThreeWithOutConsumer : BaseKafkaConsumer
 {
-    public ProcessEcoPoolWithOutConsumer(
+    public ProcessModelThreeWithOutConsumer(
         ConsumerSettings         consumerSettings,
         ApplicationConfiguration configuration,
         ILogger                  logger,
         IServiceScopeFactory     serviceScopeFactory
-    ) : base(consumerSettings, configuration, logger, serviceScopeFactory)
-    {
-    }
+    ) : base(consumerSettings, configuration, logger, serviceScopeFactory) { }
 
     protected override Task<bool> OnMessage(ConsumeResult<Ignore, string> e)
     {
-        var message = JsonSerializer.Deserialize<EcoPoolProcessMessage>(e.Message.Value);
+        var message = JsonSerializer.Deserialize<ModelThreeMessage>(e.Message.Value);
         try
         {
-            Logger.LogInformation("[ProcessEcoPoolWithOutConsumer] OnMessage | Init");
-            return message is not null ? EcoPoolProcess(message) : Task.FromResult(false);
+            Logger.LogInformation("[ProcessModelThreeWithOutConsumer] OnMessage | Init");
+            return message is not null ? Process(message) : Task.FromResult(false);
         }
         catch (Exception ex)
         {
-            Logger.LogError("[ProcessEcoPoolWithOutConsumer] Error | Data: {Exception}", ex);
+            Logger.LogError("[ProcessModelThreeWithOutConsumer] Error | Data: {Exception}", ex);
             return Task.FromResult(false);
         }
         finally
         {
-            Logger.LogInformation("[ProcessEcoPoolWithOutConsumer] OnMessage | End");
+            Logger.LogInformation("[ProcessModelThreeWithOutConsumer] OnMessage | End");
         }
     }
 
-    private async Task<bool> EcoPoolProcess(EcoPoolProcessMessage message)
+    private async Task<bool> Process(ModelThreeMessage message)
     {
         using var scope            = ServiceScopeFactory.CreateScope();
         var       walletRepository = scope.ServiceProvider.GetService<IWalletRepository>();
 
-        var ecoPoolsType = new List<EcoPoolsType>();
-        var levelsType   = new List<LevelsType>();
-        var request = new EcoPoolTransactionRequest
+        var ecoPoolsType = new List<ModelThreeType>();
+        var levelsType   = new List<ModelThreeLevelsType>();
+        var request = new ModelThreeTransactionRequest
         {
             EcoPoolConfigurationId  = message.Configuration.Id,
             CompanyPercentageLevels = message.Configuration.CompanyPercentageLevels.ToDecimal(),
@@ -57,7 +55,7 @@ public class ProcessEcoPoolWithOutConsumer : BaseKafkaConsumer
             Case                    = message.Configuration.Case,
             TotalPercentageLevels   = message.Configuration.Levels.Sum(x => x.Percentage)
         };
-        Logger.LogInformation("[ProcessEcoPoolWithOutConsumer] ProcessListOutsideMonth | Init");
+        Logger.LogInformation("[ProcessModelThreeWithOutConsumer] ProcessListOutsideMonth | Init");
 
         
         foreach (var pool in message.Pools)
@@ -67,12 +65,12 @@ public class ProcessEcoPoolWithOutConsumer : BaseKafkaConsumer
 
             if (affiliate is null)
             {
-                Logger.LogWarning($"[ProcessEcoPoolWithInConsumer] | EcoPoolProcess | Affiliate: {affiliate.ToJsonString()}");
+                Logger.LogWarning($"[ProcessModelThreeWithOutConsumer] | EcoPoolProcess | Affiliate: {affiliate.ToJsonString()}");
                 continue;
             }
             if (pool.Invoice.Date is null)
             {
-                Logger.LogWarning($"[ProcessEcoPoolWithInConsumer] | EcoPoolProcess | Date wrong");
+                Logger.LogWarning($"[ProcessModelThreeWithOutConsumer] | EcoPoolProcess | Date wrong");
                 continue;
             }
 
@@ -81,19 +79,20 @@ public class ProcessEcoPoolWithOutConsumer : BaseKafkaConsumer
             var daysInMonth     = DateTime.DaysInMonth(datePoolTemp.Year, datePoolTemp.Month);
             var lastDayInMonth  = new DateTime(datePoolTemp.Year, datePoolTemp.Month, daysInMonth, 23, 59, 59);
 
-            var levelsMapped = affiliate.FamilyTree.Select(s => new LevelsType
+            var levelsMapped = affiliate.FamilyTree.Select(s => new ModelThreeLevelsType
             {
                 Percentage    = message.Configuration.Levels.FirstOrDefault(x => x.Level == s.Level)!.Percentage,
                 Level         = s.Level,
                 AffiliateId   = s.Id,
                 PoolId        = pool.Id,
                 AffiliateName = s.UserName,
-                Side          = s.Side
+                Side          = s.Side,
+                UserCreatedAt = s.UserCreatedAt
             }).ToList();
 
             var productName = product?.Name ?? string.Empty;
             levelsType.AddRange(levelsMapped);
-            ecoPoolsType.Add(new EcoPoolsType
+            ecoPoolsType.Add(new ModelThreeType
             {
                 AffiliateId       = affiliate.Id,
                 AffiliateUserName = affiliate.UserName,
@@ -104,16 +103,17 @@ public class ProcessEcoPoolWithOutConsumer : BaseKafkaConsumer
                 LastDayDate       = lastDayInMonth,
                 PaymentDate       = firstDayInMonth,
                 ProductExternalId = pool.ProductId,
-                ProductName       = productName
+                ProductName       = productName,
+                UserCreatedAt     = affiliate.UserCreatedAt
             });
         }
 
         request.LevelsType   = levelsType;
         request.EcoPoolsType = ecoPoolsType;
 
-        await walletRepository!.CreateEcoPoolSP(request);
+        await walletRepository!.CreateModelThreeSP(request);
 
-        Logger.LogInformation($"[ProcessEcoPoolWithOutConsumer] | EcoPoolProcess | Batch Completed");
+        Logger.LogInformation($"[ProcessModelThreeWithOutConsumer] | EcoPoolProcess | Batch Completed");
         return true;
     }
 }

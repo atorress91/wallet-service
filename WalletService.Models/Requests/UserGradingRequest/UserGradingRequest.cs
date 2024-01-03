@@ -10,5 +10,6 @@ public class UserGradingRequest
     public string UserName { get; set; }
     public double Points { get; set; }
     public double Commissions { get; set; }
+    public DateTime UserCreatedAt { get; set; }
     public GradingDto? Grading { get; set; }
 }

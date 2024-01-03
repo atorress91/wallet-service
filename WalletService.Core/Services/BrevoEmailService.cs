@@ -244,4 +244,50 @@ public class BrevoEmailService : IBrevoEmailService
 
         return await SendEmailForMembership(user.Email!, Constants.SubjectConfirmPurchase, body, pdfData);
     }
+    
+    public async Task<bool> SendEmailPurchaseConfirmForAcademy(UserInfoResponse user, Dictionary<string, byte[]> pdfDataDict,
+        InvoicesSpResponse                                            spResponse)
+    {
+        var dictionary = new Dictionary<string, string>();
+
+        var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        var separator        = Path.DirectorySeparatorChar;
+        var pathFile         = $"{workingDirectory}{separator}EmailTemplates{separator}confirm-purchase-academy.html";
+        var bodyString       = await File.ReadAllTextAsync(pathFile, Encoding.UTF8);
+
+        if (string.IsNullOrEmpty(bodyString))
+            return false;
+
+        var fullName = $"{user.Name} {user.LastName}";
+        var date     = DateTime.Now.ToString("MM/dd/yyyy");
+        dictionary.Add("{0}", fullName);
+        dictionary.Add("{1}", date);
+        
+        var body = bodyString.ReplaceHtml(dictionary);
+
+        return await SendEmailWithInvoice(user.Email!, Constants.SubjectConfirmPurchase, body, pdfDataDict);
+    }
+    
+    public async Task<bool> SendInvitationsForTradingAcademy(UserAffiliateResponse user, string link, string code)
+    {
+        var dictionary = new Dictionary<string, string>();
+
+        var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        var separator        = Path.DirectorySeparatorChar;
+        var pathFile         = $"{workingDirectory}{separator}EmailTemplates{separator}invitation-trading-academy.html";
+        var bodyString       = await File.ReadAllTextAsync(pathFile, Encoding.UTF8);
+
+        if (string.IsNullOrEmpty(bodyString))
+            return false;
+
+        var fullName = $"{user.Data!.Name} {user.Data.LastName}";
+       
+        dictionary.Add("{0}", fullName);
+        dictionary.Add("{1}", link);
+        dictionary.Add("{2}", code);
+        
+        var body = bodyString.ReplaceHtml(dictionary);
+
+        return await SendEmail(user.Data.Email!, Constants.SubjectInvitationForAcademy, body);
+    }
 }

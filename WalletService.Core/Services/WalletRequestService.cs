@@ -1,5 +1,7 @@
-﻿using AutoMapper;
 using System.Text.Json;
+using AutoMapper;
+using WalletService.Core.Factory;
+using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.Models;
@@ -22,13 +24,18 @@ public class WalletRequestService : BaseService, IWalletRequestService
     private readonly IInvoiceDetailRepository _invoiceDetailRepository;
     private readonly IWalletRepository        _walletRepository;
     private readonly IWalletPeriodRepository  _walletPeriodRepository;
+    private readonly IPaymentStrategyFactory        _paymentStrategyFactory;
 
 
     public WalletRequestService(
         IMapper                  mapper,
         IWalletRequestRepository walletRequestRepository,
         IAccountServiceAdapter   accountServiceAdapter,
-        IInvoiceRepository       invoiceRepository, IInvoiceDetailRepository invoicesDetails, IWalletRepository walletRepository,IWalletPeriodRepository walletPeriodRepository) : base(mapper)
+        IInvoiceRepository       invoiceRepository, 
+        IInvoiceDetailRepository invoicesDetails, 
+        IWalletRepository walletRepository,
+        IWalletPeriodRepository walletPeriodRepository, 
+        IPaymentStrategyFactory paymentStrategyFactory) : base(mapper)
     {
         _walletRequestRepository = walletRequestRepository;
         _accountServiceAdapter   = accountServiceAdapter;
@@ -36,7 +43,9 @@ public class WalletRequestService : BaseService, IWalletRequestService
         _invoiceDetailRepository = invoicesDetails;
         _walletRepository        = walletRepository;
         _walletPeriodRepository  = walletPeriodRepository;
+        _paymentStrategyFactory  = paymentStrategyFactory;
     }
+
     public async Task<IEnumerable<WalletRequestDto>> GetAllWalletsRequests()
     {
         var response = await _walletRequestRepository.GetAllWalletsRequests();
@@ -57,18 +66,20 @@ public class WalletRequestService : BaseService, IWalletRequestService
 
         return Mapper.Map<IEnumerable<WalletRequestDto>>(response);
     }
+
     public async Task<WalletRequestDto?> CreateWalletRequestAsync(WalletRequestRequest request)
     {
         var isDateValid  = await IsWithdrawalDateAllowed();
         var hasWalletBtc = await HasWalletAddress(request.AffiliateId);
-        
+
         if (!isDateValid)
             return null;
-        
+
         if (!hasWalletBtc)
             return null;
-        
-        var response             = await _accountServiceAdapter.VerificationCode(request.VerificationCode, request.UserPassword, request.AffiliateId);
+
+        var response =
+            await _accountServiceAdapter.VerificationCode(request.VerificationCode, request.UserPassword, request.AffiliateId);
         var userAvailableBalance = await _walletRepository.GetAvailableBalanceByAffiliateId(request.AffiliateId);
         var userReverseBalance   = await _walletRepository.GetReverseBalanceByAffiliateId(request.AffiliateId);
         var isActivePool         = await _walletRepository.IsActivePoolGreaterThanOrEqualTo25(request.AffiliateId);
@@ -91,7 +102,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         if (request.Amount > userAvailableBalance)
             return null;
 
-        var walletRequest = new WalletsRequests()
+        var walletRequest = new WalletsRequests
         {
             Amount        = request.Amount,
             Concept       = request.Concept!,
@@ -109,41 +120,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
 
         return Mapper.Map<WalletRequestDto>(walletRequest);
     }
-    private async Task<bool> IsWithdrawalDateAllowed()
-    {
-        var defaultZone = Constants.DefaultWithdrawalZone;
-    
-        TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(defaultZone);
-        DateTime localDateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
-    
-        if (localDateTime.TimeOfDay < new TimeSpan(8, 0, 0) || localDateTime.TimeOfDay > new TimeSpan(18, 0, 0))
-            return false;
 
-        var allowedDatesObjects = await _walletPeriodRepository.GetAllWalletsPeriods();
-
-        var allowedDates = allowedDatesObjects.Select(wp => wp.Date.Date).ToList(); 
-
-        return allowedDates.Contains(localDateTime.Date);
-    }
-    
-    private async Task<bool> HasWalletAddress(int affiliateId)
-    {
-        var response = await _accountServiceAdapter.GetAffiliateBtcByAffiliateId(affiliateId);
-
-        if (response.Content is null)
-            return false;
-
-        var userInfo = JsonSerializer.Deserialize<AffiliateBtcResponse>(response.Content);
-
-        if (userInfo?.Data is null)
-            return false;
-        
-        if (string.IsNullOrEmpty(userInfo.Data.Address))
-            return false;
-        
-        return true;
-    }
-    
     public async Task<ServicesResponse?> ProcessOption(int pOption, List<int> ids)
     {
         var response = new ServicesResponse();
@@ -201,13 +178,16 @@ public class WalletRequestService : BaseService, IWalletRequestService
     {
         var response         = await _invoiceRepository.GetInvoiceById(request.InvoiceId);
         var userInfoResponse = await _accountServiceAdapter.GetUserInfo(response!.AffiliateId);
+        
+        var amountReverted = response.TotalInvoice * (decimal?)0.90;
+        var leftOverBalance = response.TotalInvoice - amountReverted;
 
-        var creditRequest = new CreditTransactionRequest()
+        var creditRequest = new CreditTransactionRequest
         {
             AffiliateId       = request.AffiliateId,
             UserId            = Constants.AdminUserId,
             Concept           = Constants.RevertEcoPoolConcept + $" Factura# {request.InvoiceId}",
-            Credit            = Convert.ToDouble(response.TotalInvoice),
+            Credit            = Convert.ToDouble(amountReverted),
             AffiliateUserName = userInfoResponse!.UserName,
             AdminUserName     = Constants.AdminEcosystemUserName,
             ConceptType       = WalletConceptType.revert_pool.ToString()
@@ -224,7 +204,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
             Type          = WalletRequestType.revert_invoice_request.ToString(),
             Status        = WalletRequestStatus.pending.ToByte(),
             CreationDate  = DateTime.Now,
-            AttentionDate = null,
+            AttentionDate = null
         };
 
         walletRequest = await _walletRequestRepository.CreateWalletRequestAsync(walletRequest);
@@ -238,12 +218,42 @@ public class WalletRequestService : BaseService, IWalletRequestService
         {
             await DeleteInvoiceAndDetails(request.InvoiceId);
             await _walletRepository.CreditTransaction(creditRequest);
+            await CreateCustomEcoPool(userInfoResponse, leftOverBalance);
             walletMovement.Status = WalletRequestStatus.approved.ToByte();
             await UpdateWalletRequestAsync(walletMovement);
         }
 
 
         return Mapper.Map<WalletRequestDto>(walletRequest);
+    }
+
+    private async Task<bool> CreateCustomEcoPool(UserInfoResponse user, decimal? leftOverBalance)
+    {
+        var payment =  _paymentStrategyFactory.GetBalancePaymentStrategy();
+
+        if (user is null)
+            return false;
+        
+        var walletRequest = new WalletRequest
+        {
+         AffiliateId       = user.Id,
+         AffiliateUserName = user.UserName!,
+         PurchaseFor       = 0,
+         Bank              = Constants.WalletBalance,
+         PaymentMethod     = 0,
+         SecretKey         = null,
+         ReceiptNumber     = leftOverBalance.ToString(),
+         ProductsList      = new List<ProductsRequests>
+         {
+             new ProductsRequests
+             {
+                 Count = 1,
+                 IdProduct = 23
+             }
+         },
+        };
+        
+        return await payment.ExecuteCustomPayment(walletRequest);
     }
 
     private async Task<bool> DeleteInvoiceAndDetails(int invoiceNumber)
@@ -261,6 +271,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
 
             return true;
         }
+        
         catch (Exception)
         {
             return false;
@@ -321,7 +332,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
             return false;
 
         var result = await _walletRepository.BulkAdministrativeDebitTransaction(walletsList.ToArray());
-        
+
         if (!result)
             return false;
 
@@ -333,6 +344,41 @@ public class WalletRequestService : BaseService, IWalletRequestService
         });
 
         await _walletRequestRepository.UpdateBulkWalletRequestsAsync(idsList);
+
+        return true;
+    }
+
+    private async Task<bool> IsWithdrawalDateAllowed()
+    {
+        var defaultZone = Constants.DefaultWithdrawalZone;
+
+        var timeZone      = TimeZoneInfo.FindSystemTimeZoneById(defaultZone);
+        var localDateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
+
+        if (localDateTime.TimeOfDay < new TimeSpan(8, 0, 0) || localDateTime.TimeOfDay > new TimeSpan(18, 0, 0))
+            return false;
+
+        var allowedDatesObjects = await _walletPeriodRepository.GetAllWalletsPeriods();
+
+        var allowedDates = allowedDatesObjects.Select(wp => wp.Date.Date).ToList();
+
+        return allowedDates.Contains(localDateTime.Date);
+    }
+
+    private async Task<bool> HasWalletAddress(int affiliateId)
+    {
+        var response = await _accountServiceAdapter.GetAffiliateBtcByAffiliateId(affiliateId);
+
+        if (response.Content is null)
+            return false;
+
+        var userInfo = JsonSerializer.Deserialize<AffiliateBtcResponse>(response.Content);
+
+        if (userInfo?.Data is null)
+            return false;
+
+        if (string.IsNullOrEmpty(userInfo.Data.Address))
+            return false;
 
         return true;
     }

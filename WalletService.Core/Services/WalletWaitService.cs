@@ -7,13 +7,13 @@ using WalletService.Models.Requests.WalletWaitRequest;
 
 namespace WalletService.Core.Services;
 
-public class WalletWaitService: BaseService, IWalletWaitService
+public class WalletWaitService : BaseService, IWalletWaitService
 {
     private readonly IWalletWaitRepository _walletWaitRepository;
+
     public WalletWaitService(IMapper mapper, IWalletWaitRepository walletWaitRepository) : base(mapper)
-    {
-        _walletWaitRepository = walletWaitRepository;
-    }
+        => _walletWaitRepository = walletWaitRepository;
+
     public async Task<IEnumerable<WalletWaitDto>> GetAllWalletsWaits()
     {
         var response = await _walletWaitRepository.GetAllWalletsWaits();
@@ -25,6 +25,7 @@ public class WalletWaitService: BaseService, IWalletWaitService
         var response = await _walletWaitRepository.GetWalletWaitById(id);
         return Mapper.Map<WalletWaitDto>(response);
     }
+
     public async Task<WalletWaitDto?> CreateWalletWaitAsync(WalletWaitRequest request)
     {
         var wallet = Mapper.Map<WalletsWaits>(request);
@@ -39,22 +40,22 @@ public class WalletWaitService: BaseService, IWalletWaitService
         if (wallet is null)
             return null;
         wallet.AffiliateId   = request.AffiliateId;
-        wallet.Credit   = request.Credit;
-        wallet.PaymentMethod   = request.PaymentMethod;
-        wallet.Bank   = request.Bank;
-        wallet.Support   = request.Support;
+        wallet.Credit        = request.Credit;
+        wallet.PaymentMethod = request.PaymentMethod;
+        wallet.Bank          = request.Bank;
+        wallet.Support       = request.Support;
         wallet.DepositDate   = request.DepositDate;
-        wallet.Status   = request.Status;
-        wallet.Attended   = request.Attended;
-        wallet.Date   = request.Date;
-        wallet.Order   = request.Order;
-        wallet.UpdatedAt   = DateTime.Now;
+        wallet.Status        = request.Status;
+        wallet.Attended      = request.Attended;
+        wallet.Date          = request.Date;
+        wallet.Order         = request.Order;
+        wallet.UpdatedAt     = DateTime.Now;
 
         wallet = await _walletWaitRepository.UpdateWalletWaitAsync(wallet);
 
         return Mapper.Map<WalletWaitDto>(wallet);
     }
-    
+
     public async Task<WalletWaitDto?> DeleteWalletWaitAsync(int id)
     {
         var wallet = await _walletWaitRepository.GetWalletWaitById(id);

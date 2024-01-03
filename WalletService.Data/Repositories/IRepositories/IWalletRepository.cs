@@ -10,10 +10,12 @@ public interface IWalletRepository
     Task<List<InvoicePacks>> GetDebitsEcoPoolWithinMonth(DateTime               from, DateTime to);
     Task<InvoicesSpResponse?> DebitEcoPoolTransactionSP(DebitTransactionRequest request);
     Task<List<InvoicePacks>> GetDebitsEcoPoolOutsideMonth(DateTime              date);
+    Task<List<InvoicesDetails>> GetInvoicesDetailsItemsForModelTwo(int          month, int year);
     Task<List<Wallets>> GetWalletByUserId(int                                   userId);
     Task<List<Wallets>> GetWalletsRequest(int                                   userId);
     Task<Wallets?> GetWalletById(int                                            id);
-    Task<bool> CreateEcoPoolSP(EcoPoolTransactionRequest                        request);
+    Task<bool> CreateModelThreeSP(ModelThreeTransactionRequest                  request);
+    Task<bool> CreateModelTwoSP(ModelTwoTransactionRequest                      request);
     Task<Wallets> CreateWalletAsync(Wallets                                     request);
     Task<Wallets> UpdateWalletAsync(Wallets                                     request);
     Task<Wallets> DeleteWalletAsync(Wallets                                     request);

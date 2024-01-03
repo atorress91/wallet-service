@@ -26,5 +26,11 @@ public class ResultsEcoPoolRepository : BaseRepository, IResultsEcoPoolRepositor
             .Include(x => x.ResultEcoPoolLevels)
             .Where(x => x.EcoPoolConfiguration.CompletedAt == null).ToListAsync();
     }
-
+    
+    public Task<List<ResultsModelTwo>> GetResultsModelTwoToPayment()
+    {
+        return Context.ResultsModelTwo
+            .Include(x => x.ResultsModelTwoLevels)
+            .Where(x => x.CompletedAt == null).ToListAsync();
+    }
 }

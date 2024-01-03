@@ -11,4 +11,9 @@ public interface IBrevoEmailService
         InvoicesSpResponse spResponse);
     Task<bool> SendEmailConfirmationEmailToThirdParty(UserInfoResponse user, string             nameOfPurchaser, List<string>       productNames);
     Task<bool> SendEmailMembershipConfirm(UserInfoResponse user, byte[] pdfData, InvoicesSpResponse spResponse);
+
+    Task<bool> SendEmailPurchaseConfirmForAcademy(UserInfoResponse user, Dictionary<string, byte[]> pdfDataDict,
+        InvoicesSpResponse                                         spResponse);
+
+    Task<bool> SendInvitationsForTradingAcademy(UserAffiliateResponse user, string link, string code);
 }

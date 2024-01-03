@@ -6,11 +6,11 @@ namespace WalletService.Data.Database.Models;
 public class PaymentTransaction
 {
     public int Id { get; set; }
-    public string? IdTransaction { get; set; }
+    public string IdTransaction { get; set; } = string.Empty;
     public int AffiliateId { get; set; }
     public decimal Amount { get; set; }
     public decimal AmountReceived { get; set; }
-    public string? Products { get; set; }
+    public string Products { get; set; } = string.Empty;
     public int Status { get; set; }
     public bool Acredited { get; set; }
     public DateTime CreatedAt { get; set; }

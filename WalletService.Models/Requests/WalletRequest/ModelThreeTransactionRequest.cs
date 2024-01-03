@@ -1,5 +1,5 @@
 ﻿namespace WalletService.Models.Requests.WalletRequest;
-public class EcoPoolTransactionRequest
+public class ModelThreeTransactionRequest
 {
     public int Case { get; set; }
     public decimal Points { get; set; }
@@ -8,12 +8,12 @@ public class EcoPoolTransactionRequest
     public decimal CompanyPercentageLevels { get; set; }
     public int EcoPoolConfigurationId { get; set; }
     public double TotalPercentageLevels { get; set; }
-    public ICollection<EcoPoolsType> EcoPoolsType { get; set; }
-    public ICollection<LevelsType> LevelsType { get; set; }
+    public ICollection<ModelThreeType> EcoPoolsType { get; set; }
+    public ICollection<ModelThreeLevelsType> LevelsType { get; set; }
     
 }
 
-public class LevelsType
+public class ModelThreeLevelsType
 {
     public int Level { get; set; }
     public double Percentage { get; set; }
@@ -21,10 +21,11 @@ public class LevelsType
     public string AffiliateName { get; set; }
     public int PoolId { get; set; }
     public int Side { get; set; }
+    public DateTime? UserCreatedAt { get; set; }
     
 }
 
-public class EcoPoolsType
+public class ModelThreeType
 {
     public int AffiliateId { get; set; }
     public int ProductExternalId { get; set; }
@@ -36,4 +37,5 @@ public class EcoPoolsType
     public DateTime LastDayDate { get; set; }
     public DateTime PaymentDate { get; set; }
     public int PoolId { get; set; }
+    public DateTime? UserCreatedAt { get; set; }
 }

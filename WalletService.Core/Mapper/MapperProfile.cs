@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using WalletService.Data.Database.CustomModels;
 using WalletService.Data.Database.Models;
 using WalletService.Models.DTO.CoinPaymentTransactionDto;
 using WalletService.Models.DTO.InvoiceDetailDto;
@@ -16,6 +17,7 @@ using WalletService.Models.DTO.WalletWithDrawalDto;
 using WalletService.Models.Requests.ConPaymentRequest;
 using WalletService.Models.Requests.InvoiceDetailRequest;
 using WalletService.Models.Requests.InvoiceRequest;
+using WalletService.Models.Requests.PaymentTransaction;
 using WalletService.Models.Requests.WalletHistoryRequest;
 using WalletService.Models.Requests.WalletPeriodRequest;
 using WalletService.Models.Requests.WalletRequest;
@@ -44,6 +46,7 @@ public class MapperProfile : Profile
         CreateMap<WalletsWithdrawals, WalletWithDrawalDto>();
         CreateMap<WalletsRequests, WalletRequestDto>();
         CreateMap<Invoices, InvoiceDto>();
+        CreateMap<Invoices, InvoiceDTO>();
         CreateMap<InvoicesDetails, InvoiceDetailDto>();
         CreateMap<EcoPoolConfiguration, EcoPoolConfigurationDto>();
         CreateMap<EcoPoolLevels, EcoPoolLevelDto>();
@@ -51,6 +54,8 @@ public class MapperProfile : Profile
         CreateMap<ResultsEcoPool, ResultsEcoPoolDto>();
         CreateMap<ResultEcoPoolLevels, ResultEcoPoolLevelsDto>();
         CreateMap<PaymentTransaction, PaymentTransactionDto>();
+        CreateMap<InvoicesTradingAcademyResponse, InvoiceTradingAcademyDto>();
+     
 
         CreateMap<WalletRequestRequest, WalletsRequests>()
             .ForMember(d => d.Id, map => map.Ignore())
@@ -116,6 +121,10 @@ public class MapperProfile : Profile
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());
-
+        
+        CreateMap<PaymentTransactionRequest, PaymentTransaction>()
+            .ForMember(d => d.Id, map => map.Ignore())
+            .ForMember(d => d.UpdatedAt, map => map.Ignore())
+            .ForMember(d => d.CreatedAt, map => map.Ignore());
     }
 }

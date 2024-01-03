@@ -41,5 +41,10 @@ public class PaymentStrategyFactory : IPaymentStrategyFactory
     {
         return _serviceProvider.GetRequiredService<CoinPaymentsPaymentStrategy>();
     }
+    
+    public IWireTransferStrategy GetWireTransferStrategy()
+    {
+        return _serviceProvider.GetRequiredService<WireTransferStrategy>();
+    }
 
 }

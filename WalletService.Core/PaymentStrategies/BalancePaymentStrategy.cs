@@ -22,8 +22,9 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
     private readonly IWalletRequestRepository _walletRequestRepository;
 
     public BalancePaymentStrategy(IInventoryServiceAdapter inventoryServiceAdapter,
-        IAccountServiceAdapter                             accountServiceAdapter, IWalletRepository        walletRepository, IMediatorPdfService mediatorPdfService,
-        IBrevoEmailService                                 brevoEmailService,     IWalletRequestRepository walletRequestRepository)
+        IAccountServiceAdapter accountServiceAdapter, IWalletRepository walletRepository,
+        IMediatorPdfService mediatorPdfService,
+        IBrevoEmailService brevoEmailService, IWalletRequestRepository walletRequestRepository)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter   = accountServiceAdapter;
@@ -32,22 +33,22 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         _mediatorPdfService      = mediatorPdfService;
         _walletRequestRepository = walletRequestRepository;
     }
-    
+
     private async Task<Dictionary<string, byte[]>> GetPdfContentFromProductIds(int[] productIds)
     {
         Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
 
         var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        var separator = Path.DirectorySeparatorChar;
+        var separator        = Path.DirectorySeparatorChar;
 
-        foreach(var id in productIds)
+        foreach (var id in productIds)
         {
             if (Enum.IsDefined(typeof(ProductPdfs), id))
             {
                 var enumValue = (ProductPdfs)id;
-                var pdfName = $"{enumValue}.pdf";
-                var path = $"{workingDirectory}{separator}Assets{separator}EcoPooles{separator}{enumValue}.pdf";
-                
+                var pdfName   = $"{enumValue}.pdf";
+                var path      = $"{workingDirectory}{separator}Assets{separator}EcoPooles{separator}{enumValue}.pdf";
+
                 var pdfContent = await File.ReadAllBytesAsync(path);
                 pdfContents[pdfName] = pdfContent;
             }
@@ -56,8 +57,10 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 Console.WriteLine($"The product ID {{id}} does not have an associated PDF.");
             }
         }
+
         return pdfContents;
     }
+
     public async Task<bool> ExecuteEcoPoolPayment(WalletRequest request)
     {
         var  debit          = 0;
@@ -70,7 +73,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         var balanceInfo      = await GetBalanceInformationByAffiliateId(request.AffiliateId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
         var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
-        
+
         if (!responseList.IsSuccessful)
             return false;
 
@@ -171,7 +174,8 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
 
-        var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        var invoicePdf =
+            await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         var productPdfsContents = await GetPdfContentFromProductIds(productIds);
 
@@ -192,7 +196,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         return true;
     }
-    
+
     private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId)
     {
         var amountRequests    = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId);
@@ -209,11 +213,12 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         if (amountRequests == 0m && response.ReverseBalance == 0m) return response;
 
-         response.AvailableBalance -= amountRequests;
-         response.AvailableBalance -= response.ReverseBalance;
+        response.AvailableBalance -= amountRequests;
+        response.AvailableBalance -= response.ReverseBalance;
 
         return response;
     }
+
     public async Task<bool> ExecuteAdminPayment(WalletRequest request)
     {
         var  debit          = 0;
@@ -322,7 +327,8 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
 
-        var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        var invoicePdf =
+            await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
         var productPdfsContents = await GetPdfContentFromProductIds(productIds);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
@@ -339,11 +345,11 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         {
             await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
         }
-        
+
         return true;
     }
-    
-     public async Task<bool> ExecutePaymentCourses(WalletRequest request)
+
+    public async Task<bool> ExecutePaymentCourses(WalletRequest request)
     {
         var  debit          = 0;
         var  points         = 0m;
@@ -355,7 +361,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         var balanceInfo      = await GetBalanceInformationByAffiliateId(request.AffiliateId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
         var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
-        
+
         if (!responseList.IsSuccessful)
             return false;
 
@@ -363,13 +369,13 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             return false;
 
         var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
-        
+
         if (result?.Data == null)
             return false;
 
         if (result.Data.Count != request.ProductsList.Count)
             return false;
-        
+
         foreach (var item in result.Data)
         {
             var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
@@ -443,13 +449,130 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
 
-        var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
-        
+        var invoicePdf =
+            await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
         {
             ["Invoice.pdf"] = invoicePdf
         };
 
+        if (allPdfData.Count > 0)
+        {
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+        }
+
+        return true;
+    }
+
+    public async Task<bool> ExecuteCustomPayment(WalletRequest request)
+    {
+        var  debit          = 0m;
+        var  points         = 0m;
+        var  commissionable = 0m;
+        byte origin         = 0;
+
+        var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var productIds   = request.ProductsList.Select(p => p.IdProduct).ToArray();
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+
+        if (!responseList.IsSuccessful)
+            return false;
+
+        if (string.IsNullOrEmpty(responseList.Content))
+            return false;
+
+        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
+        
+        if (result?.Data == null)
+            return false;
+
+        if (result.Data.Count != request.ProductsList.Count)
+            return false;
+
+        foreach (var item in result.Data)
+        {
+            var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
+            var tax     = item.Tax;
+            item.SalePrice  = Convert.ToDecimal(request.ReceiptNumber);
+            item.BaseAmount = item.SalePrice;
+            item.Name       = "CustomEcoPool";
+                
+            debit           = item.BaseAmount;
+            points         += item.BinaryPoints * product.Count;
+            commissionable += item.CommissionableValue * product.Count;
+            if (item.CategoryId == 2)
+            {
+                origin = 1;
+            }
+
+            var invoiceDetail = new InvoiceDetailsTransactionRequest
+            {
+                ProductId             = item.Id,
+                PaymentGroupId        = item.PaymentGroup,
+                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
+                ProductName           = item.Name!,
+                ProductPrice          = item.SalePrice,
+                ProductPriceBtc       = Constants.None,
+                ProductIva            = item.Tax,
+                ProductQuantity       = product.Count,
+                ProductCommissionable = item.CommissionableValue,
+                BinaryPoints          = item.BinaryPoints,
+                ProductPoints         = item.ValuePoints,
+                ProductDiscount       = item.ProductDiscount,
+                CombinationId         = Constants.None,
+                ProductPack           = Convert.ToByte(item.ProductPacks),
+                BaseAmount            = (item.BaseAmount * product.Count),
+                DailyPercentage       = item.DailyPercentage,
+                WaitingDays           = item.DaysWait,
+                DaysToPayQuantity     = Constants.DaysToPayQuantity,
+                ProductStart          = Constants.None,
+            };
+
+            invoiceDetails.Add(invoiceDetail);
+        }
+
+        if (debit == 0)
+            return false;
+
+        if (invoiceDetails.Count == 0)
+            return false;
+
+        var debitTransactionRequest = new DebitTransactionRequest
+        {
+            Debit             = debit,
+            AffiliateId       = request.AffiliateId,
+            UserId            = Constants.AdminUserId,
+            ConceptType       = WalletConceptType.purchasing_pool.ToString(),
+            Points            = points,
+            Concept           = Constants.EcoPoolProductCategoryForAdmin,
+            Commissionable    = commissionable,
+            Bank              = request.Bank,
+            PaymentMethod     = Constants.AdminPayment,
+            Origin            = origin,
+            Level             = Constants.None,
+            AffiliateUserName = request.AffiliateUserName,
+            AdminUserName     = Constants.AdminEcosystemUserName,
+            ReceiptNumber     = request.ReceiptNumber,
+            Type              = Constants.None,
+            SecretKey         = request.SecretKey,
+            invoices          = invoiceDetails,
+        };
+
+        var spResponse = await _walletRepository.AdminDebitTransaction(debitTransactionRequest);
+
+        if (spResponse is null)
+            return false;
+
+        var invoicePdf =
+            await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+
+        Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
+        {
+            ["Invoice.pdf"] = invoicePdf
+        };
+        
         if (allPdfData.Count > 0)
         {
             await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);

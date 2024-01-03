@@ -153,6 +153,7 @@ public static class IocExtensionApp
         services.AddScoped<IResultsEcoPoolRepository, ResultsEcoPoolRepository>();
         services.AddScoped<IApiClientRepository, ApiClientRepository>();
         services.AddScoped<ICoinPaymentTransactionRepository, CoinPaymentTransactionRepository>();
+        
     }
 
     private static void InjectAdapters(IServiceCollection services)
@@ -175,6 +176,7 @@ public static class IocExtensionApp
         services.AddScoped<ToThirdPartiesPaymentStrategy>();
         services.AddScoped<MembershipPaymentStrategy>();
         services.AddScoped<CoinPaymentsPaymentStrategy>();
+        services.AddScoped<WireTransferStrategy>();
     }
 
     private static void InjectServices(IServiceCollection services)
@@ -195,6 +197,7 @@ public static class IocExtensionApp
         services.AddScoped<IResultsEcoPoolService, ResultsEcoPoolService>();
         services.AddScoped<IConPaymentService, ConPaymentService>();
         services.AddScoped<IBrevoEmailService, BrevoEmailService>();
+        services.AddScoped<IPaymentTransactionService, PaymentTransactionService>();
     }
 
     private static void InjectPackages(IServiceCollection services)

@@ -54,6 +54,28 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
         }
         return pdfContents;
     }
+
+    private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
+    {
+        Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
+
+        var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        var separator        = Path.DirectorySeparatorChar;
+        
+        var pdfDirectory = $"{workingDirectory}{separator}Assets{separator}TradingAcademy";
+        
+        var pdfFiles = Directory.GetFiles(pdfDirectory, "*.pdf");
+
+        foreach (var pdfFile in pdfFiles)
+        {
+            var fileName   = Path.GetFileName(pdfFile);
+            var pdfContent = await File.ReadAllBytesAsync(pdfFile);
+            pdfContents[fileName] = pdfContent;
+        }
+
+        return pdfContents;
+    }
+
     public async Task<bool> ExecuteEcoPoolPayment(WalletRequest request)
     {
         var  debit          = 0;
@@ -190,7 +212,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
 
     public async Task<bool> ExecuteCoursePayment(WalletRequest request)
     {
-        var  debit          = 0;
+        var  debit          = 0m;
         var  points         = 0m;
         var  commissionable = 0m;
         byte origin         = 0;
@@ -218,7 +240,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
         {
             var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
             var tax     = item.Tax;
-            debit          += (int)((item.SalePrice * product!.Count) * (1 + (tax / 100)));
+            debit          += (item.SalePrice * product!.Count) * (1 + (tax / 100));
             points         += item.BinaryPoints * product.Count;
             commissionable += item.CommissionableValue * product.Count;
             if (item.CategoryId == 2)
@@ -278,25 +300,32 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentStrategy
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
         };
-
+        
+        var hasCourse  = await _invoiceRepository.GetInvoicesForTradingAcademyPurchases(request.AffiliateId);
         var spResponse = await _invoiceRepository.HandleDebitTransactionForCourse(debitTransactionRequest);
-
+        
         if (spResponse is null)
             return false;
-
+    
+        Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>();
         var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+
+        allPdfData["Invoice.pdf"] = invoicePdf;
         
-        Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
+        if (!hasCourse && invoicePdf.Length != 0)
         {
-            ["Invoice.pdf"] = invoicePdf
-        };
-        
-        if (invoicePdf.Length != 0)
+            var pdfContents = await GetPdfContentForTradingAcademy();
+            foreach (var pdf in pdfContents)
+            {
+                allPdfData[pdf.Key] = pdf.Value;
+            }
+            await _brevoEmailService.SendEmailPurchaseConfirmForAcademy(userInfoResponse!, allPdfData, spResponse);
+        }
+        else if (invoicePdf.Length != 0)
         {
             await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
         }
 
         return true;
     }
-
 }

@@ -3,8 +3,8 @@ using Microsoft.Extensions.Options;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Models.Configuration;
 using WalletService.Models.DTO.AffiliateInformation;
+using WalletService.Models.DTO.LeaderBoardDto;
 using WalletService.Models.Requests.RequestValidationCode;
-using WalletService.Models.Requests.TransferBalanceRequest;
 using WalletService.Models.Responses;
 using WalletService.Models.Responses.BaseResponses;
 using WalletService.Utility.Extensions;
@@ -56,27 +56,6 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
     {
         return Put($"/userAffiliateInfo/revert_activation/{id}/");
     }
-
-    public async Task<ICollection<UserBinaryInformation>> CalculatePointPerUser(Dictionary<int, decimal> dictionary)
-    {
-        var userBinaryInformation = new List<UserBinaryInformation>();
-        
-        var data = new Dictionary<string, Dictionary<int, decimal>>()
-        {
-            { "Users", dictionary }
-        }.ToJsonString();
-        
-        var response = await Post($"matrix/binary_complete/", data);
-        if (!response.IsSuccessful)
-            throw new Exception("Failed to retrieve user information");
-
-        if (string.IsNullOrEmpty(response.Content))
-            throw new Exception("User information content is empty");
-
-        var result = JsonSerializer.Deserialize<UserAffiliatePointInformation>(response.Content);
-        return result!.Success ? result.Data : userBinaryInformation;
-    }
-
     public Task<IRestResponse> GetTotalActiveMembers()
     {
         return Get($"/userAffiliateInfo/getTotalActiveMembers/", new Dictionary<string, string>());
@@ -95,7 +74,47 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
             throw;
         }
     }
+
+    public Task<IRestResponse> GetHave2Children(int[]                       users)
+    {
+        var data = new Dictionary<string, object>
+        {
+            { "Users", users }
+        }.ToJsonString();
+        
+        return Post($"/matrix/have_2_children/", data);
+    }
+
+    public Task<IRestResponse> AddTreeModel4(IEnumerable<LeaderBoardModel4> leaderBoard)
+    {
+        return Post($"/leaderboard/model4/addTree/", leaderBoard.ToJsonString());
+    }
     
+    public Task<IRestResponse> AddTreeModel5(IEnumerable<LeaderBoardModel5> leaderBoard)
+    {
+        return Post($"/leaderboard/model5/addTree/", leaderBoard.ToJsonString());
+    }
+    
+    public Task<IRestResponse> AddTreeModel6(IEnumerable<LeaderBoardModel6> leaderBoard)
+    {
+        return Post($"/leaderboard/model6/addTree/", leaderBoard.ToJsonString());
+    }
+
+    public Task<IRestResponse> DeleteTreeModel6()
+    {
+        return Post($"/leaderboard/model6/deleteTree/", new Dictionary<string,string>().ToJsonString());
+    }
+
+    public Task<IRestResponse> DeleteTreeModel4()
+    {
+        return Post($"/leaderboard/model4/deleteTree/", new Dictionary<string,string>().ToJsonString());
+    }
+
+    public Task<IRestResponse> DeleteTreeModel5()
+    {
+        return Post($"/leaderboard/model5/deleteTree/", new Dictionary<string,string>().ToJsonString());
+    }
+
     public async Task<UserInfoResponse?> GetUserInfo(int id)
     {
         var response = await Get($"/userAffiliateInfo/get_user_id/{id}/", new Dictionary<string, string>());

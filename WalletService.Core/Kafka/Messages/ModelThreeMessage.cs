@@ -6,11 +6,11 @@ using WalletService.Models.Responses;
 
 namespace WalletService.Core.Kafka.Messages;
 
-public class EcoPoolProcessMessage
+public class ModelThreeMessage
 {
     public ICollection<InvoicePackDto>      Pools              { get; set; } 
     public ICollection<ProductWalletDto>    ListResultProducts { get; set; }
-    public ICollection<UserEcoPoolResponse> ListResultAccounts { get; set; }
+    public ICollection<UserModelTwoThreeResponse> ListResultAccounts { get; set; }
     public EcoPoolConfigurationDto          Configuration      { get; set; }
     public DateTime                         StarDate           { get; set; }
     public DateTime                         EndDate            { get; set; }
