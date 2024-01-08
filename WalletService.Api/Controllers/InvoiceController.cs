@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using WalletService.Core.Services.IServices;
 
@@ -54,5 +53,13 @@ public class InvoiceController : BaseController
         var result = await _invoiceService.SendInvitationsForUpcomingCourses(link, code);
 
         return result.IsNullOrEmpty() ? Ok(Fail("The invoice wasn't found")) : Ok(Success(result));
+    }
+    
+    [HttpGet("GetAllInvoicesForModelOneAndTwo")]
+    public async Task<IActionResult>GetAllInvoicesForModelOneAndTwo()
+    {
+        var result = await _invoiceService.GetAllInvoicesModelOneAndTwo();
+
+        return result.IsNullOrEmpty() ? Ok(Fail("The invoices wasn't found")) : Ok(Success(result));
     }
 }

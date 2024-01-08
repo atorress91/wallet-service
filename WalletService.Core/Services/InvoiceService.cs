@@ -21,11 +21,12 @@ public class InvoiceService : BaseService, IInvoiceService
     private readonly ICoinPaymentTransactionRepository _coinPaymentTransactionRepository;
     private readonly ILogger<InvoiceService>           _logger;
     private readonly IAccountServiceAdapter            _accountServiceAdapter;
-    private readonly IBrevoEmailService                     _brevoEmailService;
+    private readonly IBrevoEmailService                _brevoEmailService;
 
     public InvoiceService(IMapper         mapper, IInvoiceRepository invoiceRepository,
         ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
-        ILogger<InvoiceService>           logger,IAccountServiceAdapter accountServiceAdapter,IBrevoEmailService brevoEmailService) : base(mapper)
+        ILogger<InvoiceService>           logger, IAccountServiceAdapter accountServiceAdapter,
+        IBrevoEmailService                brevoEmailService) : base(mapper)
     {
         _invoiceRepository                = invoiceRepository;
         _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
@@ -124,6 +125,7 @@ public class InvoiceService : BaseService, IInvoiceService
 
         return mappedList;
     }
+
     public async Task<IEnumerable<UserAffiliateResponse>> SendInvitationsForUpcomingCourses(string link, string code)
     {
         var allInvoices = await _invoiceRepository.GetAllInvoicesForTradingAcademyPurchases();
@@ -132,8 +134,9 @@ public class InvoiceService : BaseService, IInvoiceService
         if (allInvoices is null)
             return new List<UserAffiliateResponse>();
 
-        var tasks = allInvoices.Where(invoice => invoice.ProductId == Constants.ForMonth || invoice.ProductId == Constants.ForWeek)
-            .Select(async invoice => 
+        var tasks = allInvoices.Where(invoice =>
+                invoice.ProductId == Constants.ForMonth || invoice.ProductId == Constants.ForWeek)
+            .Select(async invoice =>
             {
                 var endDate = invoice.ProductId == Constants.ForMonth
                                   ? CommonExtensions.CalculateMonthlyCourseDates(invoice.CreatedAt).EndDate
@@ -152,14 +155,19 @@ public class InvoiceService : BaseService, IInvoiceService
             });
 
         var results = await Task.WhenAll(tasks);
-        return results.Where(user => user != null).Select(user => user!); 
+        return results.Where(user => user != null).Select(user => user!);
     }
-    
-    public async Task<IEnumerable<InvoiceModelOneAndTwoDto>>GetAllInvoicesModelOneAndTwo()
+
+    public async Task<IEnumerable<InvoiceModelOneAndTwoDto>> GetAllInvoicesModelOneAndTwo()
     {
         var response = await _invoiceRepository.GetAllInvoicesModelOneAndTwo();
-        var mappedList = Mapper.Map<IEnumerable<InvoiceModelOneAndTwoDto>>(response);
-       
-        return mappedList;
+
+        if (response is null)
+            return new List<InvoiceModelOneAndTwoDto>();
+
+        var invoices = Mapper.Map<IEnumerable<InvoiceModelOneAndTwoDto>>(response);
+        var invoiceOrder = invoices.OrderByDescending(e=>e.CreatedAt).ToList();
+        
+        return invoiceOrder;
     }
 }

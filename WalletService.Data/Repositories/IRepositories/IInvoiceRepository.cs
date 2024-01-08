@@ -19,5 +19,5 @@ public interface IInvoiceRepository
     Task<InvoicesSpResponse?>                   HandleDebitTransactionForCourse(DebitTransactionRequest request);
     Task<bool>                                  GetInvoicesForTradingAcademyPurchases(int               affiliateId);
     Task<List<InvoicesTradingAcademyResponse>?> GetAllInvoicesForTradingAcademyPurchases();
-    Task<List<InvoiceModelOneAndTwoResponse>>   GetAllInvoicesModelOneAndTwo();
+    Task<List<InvoiceModelOneAndTwoResponse>?>   GetAllInvoicesModelOneAndTwo();
 }

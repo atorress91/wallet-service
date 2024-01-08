@@ -55,6 +55,7 @@ public class MapperProfile : Profile
         CreateMap<ResultEcoPoolLevels, ResultEcoPoolLevelsDto>();
         CreateMap<PaymentTransaction, PaymentTransactionDto>();
         CreateMap<InvoicesTradingAcademyResponse, InvoiceTradingAcademyDto>();
+        CreateMap<InvoiceModelOneAndTwoResponse, InvoiceModelOneAndTwoDto>();
      
 
         CreateMap<WalletRequestRequest, WalletsRequests>()

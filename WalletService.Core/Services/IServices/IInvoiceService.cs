@@ -11,5 +11,6 @@ public interface IInvoiceService
     Task<IEnumerable<InvoiceDto>>                GetAllInvoices();
     Task<bool>                                   RevertUnconfirmedOrUnpaidTransactions();
     Task<IEnumerable<InvoiceTradingAcademyDto?>> GetAllInvoicesForTradingAcademyPurchases();
-    Task<IEnumerable<UserAffiliateResponse>>          SendInvitationsForUpcomingCourses(string link, string code);
+    Task<IEnumerable<UserAffiliateResponse>>     SendInvitationsForUpcomingCourses(string link, string code);
+    Task<IEnumerable<InvoiceModelOneAndTwoDto>>  GetAllInvoicesModelOneAndTwo();
 }

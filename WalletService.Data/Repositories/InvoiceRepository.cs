@@ -280,7 +280,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
         return invoiceDetailsList;
     }
 
-    public async Task<List<InvoiceModelOneAndTwoResponse>> GetAllInvoicesModelOneAndTwo()
+    public async Task<List<InvoiceModelOneAndTwoResponse>?> GetAllInvoicesModelOneAndTwo()
     {
         await using var command = Context.Database.GetDbConnection().CreateCommand();
         command.CommandText = Constants.GetAllDetailsModelOneAndTwo;
