@@ -71,7 +71,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
         try
         {
             await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
-            await using var cmd = new SqlCommand(Constants.HandleDebitTransationSP, sql);
+            await using var cmd = new SqlCommand(Constants.HandleDebitTransactionSp, sql);
 
             var invoicesDetails = ConvertToDataTable(request.invoices);
 

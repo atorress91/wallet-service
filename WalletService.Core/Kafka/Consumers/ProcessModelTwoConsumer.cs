@@ -104,7 +104,7 @@ public class ProcessModelTwoConsumer : BaseKafkaConsumer
 
         request.LevelsType   = levelsType;
         request.EcoPoolsType = ecoPoolsType;
-        await walletRepository!.CreateModelTwoSP(request);
+        await walletRepository!.CreateModelTwoSp(request);
         Logger.LogInformation($"[ProcessModelTwoConsumer] | EcoPoolProcess | Batch Completed");
 
         return true;

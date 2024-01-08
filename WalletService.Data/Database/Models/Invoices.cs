@@ -31,6 +31,5 @@ public class Invoices
     public DateTime? DeletedAt { get; set; }
 
     public virtual ICollection<InvoicesDetails> InvoiceDetail { get; set; }
-    public virtual ICollection<InvoicePacks> InvoicePacks { get; set; }
 
 }
