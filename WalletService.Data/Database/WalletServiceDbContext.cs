@@ -29,7 +29,6 @@ public class WalletServiceDbContext : DbContext
     public virtual DbSet<ResultsEcoPool> ResultsEcoPool { get; set; }
 
     public virtual DbSet<ResultEcoPoolLevels> ResultEcoPoolLevels { get; set; }
-    public virtual DbSet<InvoicePacks> InvoicePacks { get; set; }
     public virtual DbSet<ApiClient> ApiClient { get; set; }
     public virtual DbSet<PaymentTransaction> PaymentTransaction { get; set; }
     public virtual DbSet<ModelFourStatistics> ModelFourStatistics { get; set; }
@@ -564,30 +563,6 @@ public class WalletServiceDbContext : DbContext
 
         });
 
-
-        modelBuilder.Entity<InvoicePacks>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.InvoiceId).IsRequired();
-            entity.Property(e => e.ProductId).IsRequired();
-            entity.Property(e => e.BaseAmount).IsRequired().HasColumnType("decimal(10,2)");
-            entity.Property(e => e.Percentage).IsRequired().HasColumnType("decimal(10,2)");
-            entity.Property(e => e.CountDays).IsRequired().HasColumnType("int");
-            entity.Property(e => e.StartDate).IsRequired().HasColumnType("date");
-            entity.Property(e => e.EndDate).HasColumnType("datetime");
-            entity.Property(e => e.Status).IsRequired().HasColumnType("char");
-
-            entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
-            entity.Property(e => e.DeletedAt).HasColumnType("datetime");
-
-
-            entity.HasOne(d => d.Invoice)
-                .WithMany(p => p.InvoicePacks)
-                .HasForeignKey(d => d.InvoiceId);
-
-            entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
-        });
 
         modelBuilder.Entity<ApiClient>(entity =>
         {

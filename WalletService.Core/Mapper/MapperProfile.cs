@@ -100,7 +100,6 @@ public class MapperProfile : Profile
 
         CreateMap<Invoices, InvoiceDto>()
             .ForMember(dest => dest.InvoiceDetail, opt => opt.MapFrom(src => src.InvoiceDetail));
-        CreateMap<InvoicePacks, InvoicePackDto>();
         
         CreateMap<InvoiceDetailRequest, InvoicesDetails>()
             .ForMember(dest => dest.Invoice, opt => opt.Ignore());
