@@ -1,6 +1,6 @@
 namespace WalletService.Data.Database.Models;
 
-public class WalletsModel1a
+public class WalletsModel1A
 {
     public int Id { get; set; }
     public int AffiliateId { get; set; }

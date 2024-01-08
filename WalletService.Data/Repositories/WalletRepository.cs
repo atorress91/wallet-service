@@ -101,7 +101,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         try
         {
             await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
-            await using var cmd = new SqlCommand(Constants.DebitTransationSP, sql);
+            await using var cmd = new SqlCommand(Constants.DebitTransactionSp, sql);
 
             var invoicesDetails = ConvertToDataTable(request.invoices);
 
@@ -130,7 +130,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         try
         {
             await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
-            await using var cmd = new SqlCommand(Constants.CoursesDebitTransactionSP, sql);
+            await using var cmd = new SqlCommand(Constants.CoursesDebitTransactionSp, sql);
 
             var invoicesDetails = ConvertToDataTable(request.invoices);
 
@@ -159,7 +159,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         try
         {
             await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
-            await using var cmd = new SqlCommand(Constants.DebitEcoPoolTransationSP, sql);
+            await using var cmd = new SqlCommand(Constants.DebitEcoPoolTransactionSp, sql);
 
             CreateDebitEcoPoolListParameters(request, cmd);
 
@@ -215,7 +215,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         try
         {
             await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
-            await using var cmd = new SqlCommand(Constants.CreditTransationSP, sql);
+            await using var cmd = new SqlCommand(Constants.CreditTransactionSp, sql);
 
             CreateCreditListParameters(request, cmd);
 
@@ -239,7 +239,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         {
             await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
 
-            await using var cmd = new SqlCommand(Constants.ModelThreeRequestSP, sqlConnection);
+            await using var cmd = new SqlCommand(Constants.ModelThreeRequestSp, sqlConnection);
 
             var levelTypeDataTable = ConvertToDataTable(request.LevelsType);
             var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
@@ -266,7 +266,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         {
             await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
 
-            await using var cmd = new SqlCommand(Constants.ModelTwoRequestSP, sqlConnection);
+            await using var cmd = new SqlCommand(Constants.ModelTwoRequestSp, sqlConnection);
 
             var levelTypeDataTable   = ConvertToDataTable(request.LevelsType);
             var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);

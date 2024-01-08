@@ -7,6 +7,8 @@ namespace WalletService.Data.Repositories.IRepositories;
 public interface IWalletModel1ARepository
 {
     Task<InvoicesSpResponse?> DebitTransaction(DebitTransactionRequest request);
-    Task<bool> CreditTransaction(CreditTransactionRequest              request);
-    Task<bool> CreateTransferBalance(Wallets                           debitTransaction, Wallets creditTransaction);
+
+    Task<InvoicesSpResponse?> DebitEcoPoolTransactionSp(DebitTransactionRequest request);
+
+    Task<bool> CreditTransaction(CreditTransactionRequest request);
 }
