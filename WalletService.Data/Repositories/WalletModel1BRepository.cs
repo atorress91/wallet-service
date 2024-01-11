@@ -27,7 +27,7 @@ public class WalletModel1BRepository : BaseRepository, IWalletModel1BRepository
         try
         {
             await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
-            await using var cmd = new SqlCommand(Constants.CreditTransactionSp, sql);
+            await using var cmd = new SqlCommand(Constants.CreditTransactionSpModel1B, sql);
 
             CreateCreditListParameters(request, cmd);
 

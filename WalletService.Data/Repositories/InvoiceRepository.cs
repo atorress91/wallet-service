@@ -65,7 +65,39 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
 
         return invoice;
     }
+    public async Task<List<Invoices>> DeleteMultipleInvoicesAndDetailsAsync(int[] invoiceIds)
+    {
+        var today = DateTime.Now;
+        
+        var invoices = await Context.Invoices
+                           .Include(i => i.InvoiceDetail)
+                           .Where(i => invoiceIds.Contains(i.Id))
+                           .ToListAsync();
 
+        if (!invoices.Any())
+        {
+            return null;
+        }
+
+        foreach (var invoice in invoices)
+        {
+            invoice.DeletedAt        = today;
+            invoice.UpdatedAt        = today;
+            invoice.CancellationDate = today;
+            invoice.Status           = false;
+            
+            foreach (var detail in invoice.InvoiceDetail)
+            {
+                detail.DeletedAt = today;
+                detail.UpdatedAt = today;
+            }
+        }
+        
+        await Context.SaveChangesAsync();
+
+        return invoices;
+    }
+    
     public async Task<InvoicesSpResponse?> HandleDebitTransaction(DebitTransactionRequest request)
     {
         try
@@ -298,7 +330,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
                 UserName       = result["UserName"].ToString() ?? "",
                 InvoiceId      = (int)result["InvoiceId"],
                 ProductName    = result["ProductName"].ToString() ?? "",
-                ProductPrice   = (decimal)result["ProductPrice"],
+                BaseAmount     = (decimal)result["BaseAmount"],
                 PaymentGroupId = (int)result["PaymentGroupId"],
                 CreatedAt      = (DateTime)result["CreatedAt"]
             });

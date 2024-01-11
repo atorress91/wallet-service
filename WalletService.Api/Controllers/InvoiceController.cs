@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using WalletService.Core.Services.IServices;
+using WalletService.Models.Requests.InvoiceRequest;
 
 namespace WalletService.Api.Controllers;
 
@@ -61,5 +62,13 @@ public class InvoiceController : BaseController
         var result = await _invoiceService.GetAllInvoicesModelOneAndTwo();
 
         return result.IsNullOrEmpty() ? Ok(Fail("The invoices wasn't found")) : Ok(Success(result));
+    }
+    
+    [HttpPost("ProcessAndReturnBalancesForModels1A1B2")]
+    public async Task<IActionResult> ProcessAndReturnBalancesForModels1A1B2([FromBody] ModelBalancesAndInvoicesRequest request)
+    {
+        var result = await _invoiceService.ProcessAndReturnBalancesForModels1A1B2(request);
+
+        return result is null ? Ok(Fail("Invoice returns could not be processed.")) : Ok(Success(result));
     }
 }

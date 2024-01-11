@@ -76,10 +76,11 @@ public static class Constants
     public const int CustomerModel5Scope    = 4;
     public static int[] CustomerModel6Scope = { 5,6,7,8,9,10, 11 };
     
-    public const string SubjectInvitationForAcademy    = "Invitación al curso de trading";
-    public const string PurchasingPoolRevertBalance    = "Pool Adquisitivo con saldo revertido";
-    public const string WireTransfer                   = "Transferencia bancaria";
-    public const string GetTradingAcademyDetailsSp     = "GetTradingAcademyInvoiceDetails";  
+    public const string SubjectInvitationForAcademy = "Invitación al curso de trading";
+    public const string PurchasingPoolRevertBalance = "Pool Adquisitivo con saldo revertido";
+    public const string WireTransfer                = "Transferencia bancaria";
+    public const string GetTradingAcademyDetailsSp  = "GetTradingAcademyInvoiceDetails";
+    public const string BalanceRefunds              = "Devolución de saldo";
              
     public const int    ForMonth                        = 31;
     public const int    ForWeek                         = 32;

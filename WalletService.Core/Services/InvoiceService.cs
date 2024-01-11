@@ -8,7 +8,9 @@ using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Constants;
 using WalletService.Models.DTO.InvoiceDto;
+using WalletService.Models.Enums;
 using WalletService.Models.Requests.InvoiceRequest;
+using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
 using WalletService.Utility.Extensions;
 using JsonSerializer = System.Text.Json.JsonSerializer;
@@ -22,17 +24,24 @@ public class InvoiceService : BaseService, IInvoiceService
     private readonly ILogger<InvoiceService>           _logger;
     private readonly IAccountServiceAdapter            _accountServiceAdapter;
     private readonly IBrevoEmailService                _brevoEmailService;
+    private readonly IWalletModel1ARepository          _walletModel1ARepository;
+    private readonly IWalletModel1BRepository          _walletModel1BRepository;
+    private readonly IWalletRepository                 _walletRepository;
 
     public InvoiceService(IMapper         mapper, IInvoiceRepository invoiceRepository,
         ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
-        ILogger<InvoiceService>           logger, IAccountServiceAdapter accountServiceAdapter,
-        IBrevoEmailService                brevoEmailService) : base(mapper)
+        ILogger<InvoiceService>           logger,                  IAccountServiceAdapter accountServiceAdapter,
+        IBrevoEmailService                brevoEmailService,       IWalletModel1ARepository walletModel1ARepository,
+        IWalletModel1BRepository          walletModel1BRepository, IWalletRepository walletRepository) : base(mapper)
     {
         _invoiceRepository                = invoiceRepository;
         _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
         _logger                           = logger;
         _accountServiceAdapter            = accountServiceAdapter;
         _brevoEmailService                = brevoEmailService;
+        _walletModel1ARepository          = walletModel1ARepository;
+        _walletModel1BRepository          = walletModel1BRepository;
+        _walletRepository                 = walletRepository;
     }
 
     public async Task<IEnumerable<InvoiceDto>> GetAllInvoiceUserAsync(int id)
@@ -165,9 +174,108 @@ public class InvoiceService : BaseService, IInvoiceService
         if (response is null)
             return new List<InvoiceModelOneAndTwoDto>();
 
-        var invoices = Mapper.Map<IEnumerable<InvoiceModelOneAndTwoDto>>(response);
-        var invoiceOrder = invoices.OrderByDescending(e=>e.CreatedAt).ToList();
+        var invoices        = Mapper.Map<IEnumerable<InvoiceModelOneAndTwoDto>>(response);
+        var invoicesOrdered = invoices.OrderByDescending(e => e.CreatedAt).ToList();
+
+        return invoicesOrdered;
+    }
+    public async Task<ModelBalancesAndInvoicesDto?> ProcessAndReturnBalancesForModels1A1B2(ModelBalancesAndInvoicesRequest request)
+    {
+        var totalModels = request.Model1AAmount + request.Model1BAmount + request.Model2Amount;
+        if (request.InvoiceId.Length == 0)
+            return null;
+
+        var (validInvoiceIds, affiliateId, totalInvoices) = await ProcessInvoices(request.InvoiceId);
+
+        if (affiliateId == 0 || totalInvoices > totalModels)
+            return null;
+
+        bool isAnyCreditTransactionSuccessful = false;
+
+        if (request.Model1AAmount > 0)
+            isAnyCreditTransactionSuccessful |= await CreditAmountToWallet(affiliateId, request.UserName, request.Model1AAmount, "Model1A");
+
+        if (request.Model1BAmount > 0)
+            isAnyCreditTransactionSuccessful |= await CreditAmountToWallet(affiliateId, request.UserName, request.Model1BAmount, "Model1B");
+
+        if (request.Model2Amount > 0)
+            isAnyCreditTransactionSuccessful |= await CreditAmountToWallet(affiliateId, request.UserName, request.Model2Amount, "Model2");
         
-        return invoiceOrder;
+        if (isAnyCreditTransactionSuccessful && validInvoiceIds.Any())
+        {
+            await _invoiceRepository.DeleteMultipleInvoicesAndDetailsAsync(validInvoiceIds.ToArray());
+        }
+
+        return new ModelBalancesAndInvoicesDto
+        {
+            UserName      = request.UserName,
+            Model1AAmount = request.Model1AAmount,
+            Model1BAmount = request.Model1BAmount,
+            Model2Amount  = request.Model2Amount,
+            InvoiceId     = validInvoiceIds.ToArray()
+        };
+    }
+    private async Task<(List<int>, int, decimal)> ProcessInvoices(int[] invoiceIds)
+    {
+        var totalInvoices   = 0m;
+        var validInvoiceIds = new List<int>();
+        int affiliateId     = 0;
+
+        foreach (var invoiceId in invoiceIds)
+        {
+            var invoice = await _invoiceRepository.GetInvoiceById(invoiceId);
+
+            if (invoice != null)
+            {
+                if (affiliateId == 0)
+                    affiliateId = invoice.AffiliateId;
+                else if (affiliateId != invoice.AffiliateId)
+                {
+                    return (new List<int>(), 0, 0m);
+                }
+
+                totalInvoices += invoice.TotalInvoice ?? 0;
+                validInvoiceIds.Add(invoiceId);
+            }
+        }
+
+        return (validInvoiceIds, affiliateId, totalInvoices);
+    }
+    
+    private async Task<bool> CreditAmountToWallet(int affiliateId, string userName, decimal amount, string model)
+    {
+        if (amount <= 0) return false;
+
+        var creditTransactionRequest = new CreditTransactionRequest
+        {
+            AffiliateId       = affiliateId,
+            UserId            = Constants.AdminUserId,
+            Concept           = Constants.BalanceRefunds,
+            Credit            = Convert.ToDouble(amount),
+            AffiliateUserName = Constants.AdminEcosystemUserName,
+            AdminUserName     = userName,
+            ConceptType       = WalletConceptType.balance_transfer.ToString()
+        };
+
+        try
+        {
+            switch (model)
+            {
+                case "Model1A":
+                    await _walletModel1ARepository.CreditTransaction(creditTransactionRequest);
+                    break;
+                case "Model1B":
+                    await _walletModel1BRepository.CreditTransaction(creditTransactionRequest);
+                    break;
+                case "Model2":
+                    await _walletRepository.CreditTransaction(creditTransactionRequest);
+                    break;
+            }
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
