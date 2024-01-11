@@ -497,7 +497,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             AdminUserName     = Constants.AdminEcosystemUserName,
             ConceptType       = conceptType
         };
-        return walletRepository.DebitEcoPoolTransactionSP(creditTransaction);
+        return walletRepository.DebitEcoPoolTransactionSp(creditTransaction);
     }
 
     private static Task CreateCreditPayment(

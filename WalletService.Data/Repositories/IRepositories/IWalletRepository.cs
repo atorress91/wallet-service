@@ -7,15 +7,15 @@ namespace WalletService.Data.Repositories.IRepositories;
 public interface IWalletRepository
 {
     Task<List<Wallets>> GetWalletByAffiliateId(int                              affiliateId);
-    Task<List<InvoicePacks>> GetDebitsEcoPoolWithinMonth(DateTime               from, DateTime to);
-    Task<InvoicesSpResponse?> DebitEcoPoolTransactionSP(DebitTransactionRequest request);
-    Task<List<InvoicePacks>> GetDebitsEcoPoolOutsideMonth(DateTime              date);
+    Task<List<InvoicesDetails>> GetDebitsEcoPoolWithinMonth(DateTime            from, DateTime to);
+    Task<InvoicesSpResponse?> DebitEcoPoolTransactionSp(DebitTransactionRequest request);
+    Task<List<InvoicesDetails>> GetDebitsEcoPoolOutsideMonth(DateTime           date);
     Task<List<InvoicesDetails>> GetInvoicesDetailsItemsForModelTwo(int          month, int year);
     Task<List<Wallets>> GetWalletByUserId(int                                   userId);
     Task<List<Wallets>> GetWalletsRequest(int                                   userId);
     Task<Wallets?> GetWalletById(int                                            id);
-    Task<bool> CreateModelThreeSP(ModelThreeTransactionRequest                  request);
-    Task<bool> CreateModelTwoSP(ModelTwoTransactionRequest                      request);
+    Task<bool> CreateModelThreeSp(ModelThreeTransactionRequest                  request);
+    Task<bool> CreateModelTwoSp(ModelTwoTransactionRequest                      request);
     Task<Wallets> CreateWalletAsync(Wallets                                     request);
     Task<Wallets> UpdateWalletAsync(Wallets                                     request);
     Task<Wallets> DeleteWalletAsync(Wallets                                     request);
@@ -28,7 +28,6 @@ public interface IWalletRepository
     Task<bool> CreateTransferBalance(Wallets                           debitTransaction, Wallets creditTransaction);
     Task<List<Wallets>> GetAllWallets();
     Task<List<ModelFourStatistics>> GetUserModelFour(int[]                        affiliateIds);
-    Task RevertDebitTransactionAsync(int                                          id);
     Task<double?> GetTotalCommissionsPaid(int                                     affiliateId);
     Task<bool> IsActivePoolGreaterThanOrEqualTo25(int                             affiliateId);
     Task<InvoicesSpResponse?> HandleMembershipTransaction(DebitTransactionRequest request);

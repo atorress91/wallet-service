@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Data;
-using System.Linq;
 using System.Text.Json;
 using WalletService.Data.Database;
 using WalletService.Data.Database.CustomModels;
@@ -10,7 +9,6 @@ using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Configuration;
 using WalletService.Models.Constants;
-using WalletService.Models.DTO.InvoiceDto;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Utility.Extensions;
 using static WalletService.Utility.Extensions.CommonExtensions;
@@ -20,7 +18,9 @@ namespace WalletService.Data.Repositories;
 public class InvoiceRepository : BaseRepository, IInvoiceRepository
 {
     private readonly ApplicationConfiguration _appSettings;
-    public InvoiceRepository(IOptions<ApplicationConfiguration> appSettings, WalletServiceDbContext context) : base(context)
+
+    public InvoiceRepository(IOptions<ApplicationConfiguration> appSettings, WalletServiceDbContext context) :
+        base(context)
         => _appSettings = appSettings.Value;
 
     public Task<List<Invoices>> GetAllInvoicesUser(int id)
@@ -31,14 +31,16 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
 
     public Task<Invoices?> GetInvoiceById(int id)
         => Context.Invoices.FirstOrDefaultAsync(x => x.Id == id);
+
     public Task<Invoices?> GetInvoiceByReceiptNumber(string idTransaction)
         => Context.Invoices
-                .FirstOrDefaultAsync(e => e.ReceiptNumber == idTransaction);
-	public Task<bool> InvoiceExistsByReceiptNumber(string idTransaction)
-	    => Context.Invoices
-			.AnyAsync(e => e.ReceiptNumber == idTransaction);
+            .FirstOrDefaultAsync(e => e.ReceiptNumber == idTransaction);
 
-	public async Task<Invoices> CreateInvoiceAsync(Invoices invoice)
+    public Task<bool> InvoiceExistsByReceiptNumber(string idTransaction)
+        => Context.Invoices
+            .AnyAsync(e => e.ReceiptNumber == idTransaction);
+
+    public async Task<Invoices> CreateInvoiceAsync(Invoices invoice)
     {
         var today = DateTime.Now;
         invoice.CreatedAt = today;
@@ -63,12 +65,45 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
 
         return invoice;
     }
+    public async Task<List<Invoices>> DeleteMultipleInvoicesAndDetailsAsync(int[] invoiceIds)
+    {
+        var today = DateTime.Now;
+        
+        var invoices = await Context.Invoices
+                           .Include(i => i.InvoiceDetail)
+                           .Where(i => invoiceIds.Contains(i.Id))
+                           .ToListAsync();
+
+        if (!invoices.Any())
+        {
+            return null;
+        }
+
+        foreach (var invoice in invoices)
+        {
+            invoice.DeletedAt        = today;
+            invoice.UpdatedAt        = today;
+            invoice.CancellationDate = today;
+            invoice.Status           = false;
+            
+            foreach (var detail in invoice.InvoiceDetail)
+            {
+                detail.DeletedAt = today;
+                detail.UpdatedAt = today;
+            }
+        }
+        
+        await Context.SaveChangesAsync();
+
+        return invoices;
+    }
+    
     public async Task<InvoicesSpResponse?> HandleDebitTransaction(DebitTransactionRequest request)
     {
         try
         {
             await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
-            await using var cmd = new SqlCommand(Constants.HandleDebitTransationSP, sql);
+            await using var cmd = new SqlCommand(Constants.HandleDebitTransactionSp, sql);
 
             var invoicesDetails = ConvertToDataTable(request.invoices);
 
@@ -91,7 +126,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             throw;
         }
     }
-    
+
     public async Task<InvoicesSpResponse?> HandleDebitTransactionForCourse(DebitTransactionRequest request)
     {
         try
@@ -120,6 +155,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             throw;
         }
     }
+
     private void CreateDebitListParameters(DebitTransactionRequest request, DataTable dataTableDetails, SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
@@ -236,18 +272,19 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             Value    = table
         };
 
-        await Context.Database.ExecuteSqlRawAsync("EXEC " + Constants.CoinPaymentRevertTransactions + " @InvoiceNumbers", param);
+        await Context.Database.ExecuteSqlRawAsync(
+            "EXEC " + Constants.CoinPaymentRevertTransactions + " @InvoiceNumbers", param);
     }
 
     public Task<List<Invoices>> GetInvoicesByReceiptNumber(ICollection<string> transactionIds)
         => Context.Invoices.Where(e => e.ReceiptNumber != null && transactionIds.Contains(e.ReceiptNumber))
-                .ToListAsync();
-    
+            .ToListAsync();
+
     public Task<bool> GetInvoicesForTradingAcademyPurchases(int affiliateId)
         => Context.Invoices
             .Include(x => x.InvoiceDetail)
             .AnyAsync(x => x.AffiliateId == affiliateId && x.InvoiceDetail.Any(d => d.PaymentGroupId == 6));
-    
+
     public async Task<List<InvoicesTradingAcademyResponse>?> GetAllInvoicesForTradingAcademyPurchases()
     {
         await using var command = Context.Database.GetDbConnection().CreateCommand();
@@ -257,7 +294,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
         await Context.Database.OpenConnectionAsync();
 
         await using var result             = await command.ExecuteReaderAsync();
-        var       invoiceDetailsList = new List<InvoicesTradingAcademyResponse>();
+        var             invoiceDetailsList = new List<InvoicesTradingAcademyResponse>();
 
         while (await result.ReadAsync())
         {
@@ -271,6 +308,34 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
                 CreatedAt    = (DateTime)result["CreatedAt"]
             });
         }
+
+        return invoiceDetailsList;
+    }
+
+    public async Task<List<InvoiceModelOneAndTwoResponse>?> GetAllInvoicesModelOneAndTwo()
+    {
+        await using var command = Context.Database.GetDbConnection().CreateCommand();
+        command.CommandText = Constants.GetAllDetailsModelOneAndTwo;
+        command.CommandType = CommandType.StoredProcedure;
+
+        await Context.Database.OpenConnectionAsync();
+
+        await using var result = await command.ExecuteReaderAsync();
+        var             invoiceDetailsList = new List<InvoiceModelOneAndTwoResponse>();
+
+        while (await result.ReadAsync())
+        {
+            invoiceDetailsList.Add(new InvoiceModelOneAndTwoResponse
+            {
+                UserName       = result["UserName"].ToString() ?? "",
+                InvoiceId      = (int)result["InvoiceId"],
+                ProductName    = result["ProductName"].ToString() ?? "",
+                BaseAmount     = (decimal)result["BaseAmount"],
+                PaymentGroupId = (int)result["PaymentGroupId"],
+                CreatedAt      = (DateTime)result["CreatedAt"]
+            });
+        }
+
         return invoiceDetailsList;
     }
 }

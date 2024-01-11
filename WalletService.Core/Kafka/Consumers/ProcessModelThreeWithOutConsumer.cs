@@ -99,7 +99,7 @@ public class ProcessModelThreeWithOutConsumer : BaseKafkaConsumer
                 PoolId            = pool.Id,
                 CountDays         = daysInMonth,
                 DaysInMonth       = daysInMonth,
-                Amount            = pool.BaseAmount,
+                Amount            = pool.BaseAmount!.Value,
                 LastDayDate       = lastDayInMonth,
                 PaymentDate       = firstDayInMonth,
                 ProductExternalId = pool.ProductId,
@@ -111,7 +111,7 @@ public class ProcessModelThreeWithOutConsumer : BaseKafkaConsumer
         request.LevelsType   = levelsType;
         request.EcoPoolsType = ecoPoolsType;
 
-        await walletRepository!.CreateModelThreeSP(request);
+        await walletRepository!.CreateModelThreeSp(request);
 
         Logger.LogInformation($"[ProcessModelThreeWithOutConsumer] | EcoPoolProcess | Batch Completed");
         return true;

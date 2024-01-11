@@ -2,101 +2,86 @@
 
 public static class Constants
 {
-    public const int    OriginEcoPoolPurchase             = 2;
-    public const string EcoPoolProductCategory            = "Pool Adquisitivo";
-    public const string EcoPoolProductCategoryForAdmin    = "Pool Adquisitivo por AdminEcosystem";
-    public const string SubjectConfirmPurchase            = "Confirmación de compra";
-    public const string SubjectConfirmAffiliation         = "Membresía activa";
-    public const string RevertEcoPoolConcept              = "Devolucion Pool Adquisitivo";
-    public const string AdminEcosystemUserName            = "adminecosystem";
-    public const int    AdminUserId                       = 1;
-    public const string AdminCredit                    = "Crédito Administrativo";
-    public const string HandleDebitTransactionCourse   = "dbo.HandleDebit_Transation_For_Courses_SP";
-    public const string WalletBalance                     = "Saldo de billetera";
-    public const string CoursesDebitTransactionSP      = "dbo.Courses_Debit_Transaction_SP";
-    public const string AdminPayment                      = "Administrativo";
-    public const string ReverseBalance                    = "Saldo revertido";
-    public const string PurchasingPoolFor                 = "Pool Adquisitivo para";
-    public const string PurchasingPoolTo                  = "Pool Adquisitivo de";
-    public const string ConPaymentAddress                 = "THiJ78d6DHm1575GfFyfe1K6k2Fp6Bq5pP";
-    public const string ConPaymentCurrency                = "USDT.TRC20";
-    public const int    MembershipBonus                   = 5;
-    public const string SubjectConfirmBonus               = "Comisión de referido";
-    public const int    DaysToPayQuantity                 = 999;
-    public const string CoinPayments                      = "CoinPayments";
-    public const string CoinPay                           = "CoinPay";
-    public const int    Batches                           = 1000;
-    public const string WithdrawalBalance                 = "Retiro de saldo";
-    public const int    None                              = 0;
-    public const string Membership                        = "Membresía";
-    public const string TransferForMembership             = "Transferencia para membresía al afiliado";
-    public const string TransferToMembership              = "Transferencia para membresía del afiliado";
-    public const int    CoinPaymentTax                    = 2;
-    public const string DebitTransationSP                 = "dbo.Debit_Transation_SP";
-    public const string DebitEcoPoolTransationSP          = "dbo.Debit_Transation_EcoPool_SP";
-    public const string AdminDebitTransactionSp           = "dbo.Admin_Debit_Transation_SP";
-    public const string HandleDebitTransationSP           = "dbo.HandleDebit_Transation_SP";
-    public const string CreditTransationSP                = "dbo.Credit_Transation_SP";
-    public const string ModelThreeRequestSP               = "dbo.CreateEcoPoolSP";
-    public const string ModelTwoRequestSP                 = "dbo.CreateModel2ResultsSP";
-    public const string RevertDebitTransaction            = "dbo.Revert_Debit_Transaction_SP";
-    public const string CoinPaymentRevertTransactions     = "dbo.CoinPaymentsRevertTransactions_SP";
-    public const string HandleMembershipTransactions      = "dbo.HandleMembershipTransactionSp";
-    public const string MembershipDebitTransactions       = "dbo.MembershipDebit_Transation_SP";
-    public const string GetTotalPurchasesInMyNetworkSp    = "dbo.sp_GetTotalPurchasesInMyNetworkByAffiliate";
-    public const string TypeTableAffiliateId              = "dbo.TypeTableAffiliateId";
-    public const string BulkAdministrativeDebitSp         = "dbo.Bulk_Administrative_Debit_Sp";
-    public const string CommissionModelTwoDescription     = "Comisión Modelo 3 por {0}, nivel {1}";
+    public const int    OriginEcoPoolPurchase                 = 2;
+    public const string EcoPoolProductCategory                = "Pool Adquisitivo";
+    public const string EcoPoolProductCategoryForAdmin        = "Pool Adquisitivo por AdminEcosystem";
+    public const string SubjectConfirmPurchase                = "Confirmación de compra";
+    public const string SubjectConfirmAffiliation             = "Membresía activa";
+    public const string RevertEcoPoolConcept                  = "Devolucion Pool Adquisitivo";
+    public const string AdminEcosystemUserName                = "adminecosystem";
+    public const int    AdminUserId                           = 1;
+    public const string AdminCredit                           = "Crédito Administrativo";
+    public const string HandleDebitTransactionCourse          = "dbo.HandleDebit_Transation_For_Courses_SP";
+    public const string WalletBalance                         = "Saldo de billetera";
+    public const string CoursesDebitTransactionSp             = "dbo.Courses_Debit_Transaction_SP";
+    public const string AdminPayment                          = "Administrativo";
+    public const string ReverseBalance                        = "Saldo revertido";
+    public const string ConPaymentAddress                     = "THiJ78d6DHm1575GfFyfe1K6k2Fp6Bq5pP";
+    public const string ConPaymentCurrency                    = "USDT.TRC20";
+    public const int    MembershipBonus                       = 5;
+    public const string SubjectConfirmBonus                   = "Comisión de referido";
+    public const int    DaysToPayQuantity                     = 999;
+    public const string CoinPayments                          = "CoinPayments";
+    public const string CoinPay                               = "CoinPay";
+    public const int    Batches                               = 1000;
+    public const string WithdrawalBalance                     = "Retiro de saldo";
+    public const int    None                                  = 0;
+    public const string Membership                            = "Membresía";
+    public const string TransferForMembership                 = "Transferencia para membresía al afiliado";
+    public const string TransferToMembership                  = "Transferencia para membresía del afiliado";
+    public const int    CoinPaymentTax                        = 2;
+    public const string DebitTransactionSp                    = "dbo.Debit_Transation_SP";
+    public const string DebitTransactionSpModel1A             = "dbo.Debit_Transaction_SP_Model1A";
+    public const string DebitTransactionSpModel1B             = "dbo.Debit_Transaction_SP_Model1B";
+    public const string DebitEcoPoolTransactionSp             = "dbo.Debit_Transation_EcoPool_SP";
+    public const string DebitEcoPoolTransactionSpModel1A      = "dbo.Debit_Transaction_EcoPool_SP_Model1A";
+    public const string DebitEcoPoolTransactionSpModel1B      = "dbo.Debit_Transaction_EcoPool_SP_Model1B";
+    public const string AdminDebitTransactionSp               = "dbo.Admin_Debit_Transation_SP";
+    public const string HandleDebitTransactionSp              = "dbo.HandleDebit_Transation_SP";
+    public const string CreditTransactionSp                   = "dbo.Credit_Transation_SP";
+    public const string CreditTransactionSpModel1A            = "dbo.Credit_Transaction_SP_Model1A";
+    public const string CreditTransactionSpModel1B            = "dbo.Credit_Transaction_SP_Model1B";
+    public const string ModelThreeRequestSp                   = "dbo.CreateEcoPoolSP";
+    public const string ModelTwoRequestSp                     = "dbo.CreateModel2ResultsSP";
+    public const string RevertDebitTransaction                = "dbo.Revert_Debit_Transaction_SP";
+    public const string CoinPaymentRevertTransactions         = "dbo.CoinPaymentsRevertTransactions_SP";
+    public const string HandleMembershipTransactions          = "dbo.HandleMembershipTransactionSp";
+    public const string MembershipDebitTransactions           = "dbo.MembershipDebit_Transation_SP";
+    public const string GetTotalPurchasesInMyNetworkSp        = "dbo.sp_GetTotalPurchasesInMyNetworkByAffiliate";
+    public const string TypeTableAffiliateId                  = "dbo.TypeTableAffiliateId";
+    public const string BulkAdministrativeDebitSp             = "dbo.Bulk_Administrative_Debit_Sp";
+    public const string CommissionModelTwoDescription         = "Comisión Modelo 3 por {0}, nivel {1}";
     public const string CommissionModelTwoDescriptionNormal   = "Comisión Modelo 3";
-    public const string CommissionModelThreeDescription     = "Comisión Modelo 2 por {0}, nivel {1}";
-    public const string CommissionModelThreeDescriptionNormal   = "Comisión Modelo 2";
-    public const string CommissionMembership              = "Comisión de membresía por";
-    public const string ConceptBinaryPayment              = "Pago Modelo 4 - ${0} - Calificacion {1}";
-    public const string ConceptModelFivePayment           = "Pago Modelo 5 - ${0} - Calificacion {1}";
-    public const string ConceptModelSixPayment            = "Pago Modelo 6 - ${0} - Calificacion {1}";
-    public const string ConceptCommissionBinaryPayment    = "Comisión Modelo 4 - ${0} - Calificacion {1}";
-    public const string ConceptCommissionModelFivePayment = "Comisión Modelo 5 - ${0} - Calificacion {1}";
-    public const string ConceptCommissionModelSixPayment  = "Comisión Modelo 6 - ${0} - Calificacion {1}";
-    public const string DefaultWithdrawalZone             = "Central America Standard Time";
-    public const int    UsdtIdCurrency                    = 19;
-    public const int    UsdtIdNetwork                     = 99;
-    public const int    CoinPayIdWallet                   = 46616;
-    public const int ChildrenLimitModel4                  = 2;
-    public const int ChildrenLimitModel5                  = 4;
-    public const int LevelsLimitModel5                    = 8;
-    public const int ChildrenLimitModel6                  = 3;
-    public const int LevelsLimitModel6                   = 10;
-    
+    public const string CommissionModelThreeDescription       = "Comisión Modelo 2 por {0}, nivel {1}";
+    public const string CommissionModelThreeDescriptionNormal = "Comisión Modelo 2";
+    public const string CommissionMembership                  = "Comisión de membresía por";
+    public const string ConceptBinaryPayment                  = "Pago Modelo 4 - ${0} - Calificacion {1}";
+    public const string ConceptModelFivePayment               = "Pago Modelo 5 - ${0} - Calificacion {1}";
+    public const string ConceptModelSixPayment                = "Pago Modelo 6 - ${0} - Calificacion {1}";
+    public const string ConceptCommissionBinaryPayment        = "Comisión Modelo 4 - ${0} - Calificacion {1}";
+    public const string ConceptCommissionModelFivePayment     = "Comisión Modelo 5 - ${0} - Calificacion {1}";
+    public const string ConceptCommissionModelSixPayment      = "Comisión Modelo 6 - ${0} - Calificacion {1}";
+    public const string DefaultWithdrawalZone                 = "Central America Standard Time";
+    public const int    UsdtIdCurrency                        = 19;
+    public const int    UsdtIdNetwork                         = 99;
+    public const int    CoinPayIdWallet                       = 46616;
+    public const int    ChildrenLimitModel4                   = 2;
+    public const int    ChildrenLimitModel5                   = 4;
+    public const int    LevelsLimitModel5                     = 8;
+    public const int    ChildrenLimitModel6                   = 3;
+    public const int    LevelsLimitModel6                     = 10;
+    public const string GetAllDetailsModelOneAndTwo           = "dbo.GetAllDetailsModelOneAndTwo";
     //Models
-    public static string[] Model4Level      = { "Cliente", "Colaborador" };
     public static int[] CustomerModel4Scope = { 1, 2, 3};
     public const int CustomerModel5Scope    = 4;
     public static int[] CustomerModel6Scope = { 5,6,7,8,9,10, 11 };
-    public static string[] Model5Level      = { "Ejecutivo" };
-    public static string[] Model6Level      =
-    {
-        "Gestor",
-        "Coordinador",
-        "Supervisor",
-        "Asesor",
-        "VP_Comercial",
-        "Subdirector",
-        "Director"
-    };
-    public const int    OriginNormalPurchase           = 1;
-    public const string SubjectInvitationForAcademy    = "Invitación al curso de trading";
-    public const string PurchasingPoolRevertBalance    = "Pool Adquisitivo con saldo revertido";
-    public const string WireTransfer                   = "Transferencia bancaria";
-    public const string CreateEcoPoolSP                = "dbo.CreateEcoPoolSP";
-    public const string GetTradingAcademyDetailsSp     = "GetTradingAcademyInvoiceDetails";  
-    public const string ActiveEcoPoolsGreaterThan25    = "dbo.sp_GetInvoicePacksByAffiliateCount";
-      
-    public const string CommissionPoolDescription       = "Comisión del pool por {0}, nivel {1}";
-    public const string CommissionPoolDescriptionNormal = "Comisión del pool";
-    public const string FirstModel4Level                      = "Cliente";
-    public const string SecondModel4Level                      ="Colaborador";
-    public const string ConceptRecurringPayment         = "Pago recurrente - ${0} - Calificacion {1}";
-
+    
+    public const string SubjectInvitationForAcademy = "Invitación al curso de trading";
+    public const string PurchasingPoolRevertBalance = "Pool Adquisitivo con saldo revertido";
+    public const string WireTransfer                = "Transferencia bancaria";
+    public const string GetTradingAcademyDetailsSp  = "GetTradingAcademyInvoiceDetails";
+    public const string BalanceRefunds              = "Devolución de saldo";
+             
     public const int    ForMonth                        = 31;
     public const int    ForWeek                         = 32;
     

@@ -143,6 +143,8 @@ public static class IocExtensionApp
         services.AddScoped<IWalletRequestRepository, WalletRequestRepository>();
         services.AddScoped<IWalletRetentionConfigRepository, WalletRetentionConfigRepository>();
         services.AddScoped<IWalletRepository, WalletRepository>();
+        services.AddScoped<IWalletModel1ARepository, WalletModel1ARepository>();
+        services.AddScoped<IWalletModel1BRepository, WalletModel1BRepository>();
         services.AddScoped<IWalletWaitRepository, WalletWaitRepository>();
         services.AddScoped<IWalletWithDrawalRepository, WalletWithDrawalRepository>();
         services.AddScoped<IInvoiceDetailRepository, InvoiceDetailRepository>();
