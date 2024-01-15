@@ -13,4 +13,10 @@ public class TestController : BaseController
     {
         return Ok();
     }
+    
+    [HttpGet("New")]
+    public IActionResult TestNewAction()
+    {
+        return Ok();
+    }
 }
