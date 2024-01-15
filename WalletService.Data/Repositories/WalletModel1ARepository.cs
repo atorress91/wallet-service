@@ -1,6 +1,7 @@
 using System.Data;
 using System.Text.Json;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using WalletService.Data.Database;
 using WalletService.Data.Database.CustomModels;
@@ -341,6 +342,16 @@ public class WalletModel1ARepository : BaseRepository, IWalletModel1ARepository
             TypeName = "dbo.InvoicesDetailsType"
         });
     }
+    
+    public async Task<decimal> GetAvailableBalanceByAffiliateId(int affiliateId)
+    {
+        var list = await Context.WalletsModel1A
+                       .Where(x => x.AffiliateId == affiliateId && x.Status == true).ToListAsync();
+
+        var result = list.Sum(x => x.Credit - x.Debit);
+        return result.ToDecimal();
+    }
+
 
 
 }

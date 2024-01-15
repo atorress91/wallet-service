@@ -200,6 +200,8 @@ public static class IocExtensionApp
         services.AddScoped<IConPaymentService, ConPaymentService>();
         services.AddScoped<IBrevoEmailService, BrevoEmailService>();
         services.AddScoped<IPaymentTransactionService, PaymentTransactionService>();
+        services.AddScoped<IWalletModel1AService, WalletModel1AService>();
+        services.AddScoped<IWalletModel1BService, WalletModel1BService>();
     }
 
     private static void InjectPackages(IServiceCollection services)

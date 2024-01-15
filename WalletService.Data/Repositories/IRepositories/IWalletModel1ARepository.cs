@@ -11,4 +11,6 @@ public interface IWalletModel1ARepository
     Task<InvoicesSpResponse?> DebitEcoPoolTransactionSp(DebitTransactionRequest request);
 
     Task<bool> CreditTransaction(CreditTransactionRequest request);
+
+    Task<decimal> GetAvailableBalanceByAffiliateId(int affiliateId);
 }
