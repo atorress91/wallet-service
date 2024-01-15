@@ -78,9 +78,9 @@ public class ProcessGradingService : BaseService, IProcessGradingService
 
         await _configurationRepository.UpdateConfiguration(configuration);
         var configurationMapped    = Mapper.Map<EcoPoolConfigurationDto>(configuration);
-        var poolsWithinMothMapped  = Mapper.Map<ICollection<InvoicePackDto>>(poolsWithinMoth);
-        var poolsWithoutMothMapped = Mapper.Map<ICollection<InvoicePackDto>>(poolsOutsideMoth);
-        var itemForModelTwoMapped = Mapper.Map<ICollection<InvoiceDetailDto>>(itemForModelTwo);
+        var poolsWithinMothMapped  = Mapper.Map<ICollection<InvoiceDetailDto>>(poolsWithinMoth);
+        var poolsWithoutMothMapped = Mapper.Map<ICollection<InvoiceDetailDto>>(poolsOutsideMoth);
+        var itemForModelTwoMapped  = Mapper.Map<ICollection<InvoiceDetailDto>>(itemForModelTwo);
 
         await SendModelTwoProcess(itemForModelTwoMapped, configurationMapped, listResultAccounts, listResultProducts,
             KafkaTopics.ProcessModelTwoTopic);
@@ -93,7 +93,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
     }
 
     private Task SendModelThreeProcess(
-        ICollection<InvoicePackDto>      pools,
+        ICollection<InvoiceDetailDto>      pools,
         EcoPoolConfigurationDto          configuration,
         decimal?                         points,
         DateTime                         endDate,

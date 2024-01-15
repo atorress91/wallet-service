@@ -80,11 +80,9 @@ public class WalletRepository : BaseRepository, IWalletRepository
     }
 
     public Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId)
-        => Context.InvoicePacks.Include(x => x.Invoice)
-            .Where(x => x.Invoice.AffiliateId == affiliateId && x.Status == "1")
-            .GroupBy(x => x.Invoice.AffiliateId)
-            .Select(g => (decimal?)g.Sum(x => x.BaseAmount))
-            .FirstOrDefaultAsync();
+        => Context.InvoicesDetails.Include(x => x.Invoice).AsNoTracking()
+            .Where(x => x.Invoice.AffiliateId == affiliateId && x.PaymentGroupId == 2)
+            .SumAsync(s => s.BaseAmount);
 
 
     public async Task<double?> GetTotalCommissionsPaid(int affiliateId)
@@ -103,7 +101,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         try
         {
             await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
-            await using var cmd = new SqlCommand(Constants.DebitTransationSP, sql);
+            await using var cmd = new SqlCommand(Constants.DebitTransactionSp, sql);
 
             var invoicesDetails = ConvertToDataTable(request.invoices);
 
@@ -132,7 +130,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         try
         {
             await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
-            await using var cmd = new SqlCommand(Constants.CoursesDebitTransactionSP, sql);
+            await using var cmd = new SqlCommand(Constants.CoursesDebitTransactionSp, sql);
 
             var invoicesDetails = ConvertToDataTable(request.invoices);
 
@@ -156,12 +154,12 @@ public class WalletRepository : BaseRepository, IWalletRepository
         }
     }
 
-    public async Task<InvoicesSpResponse?> DebitEcoPoolTransactionSP(DebitTransactionRequest request)
+    public async Task<InvoicesSpResponse?> DebitEcoPoolTransactionSp(DebitTransactionRequest request)
     {
         try
         {
             await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
-            await using var cmd = new SqlCommand(Constants.DebitEcoPoolTransationSP, sql);
+            await using var cmd = new SqlCommand(Constants.DebitEcoPoolTransactionSp, sql);
 
             CreateDebitEcoPoolListParameters(request, cmd);
 
@@ -217,7 +215,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         try
         {
             await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
-            await using var cmd = new SqlCommand(Constants.CreditTransationSP, sql);
+            await using var cmd = new SqlCommand(Constants.CreditTransactionSp, sql);
 
             CreateCreditListParameters(request, cmd);
 
@@ -235,13 +233,13 @@ public class WalletRepository : BaseRepository, IWalletRepository
     }
 
 
-    public async Task<bool> CreateModelThreeSP(ModelThreeTransactionRequest request)
+    public async Task<bool> CreateModelThreeSp(ModelThreeTransactionRequest request)
     {
         try
         {
             await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
 
-            await using var cmd = new SqlCommand(Constants.ModelThreeRequestSP, sqlConnection);
+            await using var cmd = new SqlCommand(Constants.ModelThreeRequestSp, sqlConnection);
 
             var levelTypeDataTable = ConvertToDataTable(request.LevelsType);
             var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
@@ -262,13 +260,13 @@ public class WalletRepository : BaseRepository, IWalletRepository
         }
     }
 
-    public async Task<bool> CreateModelTwoSP(ModelTwoTransactionRequest request)
+    public async Task<bool> CreateModelTwoSp(ModelTwoTransactionRequest request)
     {
         try
         {
             await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
 
-            await using var cmd = new SqlCommand(Constants.ModelTwoRequestSP, sqlConnection);
+            await using var cmd = new SqlCommand(Constants.ModelTwoRequestSp, sqlConnection);
 
             var levelTypeDataTable   = ConvertToDataTable(request.LevelsType);
             var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
@@ -662,19 +660,15 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return request;
     }
 
-    public Task<List<InvoicePacks>> GetDebitsEcoPoolWithinMonth(DateTime from, DateTime to)
-    {
-        return Context.InvoicePacks.Include(i => i.Invoice).AsNoTracking()
-            .Where(x => x.Status == "1" && x.Invoice.Status == true && x.Invoice.CancellationDate == null &&
-                        x.StartDate >= from && x.StartDate <= to)
-            .ToListAsync();
-    }
+    public Task<List<InvoicesDetails>> GetDebitsEcoPoolWithinMonth(DateTime from, DateTime to)
+        => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
+            .Where(x => x.ProductPack && x.Invoice.Status == true && x.Invoice.CancellationDate == null &&
+                        x.Date >= from && x.Date <= to).ToListAsync();
 
-    public Task<List<InvoicePacks>> GetDebitsEcoPoolOutsideMonth(DateTime date)
-    {
-        return Context.InvoicePacks.Include(i => i.Invoice).AsNoTracking()
-            .Where(x => x.StartDate < date && x.Status == "1" && x.Invoice.Status == true && x.Invoice.CancellationDate == null).ToListAsync();
-    }
+    public Task<List<InvoicesDetails>> GetDebitsEcoPoolOutsideMonth(DateTime date)
+        => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
+            .Where(x => x.ProductPack && x.Date < date && x.Invoice.Status == true && 
+                        x.Invoice.CancellationDate == null).ToListAsync();
     
     public Task<List<InvoicesDetails>> GetInvoicesDetailsItemsForModelTwo(int month, int year)
     {
@@ -727,8 +721,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
     public async Task<bool> IsActivePoolGreaterThanOrEqualTo25(int affiliateId)
     {
-        var result = await Context.InvoicePacks.Include(x => x.Invoice)
-            .Where(x => x.Status == "1" && x.Invoice.AffiliateId == affiliateId && x.Invoice.Status == true &&
+        var result = await Context.InvoicesDetails.Include(x => x.Invoice)
+            .Where(x => x.ProductPack && x.Invoice.AffiliateId == affiliateId && x.Invoice.Status == true &&
                         x.Invoice.CancellationDate == null).ToListAsync();
 
         if (result is { Count: 0 })

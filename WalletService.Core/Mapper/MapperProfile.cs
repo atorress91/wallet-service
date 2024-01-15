@@ -55,6 +55,7 @@ public class MapperProfile : Profile
         CreateMap<ResultEcoPoolLevels, ResultEcoPoolLevelsDto>();
         CreateMap<PaymentTransaction, PaymentTransactionDto>();
         CreateMap<InvoicesTradingAcademyResponse, InvoiceTradingAcademyDto>();
+        CreateMap<InvoiceModelOneAndTwoResponse, InvoiceModelOneAndTwoDto>();
      
 
         CreateMap<WalletRequestRequest, WalletsRequests>()
@@ -100,7 +101,6 @@ public class MapperProfile : Profile
 
         CreateMap<Invoices, InvoiceDto>()
             .ForMember(dest => dest.InvoiceDetail, opt => opt.MapFrom(src => src.InvoiceDetail));
-        CreateMap<InvoicePacks, InvoicePackDto>();
         
         CreateMap<InvoiceDetailRequest, InvoicesDetails>()
             .ForMember(dest => dest.Invoice, opt => opt.Ignore());
