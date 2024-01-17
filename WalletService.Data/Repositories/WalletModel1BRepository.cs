@@ -8,6 +8,7 @@ using WalletService.Data.Database.CustomModels;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Configuration;
 using WalletService.Models.Constants;
+using WalletService.Models.Enums;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Utility.Extensions;
 
@@ -15,7 +16,6 @@ namespace WalletService.Data.Repositories;
 
 public class WalletModel1BRepository : BaseRepository, IWalletModel1BRepository
 {
-
     private readonly ApplicationConfiguration _appSettings;
 
     public WalletModel1BRepository(IOptions<ApplicationConfiguration> appSettings, WalletServiceDbContext context) :
@@ -342,6 +342,7 @@ public class WalletModel1BRepository : BaseRepository, IWalletModel1BRepository
             TypeName = "dbo.InvoicesDetailsType"
         });
     }
+
     public async Task<decimal> GetAvailableBalanceByAffiliateId(int affiliateId)
     {
         var list = await Context.WalletsModel1B
@@ -349,5 +350,27 @@ public class WalletModel1BRepository : BaseRepository, IWalletModel1BRepository
 
         var result = list.Sum(x => x.Credit - x.Debit);
         return result.ToDecimal();
+    }
+
+    public Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId)
+        => Context.InvoicesDetails.Include(x => x.Invoice).AsNoTracking()
+            .Where(x => x.Invoice.AffiliateId == affiliateId && x.PaymentGroupId == 8)
+            .SumAsync(s => s.BaseAmount);
+    
+    public async Task<decimal?> GetReverseBalanceByAffiliateId(int affiliateId)
+    {
+        var totalCredits = await Context.WalletsModel1B
+                               .Where(x => x.AffiliateId == affiliateId && x.ConceptType == WalletConceptType.revert_pool.ToString())
+                               .Select(x => x.Credit)
+                               .SumAsync();
+
+        var totalDebits = await Context.WalletsModel1B
+                              .Where(x => x.AffiliateId == affiliateId &&
+                                          x.ConceptType == WalletConceptType.purchase_with_reverse_balance.ToString())
+                              .Select(x => x.Debit)
+                              .SumAsync();
+
+        var reverseBalance = totalCredits - totalDebits;
+        return Convert.ToDecimal(reverseBalance);
     }
 }

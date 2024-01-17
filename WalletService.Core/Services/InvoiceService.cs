@@ -179,7 +179,9 @@ public class InvoiceService : BaseService, IInvoiceService
 
         return invoicesOrdered;
     }
-    public async Task<ModelBalancesAndInvoicesDto?> ProcessAndReturnBalancesForModels1A1B2(ModelBalancesAndInvoicesRequest request)
+
+    public async Task<ModelBalancesAndInvoicesDto?> ProcessAndReturnBalancesForModels1A1B2(
+        ModelBalancesAndInvoicesRequest request)
     {
         var totalModels = request.Model1AAmount + request.Model1BAmount + request.Model2Amount;
         if (request.InvoiceId.Length == 0)
@@ -187,20 +189,23 @@ public class InvoiceService : BaseService, IInvoiceService
 
         var (validInvoiceIds, affiliateId, totalInvoices) = await ProcessInvoices(request.InvoiceId);
 
-        if (affiliateId == 0 || totalInvoices > totalModels)
+        if (affiliateId == 0 || totalModels > totalInvoices)
             return null;
 
         bool isAnyCreditTransactionSuccessful = false;
 
         if (request.Model1AAmount > 0)
-            isAnyCreditTransactionSuccessful |= await CreditAmountToWallet(affiliateId, request.UserName, request.Model1AAmount, "Model1A");
+            isAnyCreditTransactionSuccessful |=
+                await CreditAmountToWallet(affiliateId, request.UserName, request.Model1AAmount, "Model1A");
 
         if (request.Model1BAmount > 0)
-            isAnyCreditTransactionSuccessful |= await CreditAmountToWallet(affiliateId, request.UserName, request.Model1BAmount, "Model1B");
+            isAnyCreditTransactionSuccessful |=
+                await CreditAmountToWallet(affiliateId, request.UserName, request.Model1BAmount, "Model1B");
 
         if (request.Model2Amount > 0)
-            isAnyCreditTransactionSuccessful |= await CreditAmountToWallet(affiliateId, request.UserName, request.Model2Amount, "Model2");
-        
+            isAnyCreditTransactionSuccessful |=
+                await CreditAmountToWallet(affiliateId, request.UserName, request.Model2Amount, "Model2");
+
         if (isAnyCreditTransactionSuccessful && validInvoiceIds.Any())
         {
             await _invoiceRepository.DeleteMultipleInvoicesAndDetailsAsync(validInvoiceIds.ToArray());
@@ -215,6 +220,7 @@ public class InvoiceService : BaseService, IInvoiceService
             InvoiceId     = validInvoiceIds.ToArray()
         };
     }
+
     private async Task<(List<int>, int, decimal)> ProcessInvoices(int[] invoiceIds)
     {
         var totalInvoices   = 0m;
@@ -241,7 +247,7 @@ public class InvoiceService : BaseService, IInvoiceService
 
         return (validInvoiceIds, affiliateId, totalInvoices);
     }
-    
+
     private async Task<bool> CreditAmountToWallet(int affiliateId, string userName, decimal amount, string model)
     {
         if (amount <= 0) return false;
@@ -252,9 +258,9 @@ public class InvoiceService : BaseService, IInvoiceService
             UserId            = Constants.AdminUserId,
             Concept           = Constants.BalanceRefunds,
             Credit            = Convert.ToDouble(amount),
-            AffiliateUserName = Constants.AdminEcosystemUserName,
-            AdminUserName     = userName,
-            ConceptType       = WalletConceptType.balance_transfer.ToString()
+            AffiliateUserName = userName,
+            AdminUserName     = Constants.AdminEcosystemUserName,
+            ConceptType       = WalletConceptType.revert_pool.ToString()
         };
 
         try
@@ -271,6 +277,7 @@ public class InvoiceService : BaseService, IInvoiceService
                     await _walletRepository.CreditTransaction(creditTransactionRequest);
                     break;
             }
+
             return true;
         }
         catch

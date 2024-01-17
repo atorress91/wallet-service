@@ -13,9 +13,11 @@ public static class Constants
     public const string AdminCredit                           = "Crédito Administrativo";
     public const string HandleDebitTransactionCourse          = "dbo.HandleDebit_Transation_For_Courses_SP";
     public const string WalletBalance                         = "Saldo de billetera";
+    public const string WalletModel1ABalance                  = "Balance modelo 1A";
+    public const string WalletModel1BBalance                  = "Balance modelo 1B";
     public const string CoursesDebitTransactionSp             = "dbo.Courses_Debit_Transaction_SP";
     public const string AdminPayment                          = "Administrativo";
-    public const string ReverseBalance                        = "Saldo revertido";
+    public const string ReverseBalance                        = "Saldo modelo 2";
     public const string ConPaymentAddress                     = "THiJ78d6DHm1575GfFyfe1K6k2Fp6Bq5pP";
     public const string ConPaymentCurrency                    = "USDT.TRC20";
     public const int    MembershipBonus                       = 5;

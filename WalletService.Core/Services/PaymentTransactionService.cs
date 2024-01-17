@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Newtonsoft.Json;
-using WalletService.Core.Factory;
+using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.Models;
@@ -21,17 +21,17 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
     private readonly ICoinPaymentTransactionRepository _paymentTransactionRepository;
     private readonly IAccountServiceAdapter            _accountServiceAdapter;
     private readonly IInventoryServiceAdapter          _inventoryServiceAdapter;
-    private readonly IPaymentStrategyFactory           _paymentStrategyFactory;
+    private readonly IWireTransferStrategy             _wireTransferStrategy;
 
-    public PaymentTransactionService(IMapper mapper, ICoinPaymentTransactionRepository paymentTransactionRepository,
-        IAccountServiceAdapter               accountServiceAdapter, IInventoryServiceAdapter inventoryServiceAdapter,
-        IPaymentStrategyFactory              paymentStrategyFactory) :
+    public PaymentTransactionService(IMapper mapper,                ICoinPaymentTransactionRepository paymentTransactionRepository,
+        IAccountServiceAdapter               accountServiceAdapter, IInventoryServiceAdapter          inventoryServiceAdapter,
+        IWireTransferStrategy                wireTransferStrategy) :
         base(mapper)
     {
         _paymentTransactionRepository = paymentTransactionRepository;
         _accountServiceAdapter        = accountServiceAdapter;
         _inventoryServiceAdapter      = inventoryServiceAdapter;
-        _paymentStrategyFactory       = paymentStrategyFactory;
+        _wireTransferStrategy         = wireTransferStrategy;
     }
 
     public async Task<PaymentTransactionDto?> CreatePaymentTransactionAsync(PaymentTransactionRequest request)
@@ -181,10 +181,10 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
 
     private async Task<bool> ExecuteEcoPoolPayment(WalletRequest walletRequest)
     {
-        var paymentStrategy = _paymentStrategyFactory.GetWireTransferStrategy();
+        
         try
         {
-            await paymentStrategy.ExecuteEcoPoolPayment(walletRequest);
+            await _wireTransferStrategy.ExecuteEcoPoolPayment(walletRequest);
             return true;
         }
         catch (Exception)
@@ -195,10 +195,9 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
 
     private async Task<bool> ExecuteCoursePayment(WalletRequest walletRequest)
     {
-        var paymentStrategy = _paymentStrategyFactory.GetWireTransferStrategy();
         try
         {
-            await paymentStrategy.ExecutePaymentCourses(walletRequest);
+            await _wireTransferStrategy.ExecutePaymentCourses(walletRequest);
             return true;
         }
         catch (Exception)

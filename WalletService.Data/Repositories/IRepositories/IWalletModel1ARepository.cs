@@ -12,5 +12,7 @@ public interface IWalletModel1ARepository
 
     Task<bool> CreditTransaction(CreditTransactionRequest request);
 
-    Task<decimal> GetAvailableBalanceByAffiliateId(int affiliateId);
+    Task<decimal>  GetAvailableBalanceByAffiliateId(int  affiliateId);
+    Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId);
+    Task<decimal?> GetReverseBalanceByAffiliateId(int    affiliateId);
 }

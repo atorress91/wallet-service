@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WalletService.Core.Services.IServices;
+using WalletService.Models.Requests.WalletRequest;
 
 namespace WalletService.Api.Controllers;
 
@@ -21,5 +22,13 @@ public class WalletModel1AController : BaseController
         var response = await _walletModel1AService.GetBalanceInformationByAffiliateId(affiliateId);
 
         return Ok(Success(response));
+    }
+    
+    [HttpPost("payWithMyBalance1A")]
+    public async Task<IActionResult> PayWithMyBalance([FromBody] WalletRequest request)
+    {
+        var response = await _walletModel1AService.PayWithMyBalance(request);
+
+        return response is false ? Ok(Fail("The payment could not be processed")) : Ok(Success(response));
     }
 }

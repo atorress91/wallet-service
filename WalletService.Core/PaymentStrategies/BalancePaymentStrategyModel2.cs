@@ -1,22 +1,18 @@
 ﻿using System.Reflection;
 using System.Text.Json;
-using AutoMapper;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
-using WalletService.Core.Services;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
-using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Constants;
 using WalletService.Models.DTO.BalanceInformationDto;
 using WalletService.Models.Enums;
 using WalletService.Models.Requests.WalletRequest;
-using WalletService.Models.Requests.WalletTransactionRequest;
 using WalletService.Models.Responses;
 
 namespace WalletService.Core.PaymentStrategies;
 
-public class ToThirdPartiesPaymentStrategy : BaseService
+public class BalancePaymentStrategyModel2 : IBalancePaymentStrategyModel2
 {
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
     private readonly IAccountServiceAdapter   _accountServiceAdapter;
@@ -25,9 +21,9 @@ public class ToThirdPartiesPaymentStrategy : BaseService
     private readonly IBrevoEmailService       _brevoEmailService;
     private readonly IWalletRequestRepository _walletRequestRepository;
 
-    public ToThirdPartiesPaymentStrategy(IInventoryServiceAdapter inventoryServiceAdapter,
-        IAccountServiceAdapter                                    accountServiceAdapter,   IWalletRepository walletRepository, IMediatorPdfService mediatorPdfService,
-        IBrevoEmailService                                        brevoEmailService,       IWalletRequestRepository walletRequestRepository,IMapper                    mapper):base(mapper)
+    public BalancePaymentStrategyModel2(IInventoryServiceAdapter inventoryServiceAdapter,
+        IAccountServiceAdapter                                     accountServiceAdapter, IWalletRepository walletRepository, IMediatorPdfService mediatorPdfService,
+        IBrevoEmailService                                         brevoEmailService, IWalletRequestRepository walletRequestRepository)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter   = accountServiceAdapter;
@@ -38,19 +34,16 @@ public class ToThirdPartiesPaymentStrategy : BaseService
     }
     public async Task<bool> ExecutePayment(WalletRequest request)
     {
-        var  debit          = 0;
+        var  debit          = 0m;
         var  points         = 0m;
         var  commissionable = 0m;
         byte origin         = 0;
-        var today  = DateTime.Now;
 
-        var          invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var          userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
-        var          purchaseFor      = await _accountServiceAdapter.GetUserInfo(request.PurchaseFor);
-        var          balanceInfo      = await GetBalanceInformationByAffiliateId(request.AffiliateId);
-        var          productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var          responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
-        List<string> productNames     = new List<string>();
+        var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var balanceInfo      = await GetBalanceInformationByAffiliateId(request.AffiliateId);
+        var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -103,10 +96,10 @@ public class ToThirdPartiesPaymentStrategy : BaseService
                 ProductCommissionable = item.CommissionableValue,
                 BinaryPoints          = item.BinaryPoints,
                 ProductPoints         = item.ValuePoints,
-                ProductDiscount       = 0,
+                ProductDiscount       = item.ProductDiscount,
                 CombinationId         = 0,
                 ProductPack           = Convert.ToByte(item.ProductPacks),
-                BaseAmount            = item.BaseAmount,
+                BaseAmount            = (item.BaseAmount * product.Count),
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
@@ -114,7 +107,6 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             };
 
             invoiceDetails.Add(invoiceDetail);
-            productNames.Add(invoiceDetail.ProductName);
         }
 
         if (debit == 0)
@@ -126,64 +118,20 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         if (debit > balanceInfo.ReverseBalance.GetValueOrDefault())
             return false;
 
-        var debitTransaction = new WalletTransactionRequest
-        {
-            Debit             = debit,
-            Deferred          = Constants.None,
-            Detail            = null,
-            AffiliateId       = request.AffiliateId,
-            AdminUserName     = Constants.AdminEcosystemUserName,
-            Status            = true,
-            UserId            = Constants.AdminUserId,
-            Credit            = Constants.None,
-            Concept           = "Transferencia de saldo revertido al afiliado "+ purchaseFor!.UserName,
-            Support           = null!,
-            Date              = today,
-            Compression       = false,
-            AffiliateUserName = request.AffiliateUserName,
-            ConceptType       = WalletConceptType.purchase_with_reverse_balance
-        };
-
-        var creditTransaction = new WalletTransactionRequest
-        {
-            Debit             = Constants.None,
-            Deferred          = Constants.None,
-            Detail            = null,
-            AffiliateId       = request.PurchaseFor,
-            AdminUserName     = Constants.AdminEcosystemUserName,
-            Status            = true,
-            UserId            = Constants.AdminUserId,
-            Credit            = debit,
-            Concept           = "Transferencia de saldo revertido del afiliado " + userInfoResponse!.UserName,
-            Support           = null!,
-            Date              = today,
-            Compression       = false,
-            AffiliateUserName = purchaseFor.UserName,
-            ConceptType       = WalletConceptType.revert_pool
-        };
-
-        var debitWallet  = Mapper.Map<Wallets>(debitTransaction);
-        var creditWallet = Mapper.Map<Wallets>(creditTransaction);
-
-        var success = await _walletRepository.CreateTransferBalance(debitWallet, creditWallet);
-
-        if (!success)
-            return false;
-        
         var debitTransactionRequest = new DebitTransactionRequest
         {
             Debit             = debit,
-            AffiliateId       = purchaseFor.Id,
+            AffiliateId       = request.AffiliateId,
             UserId            = Constants.AdminUserId,
             ConceptType       = WalletConceptType.purchase_with_reverse_balance.ToString(),
             Points            = points,
-            Concept           = Constants.PurchasingPoolRevertBalance,
+            Concept           = Constants.EcoPoolProductCategory,
             Commissionable    = commissionable,
             Bank              = request.Bank,
             PaymentMethod     = Constants.ReverseBalance,
             Origin            = origin,
             Level             = 0,
-            AffiliateUserName = purchaseFor.UserName!,
+            AffiliateUserName = request.AffiliateUserName,
             AdminUserName     = Constants.AdminEcosystemUserName,
             ReceiptNumber     = request.ReceiptNumber,
             Type              = 0,
@@ -195,13 +143,10 @@ public class ToThirdPartiesPaymentStrategy : BaseService
 
         if (spResponse is null)
             return false;
-        
-        var fullName                   = purchaseFor.Name + " " + purchaseFor.LastName;
-        var invoicePdf = await _mediatorPdfService.GenerateInvoice(purchaseFor, debitTransactionRequest, spResponse);
+
+        var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
         var productPdfsContents = await GetPdfContentFromProductIds(productIds);
-        
-        await _brevoEmailService.SendEmailConfirmationEmailToThirdParty(userInfoResponse, fullName, productNames);
-        
+
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
         {
             ["Invoice.pdf"] = invoicePdf
@@ -211,15 +156,14 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         {
             allPdfData[pdfDataEntry.Key] = pdfDataEntry.Value;
         }
-
+        
         if (invoicePdf.Length != 0)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(purchaseFor, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
         }
 
         return true;
     }
-
     private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId)
     {
         var amountRequests    = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId);
@@ -237,11 +181,9 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         if (amountRequests == 0m && response.ReverseBalance == 0m) return response;
 
         response.AvailableBalance -= amountRequests;
-        response.AvailableBalance -= response.ReverseBalance;
 
         return response;
     }
-    
     private async Task<Dictionary<string, byte[]>> GetPdfContentFromProductIds(int[] productIds)
     {
         Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
