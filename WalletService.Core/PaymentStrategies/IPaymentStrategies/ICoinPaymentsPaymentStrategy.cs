@@ -2,8 +2,9 @@
 
 namespace WalletService.Core.PaymentStrategies.IPaymentStrategies;
 
-public interface IMembershipPaymentStrategy
+public interface ICoinPaymentsPaymentStrategy
 {
-    Task<bool> ExecutePayment(WalletRequest           request);
+    Task<bool> ExecuteEcoPoolPayment(WalletRequest    request);
+    Task<bool> ExecuteCoursePayment(WalletRequest     request);
     Task<bool> ExecuteMembershipPayment(WalletRequest request);
 }

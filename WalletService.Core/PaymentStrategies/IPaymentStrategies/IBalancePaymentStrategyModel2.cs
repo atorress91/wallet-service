@@ -2,7 +2,7 @@
 
 namespace WalletService.Core.PaymentStrategies.IPaymentStrategies;
 
-public interface IPaymentStrategy
+public interface IBalancePaymentStrategyModel2
 {
     Task<bool> ExecutePayment(WalletRequest request);
 }
