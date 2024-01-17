@@ -38,10 +38,10 @@ public class MediatorPdfService : IMediatorPdfService
                             row.RelativeItem().Column(col =>
                             {
                                 col.Item().AlignRight().Background("#257272").Border(1).BorderColor("#257272").AlignCenter()
-                                    .Text($"Factura #{spResponse.Id}")
+                                    .Text($"Factura de servicios #{spResponse.Id}")
                                     .FontColor("#fff");
 
-                                col.Item().AlignRight().Text("Razón Social: Ecosystem Sharing Evolution S.A.").FontSize(10);
+                                col.Item().AlignRight().Text("Razón Social: Ecosystem OCX Sharing Evolution S.A.").FontSize(10);
                                 col.Item().AlignRight().Text("C.I.F: 3-101-844938").FontSize(10);
                                 col.Item().AlignRight().Text("Domicilio: San José-Santa Ana, Brasil, Centro Comercial Plaza del Rio, Local #3").FontSize(10);
                                 col.Item().AlignRight().Text("Tel/Fax: 50663321239").FontSize(10);
@@ -155,7 +155,7 @@ public class MediatorPdfService : IMediatorPdfService
                                 row.RelativeItem().Column(col2 =>
                                 {
                                     col2.Item().AlignRight().Text("Monto pagado").Bold().FontSize(16);
-                                    col2.Item().AlignRight().Text($"Total + iva incl.: ${invoice.Debit.ToString("0.00")}").FontSize(18).FontColor("30A2FF");
+                                    col2.Item().AlignRight().Text($"Total: ${invoice.Debit.ToString("0.00")}").FontSize(18).FontColor("30A2FF");
                                     col2.Item().AlignRight().Text("Fecha de pago:").FontSize(12);
                                     col2.Item().AlignRight().Text(date).FontSize(12);
                                 });
