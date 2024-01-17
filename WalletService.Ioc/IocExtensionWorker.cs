@@ -6,8 +6,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NLog.Extensions.Logging;
-using WalletService.Core.Factory;
-using WalletService.Core.Kafka.Consumers;
 using WalletService.Core.Kafka.Producer;
 using WalletService.Core.Kafka.Topics;
 using WalletService.Core.Mapper;
@@ -33,7 +31,6 @@ public static class IocExtensionWorker
         InjectServices(services);
         InjectAdapters(services);
         InjectLogging(services);
-        InjectFactories(services);
         InjectSingletonsAndFactories(services);
         RegisterServiceProvider(services);
     }
@@ -147,12 +144,7 @@ public static class IocExtensionWorker
         services.AddSingleton<HttpClient>();
         services.AddSingleton(services.BuildServiceProvider());
     }
-
-    private static void InjectFactories(IServiceCollection services)
-    {
-        services.AddScoped<IPaymentStrategyFactory, PaymentStrategyFactory>();
-    }
-
+    
     private static void InjectSingletonsAndFactories(IServiceCollection services)
     {
         services.AddHttpClient();

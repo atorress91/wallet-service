@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Globalization;
 using Microsoft.IdentityModel.Tokens;
-using WalletService.Core.Factory;
+using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.CustomModels;
@@ -27,7 +27,6 @@ namespace WalletService.Core.Services;
 public class ConPaymentService : BaseService, IConPaymentService
 {
     private readonly string                            _merchantId;
-    private readonly IPaymentStrategyFactory           _paymentStrategyFactory;
     private readonly ApplicationConfiguration          _appSettings;
     private readonly ConPaymentsApi.ConPaymentsApi     _conPaymentsApi;
     private readonly ICoinPaymentTransactionRepository _coinPaymentTransactionRepository;
@@ -38,11 +37,11 @@ public class ConPaymentService : BaseService, IConPaymentService
     private readonly IBrevoEmailService                _brevoEmailService;
     private readonly IWalletRequestRepository          _walletRequestRepository;
     private readonly IInventoryServiceAdapter          _inventoryServiceAdapter;
+    private readonly ICoinPaymentsPaymentStrategy              _coinPaymentsPaymentStrategy;
 
 
     public ConPaymentService(
         IMapper                           mapper, IOptions<ApplicationConfiguration> appSettings,
-        IPaymentStrategyFactory           paymentStrategyFactory,
         ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
         IInvoiceRepository                invoiceRepository,
         ILogger<ConPaymentService>        logger,
@@ -50,10 +49,10 @@ public class ConPaymentService : BaseService, IConPaymentService
         IWalletRepository                 walletRepository,
         IBrevoEmailService                brevoEmailService,
         IWalletRequestRepository          walletRequestRepository,
-        IInventoryServiceAdapter          inventoryServiceAdapter
+        IInventoryServiceAdapter          inventoryServiceAdapter,
+        ICoinPaymentsPaymentStrategy              coinPaymentsPaymentStrategy
     ) : base(mapper)
     {
-        _paymentStrategyFactory = paymentStrategyFactory;
         _invoiceRepository      = invoiceRepository;
         _appSettings            = appSettings.Value;
         _conPaymentsApi =
@@ -66,6 +65,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         _brevoEmailService                = brevoEmailService;
         _walletRequestRepository          = walletRequestRepository;
         _inventoryServiceAdapter          = inventoryServiceAdapter;
+        _coinPaymentsPaymentStrategy              = coinPaymentsPaymentStrategy;
     }
 
     public async Task<GetPayByNameProfileResponse> GetPayByNameProfile(string nameTag)
@@ -395,28 +395,25 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     private async Task ExecuteEcoPoolPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
     {
-        var paymentStrategy = _paymentStrategyFactory.GetCoinPaymentStrategy();
-
+        
         walletRequest.ProductsList = products.Select(product => new ProductsRequests
         {
             IdProduct = product.ProductId,
             Count     = product.Quantity
         }).ToList();
 
-        await paymentStrategy.ExecuteEcoPoolPayment(walletRequest);
+        await _coinPaymentsPaymentStrategy.ExecuteEcoPoolPayment(walletRequest);
     }
 
     private async Task ExecuteCoursePayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
     {
-        var paymentStrategy = _paymentStrategyFactory.GetCoinPaymentStrategy();
-
         walletRequest.ProductsList = products.Select(product => new ProductsRequests
         {
             IdProduct = product.ProductId,
             Count     = product.Quantity
         }).ToList();
 
-        await paymentStrategy.ExecuteCoursePayment(walletRequest);
+        await _coinPaymentsPaymentStrategy.ExecuteCoursePayment(walletRequest);
     }
 
     private async Task GrantWelcomeBonus(int userId, string productsInfo)
@@ -455,15 +452,13 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     private async Task ExecuteMembershipPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
     {
-        var paymentStrategy = _paymentStrategyFactory.GetMembershipStrategy();
-
         walletRequest.ProductsList = products.Select(product => new ProductsRequests
         {
             IdProduct = product.ProductId,
             Count     = product.Quantity
         }).ToList();
 
-        await paymentStrategy.ExecuteMembershipPayment(walletRequest);
+        await _coinPaymentsPaymentStrategy.ExecuteMembershipPayment(walletRequest);
     }
 
     private async Task<bool> RevertUnconfirmedOrUnpaidTransactions(string idTransaction, string productsInfo)

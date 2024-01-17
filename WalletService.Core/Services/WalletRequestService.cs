@@ -1,6 +1,5 @@
 using System.Text.Json;
 using AutoMapper;
-using WalletService.Core.Factory;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -24,18 +23,19 @@ public class WalletRequestService : BaseService, IWalletRequestService
     private readonly IInvoiceDetailRepository _invoiceDetailRepository;
     private readonly IWalletRepository        _walletRepository;
     private readonly IWalletPeriodRepository  _walletPeriodRepository;
-    private readonly IPaymentStrategyFactory        _paymentStrategyFactory;
+    private readonly IBalancePaymentStrategy   _balancePaymentStrategy;
+
 
 
     public WalletRequestService(
         IMapper                  mapper,
         IWalletRequestRepository walletRequestRepository,
         IAccountServiceAdapter   accountServiceAdapter,
-        IInvoiceRepository       invoiceRepository, 
-        IInvoiceDetailRepository invoicesDetails, 
-        IWalletRepository walletRepository,
-        IWalletPeriodRepository walletPeriodRepository, 
-        IPaymentStrategyFactory paymentStrategyFactory) : base(mapper)
+        IInvoiceRepository       invoiceRepository,
+        IInvoiceDetailRepository invoicesDetails,
+        IWalletRepository        walletRepository,
+        IWalletPeriodRepository  walletPeriodRepository, IBalancePaymentStrategy balancePaymentStrategy
+    ) : base(mapper)
     {
         _walletRequestRepository = walletRequestRepository;
         _accountServiceAdapter   = accountServiceAdapter;
@@ -43,7 +43,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         _invoiceDetailRepository = invoicesDetails;
         _walletRepository        = walletRepository;
         _walletPeriodRepository  = walletPeriodRepository;
-        _paymentStrategyFactory  = paymentStrategyFactory;
+        _balancePaymentStrategy  = balancePaymentStrategy;
     }
 
     public async Task<IEnumerable<WalletRequestDto>> GetAllWalletsRequests()
@@ -178,8 +178,8 @@ public class WalletRequestService : BaseService, IWalletRequestService
     {
         var response         = await _invoiceRepository.GetInvoiceById(request.InvoiceId);
         var userInfoResponse = await _accountServiceAdapter.GetUserInfo(response!.AffiliateId);
-        
-        var amountReverted = response.TotalInvoice * (decimal?)0.90;
+
+        var amountReverted  = response.TotalInvoice * (decimal?)0.90;
         var leftOverBalance = response.TotalInvoice - amountReverted;
 
         var creditRequest = new CreditTransactionRequest
@@ -229,31 +229,29 @@ public class WalletRequestService : BaseService, IWalletRequestService
 
     private async Task<bool> CreateCustomEcoPool(UserInfoResponse user, decimal? leftOverBalance)
     {
-        var payment =  _paymentStrategyFactory.GetBalancePaymentStrategy();
-
         if (user is null)
             return false;
-        
+
         var walletRequest = new WalletRequest
         {
-         AffiliateId       = user.Id,
-         AffiliateUserName = user.UserName!,
-         PurchaseFor       = 0,
-         Bank              = Constants.WalletBalance,
-         PaymentMethod     = 0,
-         SecretKey         = null,
-         ReceiptNumber     = leftOverBalance.ToString(),
-         ProductsList      = new List<ProductsRequests>
-         {
-             new ProductsRequests
-             {
-                 Count = 1,
-                 IdProduct = 23
-             }
-         },
+            AffiliateId       = user.Id,
+            AffiliateUserName = user.UserName!,
+            PurchaseFor       = 0,
+            Bank              = Constants.WalletBalance,
+            PaymentMethod     = 0,
+            SecretKey         = null,
+            ReceiptNumber     = leftOverBalance.ToString(),
+            ProductsList = new List<ProductsRequests>
+            {
+                new ProductsRequests
+                {
+                    Count     = 1,
+                    IdProduct = 23
+                }
+            },
         };
-        
-        return await payment.ExecuteCustomPayment(walletRequest);
+
+        return await _balancePaymentStrategy.ExecuteCustomPayment(walletRequest);
     }
 
     private async Task<bool> DeleteInvoiceAndDetails(int invoiceNumber)
@@ -271,7 +269,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
 
             return true;
         }
-        
+
         catch (Exception)
         {
             return false;

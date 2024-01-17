@@ -11,22 +11,51 @@ using WalletService.Models.Responses;
 
 namespace WalletService.Core.PaymentStrategies;
 
-public class CoinPayPaymentStrategy:IPaymentStrategy
+public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 {
-     private readonly IInvoiceRepository       _invoiceRepository;
+    private readonly IInvoiceRepository       _invoiceRepository;
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
     private readonly IAccountServiceAdapter   _accountServiceAdapter;
     private readonly IMediatorPdfService      _mediatorPdfService;
     private readonly IBrevoEmailService       _brevoEmailService;
+    private readonly IWalletRepository        _walletRepository;
 
     public CoinPayPaymentStrategy(IInvoiceRepository invoiceRepository,     IInventoryServiceAdapter inventoryServiceAdapter,
-        IAccountServiceAdapter                            accountServiceAdapter, IBrevoEmailService       brevoEmailService, IMediatorPdfService mediatorPdfService)
+        IAccountServiceAdapter                       accountServiceAdapter, IBrevoEmailService       brevoEmailService, IMediatorPdfService mediatorPdfService, IWalletRepository walletRepository)
     {
         _invoiceRepository       = invoiceRepository;
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter   = accountServiceAdapter;
         _brevoEmailService       = brevoEmailService;
         _mediatorPdfService      = mediatorPdfService;
+        _walletRepository        = walletRepository;
+    }
+
+    private async Task<Dictionary<string, byte[]>> GetPdfContentFromProductIds(int[] productIds)
+    {
+        Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
+
+        var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        var separator        = Path.DirectorySeparatorChar;
+
+        foreach (var id in productIds)
+        {
+            if (Enum.IsDefined(typeof(ProductPdfs), id))
+            {
+                var enumValue = (ProductPdfs)id;
+                var pdfName   = $"{enumValue}.pdf";
+                var path      = $"{workingDirectory}{separator}Assets{separator}EcoPooles{separator}{enumValue}.pdf";
+
+                var pdfContent = await File.ReadAllBytesAsync(path);
+                pdfContents[pdfName] = pdfContent;
+            }
+            else
+            {
+                Console.WriteLine($"The product ID {{id}} does not have an associated PDF.");
+            }
+        }
+
+        return pdfContents;
     }
     public async Task<bool> ExecutePayment(WalletRequest request)
     {
@@ -137,7 +166,7 @@ public class CoinPayPaymentStrategy:IPaymentStrategy
             return false;
 
         var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
-        
+
         var productPdfsContents = await GetPdfContentFromProductIds(productIds);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
@@ -161,32 +190,108 @@ public class CoinPayPaymentStrategy:IPaymentStrategy
 
         return true;
     }
-    
-    private async Task<Dictionary<string, byte[]>> GetPdfContentFromProductIds(int[] productIds)
+
+    public async Task<bool> ExecuteMembershipPayment(WalletRequest request)
     {
-        Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
+        var  debit          = 0;
+        var  points         = 0m;
+        var  commissionable = 0m;
+        byte origin         = 0;
 
-        var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        var separator = Path.DirectorySeparatorChar;
+        var invoiceDetails       = new List<InvoiceDetailsTransactionRequest>();
+        var userInfoResponse     = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var affiliateBonusWinner = await _accountServiceAdapter.GetUserInfo(userInfoResponse!.Father);
 
-        foreach(var id in productIds)
+        var firstProductId   = request.ProductsList.First().IdProduct;
+        var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
+
+        var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
+
+        if (productResponse?.Data == null)
+            return false;
+
+        var item    = productResponse.Data;
+        var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
+        if (product != null)
         {
-            if (Enum.IsDefined(typeof(ProductPdfs), id))
+            var tax = item.Tax;
+            debit          += (int)((item.SalePrice * product.Count) * (1 + (tax / 100)));
+            points         += item.BinaryPoints * product.Count;
+            commissionable += item.CommissionableValue * product.Count;
+            if (item.CategoryId == 2)
             {
-                var enumValue = (ProductPdfs)id;
-                var pdfName = $"{enumValue}.pdf";
-                var path = $"{workingDirectory}{separator}Assets{separator}EcoPooles{separator}{enumValue}.pdf";
-                
-                var pdfContent = await File.ReadAllBytesAsync(path);
-                pdfContents[pdfName] = pdfContent;
+                origin = 1;
             }
-            else
+
+            var invoiceDetail = new InvoiceDetailsTransactionRequest
             {
-                Console.WriteLine($"The product ID {{id}} does not have an associated PDF.");
-            }
+                ProductId             = item.Id,
+                PaymentGroupId        = item.PaymentGroup,
+                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
+                ProductName           = item.Name!,
+                ProductPrice          = item.SalePrice,
+                ProductPriceBtc       = Constants.None,
+                ProductIva            = item.Tax,
+                ProductQuantity       = product.Count,
+                ProductCommissionable = item.CommissionableValue,
+                BinaryPoints          = item.BinaryPoints,
+                ProductPoints         = item.ValuePoints,
+                ProductDiscount       = Constants.None,
+                CombinationId         = Constants.None,
+                ProductPack           = Convert.ToByte(item.ProductPacks),
+                BaseAmount            = item.BaseAmount,
+                DailyPercentage       = item.DailyPercentage,
+                WaitingDays           = item.DaysWait,
+                DaysToPayQuantity     = Constants.None,
+                ProductStart          = Constants.None,
+            };
+
+            invoiceDetails.Add(invoiceDetail);
         }
 
+        if (debit == 0)
+            return false;
 
-        return pdfContents;
+        if (invoiceDetails.Count == 0)
+            return false;
+
+        var debitTransactionRequest = new DebitTransactionRequest
+        {
+            Debit             = debit,
+            AffiliateId       = request.AffiliateId,
+            UserId            = Constants.AdminUserId,
+            ConceptType       = WalletConceptType.purchasing_pool.ToString(),
+            Points            = points,
+            Concept           = Constants.Membership,
+            Commissionable    = commissionable,
+            Bank              = Constants.CoinPayments,
+            PaymentMethod     = Constants.CoinPayments,
+            Origin            = origin,
+            Level             = Constants.None,
+            AffiliateUserName = request.AffiliateUserName,
+            AdminUserName     = Constants.AdminEcosystemUserName,
+            ReceiptNumber     = request.ReceiptNumber,
+            Type              = Constants.None,
+            SecretKey         = request.SecretKey,
+            invoices          = invoiceDetails,
+        };
+
+        var spResponse = await _walletRepository.HandleMembershipTransaction(debitTransactionRequest);
+
+        if (spResponse is null)
+            return false;
+
+        await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
+
+        var pdfResult = await _mediatorPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
+
+        await _brevoEmailService.SendEmailWelcome(userInfoResponse, spResponse);
+
+        if (pdfResult.Length != 0)
+        {
+            await _brevoEmailService.SendEmailMembershipConfirm(userInfoResponse, pdfResult, spResponse);
+        }
+
+        return true;
     }
 }

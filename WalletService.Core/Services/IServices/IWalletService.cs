@@ -15,7 +15,7 @@ public interface IWalletService
 {
     #region Wallet
 
-    Task<IEnumerable<WalletDto?>> GetWalletByUserId(int userId);
+    Task<IEnumerable<WalletDto?>> GetWalletByUserId(int      userId);
     Task<IEnumerable<WalletDto?>> GetWalletByAffiliateId(int affiliateId);
     Task<IEnumerable<WalletDto>> GetAllWallets();
     Task<IEnumerable<WalletDto>> GetWalletsRequest(int userId);
@@ -24,13 +24,12 @@ public interface IWalletService
 
     // Task<WalletDto?> CreateWalletAsync(WalletRequest                   request);
     // Task<WalletDto?> UpdateWalletAsync(int                             id, WalletRequest request);
-    Task<WalletDto?> DeleteWalletAsync(int id);
+    Task<WalletDto?> DeleteWalletAsync(int                             id);
     Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId);
     Task<BalanceInformationAdminDto> GetBalanceInformationAdmin();
-    Task<bool> PaymentHandler(WalletRequest request);
     Task<bool> TransferBalanceForNewAffiliate(TransferBalanceRequest name);
-    Task<ServicesResponse> TransferBalance(string encrypted);
-    Task<bool> HandleWalletRequestRevertTransactionAsync(int option, int invoiceId);
+    Task<ServicesResponse> TransferBalance(string                    encrypted);
+    Task<bool> HandleWalletRequestRevertTransactionAsync(int         option, int invoiceId);
 
     Task<(List<PurchasesPerMonthDto> CurrentYearPurchases, List<PurchasesPerMonthDto> PreviousYearPurchases)?>
         GetPurchasesMadeInMyNetwork(int affiliateId);
@@ -38,7 +37,10 @@ public interface IWalletService
     Task<bool> AdminPaymentHandler(WalletRequest request);
     Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance();
     Task<bool> CreateBalanceAdmin(CreditTransactionAdminRequest request);
-    Task<bool> CoursePaymentHandler(WalletRequest request);
+    Task<bool> CoursePaymentHandler(WalletRequest               request);
+    Task<bool> PayWithMyBalance(WalletRequest                   request);
+    Task<bool> PayWithMyBalanceModel2(WalletRequest             request);
+    Task<bool> PayMembershipWithMyBalance(WalletRequest         request);
 
     #endregion
 }

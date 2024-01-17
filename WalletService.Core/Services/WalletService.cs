@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using AutoMapper;
-using WalletService.Core.Factory;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -21,32 +20,34 @@ namespace WalletService.Core.Services;
 
 public class WalletService : BaseService, IWalletService
 {
-    private readonly IAccountServiceAdapter _accountServiceAdapter;
-    private readonly IInvoiceDetailRepository _invoiceDetailRepository;
-    private readonly IInvoiceRepository _invoiceRepository;
-    private readonly INetworkPurchaseRepository _networkPurchaseRepository;
-    private readonly IPaymentStrategyFactory _paymentStrategyFactory;
-    private readonly IWalletRepository _walletRepository;
-    private readonly IWalletRequestRepository _walletRequestRepository;
+    private readonly IAccountServiceAdapter        _accountServiceAdapter;
+    private readonly IInvoiceDetailRepository      _invoiceDetailRepository;
+    private readonly IInvoiceRepository            _invoiceRepository;
+    private readonly INetworkPurchaseRepository    _networkPurchaseRepository;
+    private readonly IWalletRepository             _walletRepository;
+    private readonly IWalletRequestRepository      _walletRequestRepository;
+    private readonly IBalancePaymentStrategy       _balancePaymentStrategy;
+    private readonly IBalancePaymentStrategyModel2 _balancePaymentStrategyModel2;
 
     public WalletService(
-        IMapper                    mapper,
-        IWalletRepository          walletRepository,
-        IWalletRequestRepository   walletRequestRepository,
-        IAccountServiceAdapter     accountServiceAdapter,
-        IInvoiceRepository         invoiceRepository,
-        IInvoiceDetailRepository   invoiceDetailRepository,
-        IPaymentStrategyFactory    paymentStrategyFactory,
-        INetworkPurchaseRepository networkPurchaseRepository) :
+        IMapper                       mapper,
+        IWalletRepository             walletRepository,
+        IWalletRequestRepository      walletRequestRepository,
+        IAccountServiceAdapter        accountServiceAdapter,
+        IInvoiceRepository            invoiceRepository,
+        IInvoiceDetailRepository      invoiceDetailRepository,
+        INetworkPurchaseRepository    networkPurchaseRepository, IBalancePaymentStrategy balancePaymentStrategy,
+        IBalancePaymentStrategyModel2 balancePaymentStrategyModel2) :
         base(mapper)
     {
-        _walletRepository          = walletRepository;
-        _walletRequestRepository   = walletRequestRepository;
-        _invoiceRepository         = invoiceRepository;
-        _invoiceDetailRepository   = invoiceDetailRepository;
-        _accountServiceAdapter     = accountServiceAdapter;
-        _paymentStrategyFactory    = paymentStrategyFactory;
-        _networkPurchaseRepository = networkPurchaseRepository;
+        _walletRepository             = walletRepository;
+        _walletRequestRepository      = walletRequestRepository;
+        _invoiceRepository            = invoiceRepository;
+        _invoiceDetailRepository      = invoiceDetailRepository;
+        _accountServiceAdapter        = accountServiceAdapter;
+        _networkPurchaseRepository    = networkPurchaseRepository;
+        _balancePaymentStrategy       = balancePaymentStrategy;
+        _balancePaymentStrategyModel2 = balancePaymentStrategyModel2;
     }
 
 
@@ -151,60 +152,44 @@ public class WalletService : BaseService, IWalletService
         return information;
     }
 
-    public async Task<bool> PaymentHandler(WalletRequest request)
+    public async Task<bool> PayWithMyBalance(WalletRequest request)
     {
-        IPaymentStrategy?           paymentStrategy           = null;
-        IBalancePaymentStrategy?    balancePaymentStrategy    = null;
-        IMembershipPaymentStrategy? membershipPaymentStrategy = null;
+        if (request.ProductsList.Count == 0)
+            return false;
 
-        switch (request.PaymentMethod)
-        {
-            case 0:
-                balancePaymentStrategy = _paymentStrategyFactory.GetBalancePaymentStrategy();
-                break;
-            case 1:
-                paymentStrategy = _paymentStrategyFactory.GetStrategy(PaymentType.ReversedBalance);
-                break;
-            case 2:
-                paymentStrategy = _paymentStrategyFactory.GetStrategy(PaymentType.PaymentToThirdParties);
-                break;
-            case 3:
-                membershipPaymentStrategy = _paymentStrategyFactory.GetMembershipStrategy();
-                break;
-            default:
-                throw new ArgumentException("No strategy available.");
-        }
+        var response = await _balancePaymentStrategy.ExecuteEcoPoolPayment(request);
 
-        if (paymentStrategy != null)
-        {
-            return await paymentStrategy.ExecutePayment(request);
-        }
-        else if (balancePaymentStrategy != null)
-        {
-            return await balancePaymentStrategy.ExecuteEcoPoolPayment(request);
-        }
-        else if (membershipPaymentStrategy != null)
-        {
-            return await membershipPaymentStrategy.ExecutePayment(request);
-        }
-        else
-        {
-            throw new InvalidOperationException("No valid payment strategy was determined.");
-        }
+        return response;
     }
-    
+
+    public async Task<bool> PayWithMyBalanceModel2(WalletRequest request)
+    {
+        if (request.ProductsList.Count == 0)
+            return false;
+
+        var response = await _balancePaymentStrategyModel2.ExecutePayment(request);
+
+        return response;
+    }
+
+    public async Task<bool> PayMembershipWithMyBalance(WalletRequest request)
+    {
+        if (request.ProductsList.Count == 0)
+            return false;
+
+        var response = await _balancePaymentStrategy.ExecuteMembershipPayment(request);
+
+        return response;
+    }
+
     public async Task<bool> CoursePaymentHandler(WalletRequest request)
     {
-        IBalancePaymentStrategy balancePaymentStrategy = _paymentStrategyFactory.GetBalancePaymentStrategy();
-
-        return await balancePaymentStrategy.ExecutePaymentCourses(request);
+        return await _balancePaymentStrategy.ExecutePaymentCourses(request);
     }
-    
+
     public async Task<bool> AdminPaymentHandler(WalletRequest request)
     {
-        var balancePaymentStrategy = _paymentStrategyFactory.GetBalancePaymentStrategy();
-
-        return await balancePaymentStrategy.ExecuteAdminPayment(request);
+        return await _balancePaymentStrategy.ExecuteAdminPayment(request);
     }
 
     public async Task<bool> TransferBalanceForNewAffiliate(TransferBalanceRequest request)
@@ -291,13 +276,13 @@ public class WalletService : BaseService, IWalletService
     public async Task<ServicesResponse> TransferBalance(string encrypted)
     {
         var data = CommonExtensions.DecryptObject<TransferBalanceRequest>(encrypted);
-        
-        var today               = DateTime.Now;
-        var amount               = data.Amount;
-        var currentUser      = await _accountServiceAdapter.GetAffiliateByUserName(data.FromUserName);
-        var userInfo         = await _accountServiceAdapter.GetAffiliateByUserName(data.ToUserName);
-        var isActivePool                 = await _walletRepository.IsActivePoolGreaterThanOrEqualTo25(data.FromAffiliateId);
-        
+
+        var today        = DateTime.Now;
+        var amount       = data.Amount;
+        var currentUser  = await _accountServiceAdapter.GetAffiliateByUserName(data.FromUserName);
+        var userInfo     = await _accountServiceAdapter.GetAffiliateByUserName(data.ToUserName);
+        var isActivePool = await _walletRepository.IsActivePoolGreaterThanOrEqualTo25(data.FromAffiliateId);
+
         if (!isActivePool)
             return new ServicesResponse { Success = false, Message = "No tiene un Pool activo", Code = 400 };
 
@@ -312,14 +297,17 @@ public class WalletService : BaseService, IWalletService
         var userBalance       = await GetBalanceInformationByAffiliateId(data.FromAffiliateId);
 
         if (currentUserResult?.Data?.VerificationCode != data.SecurityCode)
-            return new ServicesResponse { Success = false, Message = "El código de seguridad no coincidec.", Code = 400 };
-        
+            return new ServicesResponse
+                { Success = false, Message = "El código de seguridad no coincidec.", Code = 400 };
+
         if (amount > userBalance.AvailableBalance)
-            return new ServicesResponse { Success = false, Message = "El monto es mayor al saldo disponible.", Code = 400 };
+            return new ServicesResponse
+                { Success = false, Message = "El monto es mayor al saldo disponible.", Code = 400 };
 
         if (result?.Data?.Status != 1)
-            return new ServicesResponse { Success = false, Message = "El estatus del afiliado a transferir es inactivo.", Code = 400 };
-        
+            return new ServicesResponse
+                { Success = false, Message = "El estatus del afiliado a transferir es inactivo.", Code = 400 };
+
         var debitTransaction = new WalletTransactionRequest
         {
             Debit             = amount,
@@ -360,11 +348,12 @@ public class WalletService : BaseService, IWalletService
         var creditWallet = Mapper.Map<Wallets>(creditTransaction);
 
         var success = await _walletRepository.CreateTransferBalance(debitWallet, creditWallet);
-        
-        if(!success)
+
+        if (!success)
             return new ServicesResponse { Success = false, Message = "No se pudo crear la transferencia.", Code = 400 };
 
-        return new ServicesResponse { Success = true, Message = "La transferencia se ha creado correctamente.", Code = 200 };
+        return new ServicesResponse
+            { Success = true, Message = "La transferencia se ha creado correctamente.", Code = 200 };
     }
 
     public async Task<bool> HandleWalletRequestRevertTransactionAsync(int option, int invoiceId)
@@ -442,7 +431,8 @@ public class WalletService : BaseService, IWalletService
         await _walletRequestRepository.UpdateWalletRequestsAsync(walletRequest);
     }
 
-    public async Task<(List<PurchasesPerMonthDto> CurrentYearPurchases, List<PurchasesPerMonthDto> PreviousYearPurchases)?>
+    public async Task<(List<PurchasesPerMonthDto> CurrentYearPurchases, List<PurchasesPerMonthDto> PreviousYearPurchases
+            )?>
         GetPurchasesMadeInMyNetwork(int affiliateId)
     {
         var networkResult = await _accountServiceAdapter.GetPersonalNetwork(affiliateId);
@@ -476,12 +466,12 @@ public class WalletService : BaseService, IWalletService
         groupedPurchases.TryGetValue(currentYear, out var currentYearPurchases);
         groupedPurchases.TryGetValue(previousYear, out var previousYearPurchases);
 
-        return (currentYearPurchases ?? new List<PurchasesPerMonthDto>(), previousYearPurchases ?? new List<PurchasesPerMonthDto>());
+        return (currentYearPurchases ?? new List<PurchasesPerMonthDto>(),
+            previousYearPurchases ?? new List<PurchasesPerMonthDto>());
     }
 
     private async Task<bool> PurchaseMembershipForNewAffiliates(WalletTransactionRequest request)
     {
-        var membershipPaymentStrategy = _paymentStrategyFactory.GetMembershipStrategy();
 
         var membership = new ProductsRequests
         {
@@ -501,9 +491,7 @@ public class WalletService : BaseService, IWalletService
             ProductsList      = new List<ProductsRequests> { membership }
         };
 
-        await membershipPaymentStrategy.ExecutePayment(walletRequest);
-
-        return true;
+        return await _balancePaymentStrategy.ExecuteMembershipPayment(walletRequest);
     }
 
     public async Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance()
@@ -512,6 +500,7 @@ public class WalletService : BaseService, IWalletService
 
         return result;
     }
+
     public async Task<bool> CreateBalanceAdmin(CreditTransactionAdminRequest request)
     {
         if (request.Amount == 0)
@@ -532,14 +521,13 @@ public class WalletService : BaseService, IWalletService
             ConceptType       = WalletConceptType.balance_transfer.ToString(),
             UserId            = Constants.AdminUserId
         };
-        
+
         var result = await _walletRepository.CreditTransaction(credit);
         if (!result)
             return false;
 
         return true;
     }
-    
-    #endregion
 
+    #endregion
 }
