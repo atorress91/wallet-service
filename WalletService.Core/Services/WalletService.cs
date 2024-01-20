@@ -129,11 +129,12 @@ public class WalletService : BaseService, IWalletService
     public async Task<BalanceInformationAdminDto> GetBalanceInformationAdmin()
     {
         var responseAffiliates = await _accountServiceAdapter.GetTotalActiveMembers();
-        var response           = JsonSerializer.Deserialize<GetTotalActiveMembersResponse>(responseAffiliates.Content);
+        var response           = JsonSerializer.Deserialize<GetTotalActiveMembersResponse>(responseAffiliates.Content!);
 
-        var enabledAffiliates     = response.Data;
+        var enabledAffiliates     = response!.Data;
         var walletProfit          = await _walletRepository.GetAvailableBalanceAdmin();
         var amountRequests        = await _walletRequestRepository.GetTotalWalletRequestAmount();
+        var reverseBalance       = await _walletRepository.GetTotalReverseBalance();
         var paidCommissions       = 0m;
         var calculatedCommissions = 0m;
 
@@ -142,12 +143,14 @@ public class WalletService : BaseService, IWalletService
             EnabledAffiliates     = enabledAffiliates,
             WalletProfit          = walletProfit,
             CommissionsPaid       = paidCommissions,
-            CalculatedCommissions = calculatedCommissions
+            CalculatedCommissions = calculatedCommissions,
+            TotalReverseBalance   = reverseBalance 
         };
 
-        if (amountRequests == 0m) return information;
+        if (amountRequests == 0m && reverseBalance == 0) return information;
 
         information.WalletProfit -= amountRequests;
+        information.WalletProfit -= reverseBalance;
 
         return information;
     }

@@ -37,4 +37,5 @@ public interface IWalletRepository
     Task TransactionPoints(int affiliateId, decimal debitLeft, decimal debitRight, decimal creditLeft, decimal creditRight);
     Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance();
     Task<InvoicesSpResponse?> CoursesDebitTransaction(DebitTransactionRequest request);
+    Task<decimal> GetTotalReverseBalance();
 }

@@ -78,6 +78,23 @@ public class WalletRepository : BaseRepository, IWalletRepository
         var reverseBalance = totalCredits - totalDebits;
         return Convert.ToDecimal(reverseBalance);
     }
+    
+    public async Task<decimal> GetTotalReverseBalance()
+    {
+        var totalCredits = await Context.Wallets
+            .Where(x=> x.ConceptType == WalletConceptType.revert_pool.ToString())
+            .Select(x => x.Credit)
+            .SumAsync();
+
+        var totalDebits = await Context.Wallets
+            .Where(x =>
+                        x.ConceptType == WalletConceptType.purchase_with_reverse_balance.ToString())
+            .Select(x => x.Debit)
+            .SumAsync();
+
+        var reverseBalance = totalCredits - totalDebits;
+        return Convert.ToDecimal(reverseBalance);
+    }
 
     public Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId)
         => Context.InvoicesDetails.Include(x => x.Invoice).AsNoTracking()

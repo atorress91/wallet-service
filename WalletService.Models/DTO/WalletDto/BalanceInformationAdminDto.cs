@@ -6,4 +6,6 @@ public class BalanceInformationAdminDto
     public decimal CommissionsPaid { get; set; }
     public decimal CalculatedCommissions { get; set; }
     public int EnabledAffiliates { get; set; }
+    
+    public decimal TotalReverseBalance { get; set; }
 }
