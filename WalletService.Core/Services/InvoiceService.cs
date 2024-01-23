@@ -30,9 +30,9 @@ public class InvoiceService : BaseService, IInvoiceService
 
     public InvoiceService(IMapper         mapper, IInvoiceRepository invoiceRepository,
         ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
-        ILogger<InvoiceService>           logger,                  IAccountServiceAdapter accountServiceAdapter,
+        ILogger<InvoiceService>           logger,                  IAccountServiceAdapter   accountServiceAdapter,
         IBrevoEmailService                brevoEmailService,       IWalletModel1ARepository walletModel1ARepository,
-        IWalletModel1BRepository          walletModel1BRepository, IWalletRepository walletRepository) : base(mapper)
+        IWalletModel1BRepository          walletModel1BRepository, IWalletRepository        walletRepository) : base(mapper)
     {
         _invoiceRepository                = invoiceRepository;
         _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
@@ -148,8 +148,8 @@ public class InvoiceService : BaseService, IInvoiceService
             .Select(async invoice =>
             {
                 var endDate = invoice.ProductId == Constants.ForMonth
-                                  ? CommonExtensions.CalculateMonthlyCourseDates(invoice.CreatedAt).EndDate
-                                  : CommonExtensions.CalculateWeeklyCourseDates(invoice.CreatedAt).EndDate;
+                    ? CommonExtensions.CalculateMonthlyCourseDates(invoice.CreatedAt).EndDate
+                    : CommonExtensions.CalculateWeeklyCourseDates(invoice.CreatedAt).EndDate;
 
                 if (endDate.Date < nextMonday)
                     return null;
@@ -224,28 +224,31 @@ public class InvoiceService : BaseService, IInvoiceService
     private async Task<(List<int>, int, decimal)> ProcessInvoices(int[] invoiceIds)
     {
         var totalInvoices   = 0m;
-        var validInvoiceIds = new List<int>();
+        var validInvoiceIds = new HashSet<int>();
         int affiliateId     = 0;
 
         foreach (var invoiceId in invoiceIds)
         {
-            var invoice = await _invoiceRepository.GetInvoiceById(invoiceId);
-
-            if (invoice != null)
+            if (!validInvoiceIds.Contains(invoiceId))
             {
-                if (affiliateId == 0)
-                    affiliateId = invoice.AffiliateId;
-                else if (affiliateId != invoice.AffiliateId)
-                {
-                    return (new List<int>(), 0, 0m);
-                }
+                var invoice = await _invoiceRepository.GetInvoiceById(invoiceId);
 
-                totalInvoices += invoice.TotalInvoice ?? 0;
-                validInvoiceIds.Add(invoiceId);
+                if (invoice != null)
+                {
+                    if (affiliateId == 0)
+                        affiliateId = invoice.AffiliateId;
+                    else if (affiliateId != invoice.AffiliateId)
+                    {
+                        return (new List<int>(), 0, 0m);
+                    }
+
+                    totalInvoices += invoice.TotalInvoice ?? 0;
+                    validInvoiceIds.Add(invoiceId);
+                }
             }
         }
 
-        return (validInvoiceIds, affiliateId, totalInvoices);
+        return (validInvoiceIds.ToList(), affiliateId, totalInvoices);
     }
 
     private async Task<bool> CreditAmountToWallet(int affiliateId, string userName, decimal amount, string model)
@@ -268,17 +271,14 @@ public class InvoiceService : BaseService, IInvoiceService
             switch (model)
             {
                 case "Model1A":
-                    await _walletModel1ARepository.CreditTransaction(creditTransactionRequest);
-                    break;
+                    return await _walletModel1ARepository.CreditTransaction(creditTransactionRequest);
                 case "Model1B":
-                    await _walletModel1BRepository.CreditTransaction(creditTransactionRequest);
-                    break;
+                    return await _walletModel1BRepository.CreditTransaction(creditTransactionRequest);
                 case "Model2":
-                    await _walletRepository.CreditTransaction(creditTransactionRequest);
-                    break;
+                    return await _walletRepository.CreditTransaction(creditTransactionRequest);
             }
 
-            return true;
+            return false;
         }
         catch
         {
