@@ -897,4 +897,129 @@ public class WalletRepository : BaseRepository, IWalletRepository
         Context.ModelFourStatistics.Add(debit);
         return Context.SaveChangesAsync();
     }
+    
+    public Task<double?> GetTotalServiceBalance(int affiliateId)
+    {
+        return Context.WalletsServiceModel2
+            .Where(x => x.AffiliateId == affiliateId)
+            .Select(s => s.Credit - s.Debit)
+            .SumAsync();
+    }
+    
+    
+    public async Task<InvoicesSpResponse?> DebitServiceBalanceTransaction(DebitTransactionRequest request)
+    {
+        try
+        {
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var cmd = new SqlCommand(Constants.DebitEcoPoolTransactionServiceSpModel1B, sql);
+
+            var invoicesDetails = CommonExtensions.ConvertToDataTable(request.invoices);
+
+            CreateDebitServiceBalanceListParameters(request, invoicesDetails, cmd);
+
+            await sql.OpenAsync();
+            await using var oReader    = await cmd.ExecuteReaderAsync();
+            var             dd         = oReader.ToDynamicList();
+            var             jsonString = dd.FirstOrDefault()!.ToJsonString();
+            var             response   = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+
+
+            await sql.CloseAsync();
+
+            return response;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public Task<InvoicesSpResponse?> DebitServiceBalanceEcoPoolTransactionSp(DebitTransactionRequest request)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<bool> CreditServiceBalanceTransaction(CreditTransactionRequest request)
+    {
+        throw new NotImplementedException();
+    }
+    
+    
+        private void CreateDebitServiceBalanceListParameters(DebitTransactionRequest request, DataTable dataTableDetails, SqlCommand cmd)
+    {
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Parameters.Add(new SqlParameter("@AffiliateId", SqlDbType.Int)
+        {
+            Value = request.AffiliateId
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int)
+        {
+            Value = request.UserId
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Concept", SqlDbType.VarChar)
+        {
+            Value = request.Concept,
+            Size  = 255
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Commissionable", SqlDbType.Decimal)
+        {
+            Value = request.Commissionable
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Bank", SqlDbType.VarChar)
+        {
+            Value      = string.IsNullOrEmpty(request.Bank) ? null : request.Bank,
+            IsNullable = true,
+            Size       = 250
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@PaymentMethod", SqlDbType.VarChar)
+        {
+            Value = request.PaymentMethod,
+            Size  = 50
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Debit", SqlDbType.Decimal)
+        {
+            Value = request.Debit
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@AffiliateUserName", SqlDbType.VarChar)
+        {
+            Value = request.AffiliateUserName,
+            Size  = 50
+        });
+        
+
+        cmd.Parameters.Add(new SqlParameter("@ReceiptNumber", SqlDbType.VarChar)
+        {
+            Value      = string.IsNullOrEmpty(request.ReceiptNumber) ? null : request.ReceiptNumber,
+            IsNullable = true,
+            Size       = 100
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Type", SqlDbType.Bit)
+        {
+            Value = request.Type
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@SecretKey", SqlDbType.VarChar)
+        {
+            Value      = string.IsNullOrEmpty(request.SecretKey) ? null : request.SecretKey,
+            IsNullable = true,
+            Size       = 40
+        });
+        
+        cmd.Parameters.Add(new SqlParameter("@InvoicesDetails", SqlDbType.Structured)
+        {
+            Value    = dataTableDetails,
+            TypeName = "dbo.InvoicesDetailsType"
+        });
+    }
+
 }

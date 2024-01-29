@@ -89,4 +89,9 @@ public static class Constants
     
     public static string[] PartitionKeys =
         { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "12", "13", "14", "18", "29", "30" };
+    
+    public const string DebitEcoPoolTransactionServiceSpModel1A      = "dbo.Debit_Transaction_SP_Service_Model1A";
+    public const string DebitEcoPoolTransactionServiceSpModel1B      = "dbo.Debit_Transaction_SP_Service_Model1B";
+    public const string DebitEcoPoolTransactionServiceSpModel2      = "dbo.Debit_Transaction_SP_Service_Model2";
+
 }

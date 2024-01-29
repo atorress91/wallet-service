@@ -29,6 +29,7 @@ public interface IWalletRepository
     Task<List<Wallets>> GetAllWallets();
     Task<List<ModelFourStatistics>> GetUserModelFour(int[]                        affiliateIds);
     Task<double?> GetTotalCommissionsPaid(int                                     affiliateId);
+    Task<double?> GetTotalServiceBalance(int                                     affiliateId);
     Task<bool> IsActivePoolGreaterThanOrEqualTo25(int                             affiliateId);
     Task<InvoicesSpResponse?> HandleMembershipTransaction(DebitTransactionRequest request);
     Task<InvoicesSpResponse?> MembershipDebitTransaction(DebitTransactionRequest  request);
@@ -38,4 +39,10 @@ public interface IWalletRepository
     Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance();
     Task<InvoicesSpResponse?> CoursesDebitTransaction(DebitTransactionRequest request);
     Task<decimal> GetTotalReverseBalance();
+    
+    Task<InvoicesSpResponse?> DebitServiceBalanceTransaction(DebitTransactionRequest request);
+
+    Task<InvoicesSpResponse?> DebitServiceBalanceEcoPoolTransactionSp(DebitTransactionRequest request);
+
+    Task<bool> CreditServiceBalanceTransaction(CreditTransactionRequest request);
 }

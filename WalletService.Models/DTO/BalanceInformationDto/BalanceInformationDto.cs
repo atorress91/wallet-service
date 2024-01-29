@@ -9,4 +9,5 @@ public class BalanceInformationDto
     public decimal? AvailableBalance { get; set; }
 
     public double? TotalCommissionsPaid { get; set; }
+    public double? ServiceBalance { get; set; }
 }
