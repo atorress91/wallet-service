@@ -15,4 +15,14 @@ public interface IWalletModel1ARepository
     Task<decimal>  GetAvailableBalanceByAffiliateId(int  affiliateId);
     Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId);
     Task<decimal?> GetReverseBalanceByAffiliateId(int    affiliateId);
+    
+    Task<double?> GetTotalServiceBalance(int affiliateId);
+    
+    
+    Task<InvoicesSpResponse?> DebitServiceBalanceTransaction(DebitTransactionRequest request);
+
+    Task<InvoicesSpResponse?> DebitServiceBalanceEcoPoolTransactionSp(DebitTransactionRequest request);
+
+    Task<bool> CreditServiceBalanceTransaction(CreditTransactionRequest request);
+
 }

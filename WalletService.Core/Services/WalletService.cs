@@ -109,13 +109,15 @@ public class WalletService : BaseService, IWalletService
         var reverseBalance       = await _walletRepository.GetReverseBalanceByAffiliateId(affiliateId);
         var totalAcquisitions    = await _walletRepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
         var totalCommissionsPaid = await _walletRepository.GetTotalCommissionsPaid(affiliateId);
+        var totalServiceBalance = await _walletRepository.GetTotalServiceBalance(affiliateId);
 
         var response = new BalanceInformationDto
         {
             AvailableBalance     = availableBalance,
             ReverseBalance       = reverseBalance ?? 0,
             TotalAcquisitions    = Math.Round(totalAcquisitions ?? 0, 2),
-            TotalCommissionsPaid = totalCommissionsPaid ?? 0
+            TotalCommissionsPaid = totalCommissionsPaid ?? 0,
+            ServiceBalance = Math.Round(totalServiceBalance ?? 0, 2)
         };
 
         if (amountRequests == 0m && response.ReverseBalance == 0m) return response;

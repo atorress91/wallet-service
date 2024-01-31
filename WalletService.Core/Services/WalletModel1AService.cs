@@ -24,13 +24,15 @@ public class WalletModel1AService : BaseService, IWalletModel1AService
         var availableBalance  = await _walletModel1ARepository.GetAvailableBalanceByAffiliateId(affiliateId);
         var totalAcquisitions = await _walletModel1ARepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
         var reverseBalance    = await _walletModel1ARepository.GetReverseBalanceByAffiliateId(affiliateId);
+        var serviceBalance    = await _walletModel1ARepository.GetTotalServiceBalance(affiliateId);
 
         var response = new BalanceInformationModel1ADto
         {
             AvailableBalance     = availableBalance,
             ReverseBalance       = reverseBalance ?? 0,
             TotalAcquisitions    = totalAcquisitions ?? 0,
-            TotalCommissionsPaid = 0
+            TotalCommissionsPaid = 0,
+            ServiceBalance       = Math.Round(serviceBalance ?? 0, 2)
         };
 
         if (response.ReverseBalance == 0m) return response;
