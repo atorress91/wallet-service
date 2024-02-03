@@ -32,7 +32,7 @@ public class WalletModel1AService : BaseService, IWalletModel1AService
             ReverseBalance       = reverseBalance ?? 0,
             TotalAcquisitions    = totalAcquisitions ?? 0,
             TotalCommissionsPaid = 0,
-            ServiceBalance       = Math.Round(serviceBalance ?? 0, 2)
+            ServiceBalance       = serviceBalance ?? 0
         };
 
         if (response.ReverseBalance == 0m) return response;
@@ -48,6 +48,16 @@ public class WalletModel1AService : BaseService, IWalletModel1AService
             return false;
         
         var response = await _balancePaymentStrategyModel1A.ExecuteEcoPoolPayment(request);
+
+        return response;
+    }
+
+    public async Task<bool> PayWithMyServiceBalance(WalletRequest request)
+    {
+        if (request.ProductsList.Count == 0)
+            return false;
+
+        var response = await _balancePaymentStrategyModel1A.ExecuteEcoPoolPaymentWithServiceBalance(request);
 
         return response;
     }

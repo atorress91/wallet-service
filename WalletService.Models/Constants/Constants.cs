@@ -83,6 +83,8 @@ public static class Constants
     public const string WireTransfer                = "Transferencia bancaria";
     public const string GetTradingAcademyDetailsSp  = "GetTradingAcademyInvoiceDetails";
     public const string BalanceRefunds              = "Devolución de saldo";
+    public const string ServiceBalanceModel1A       = "Saldo de servicios Modelo 1A";
+    public const string ServiceBalanceModel1B       = "Saldo de servicios Modelo 1B";
              
     public const int    ForMonth                        = 31;
     public const int    ForWeek                         = 32;

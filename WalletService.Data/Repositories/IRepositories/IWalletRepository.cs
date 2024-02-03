@@ -29,7 +29,7 @@ public interface IWalletRepository
     Task<List<Wallets>> GetAllWallets();
     Task<List<ModelFourStatistics>> GetUserModelFour(int[]                        affiliateIds);
     Task<double?> GetTotalCommissionsPaid(int                                     affiliateId);
-    Task<double?> GetTotalServiceBalance(int                                     affiliateId);
+    Task<decimal?> GetTotalServiceBalance(int                                     affiliateId);
     Task<bool> IsActivePoolGreaterThanOrEqualTo25(int                             affiliateId);
     Task<InvoicesSpResponse?> HandleMembershipTransaction(DebitTransactionRequest request);
     Task<InvoicesSpResponse?> MembershipDebitTransaction(DebitTransactionRequest  request);
