@@ -117,7 +117,7 @@ public class WalletService : BaseService, IWalletService
             ReverseBalance       = reverseBalance ?? 0,
             TotalAcquisitions    = Math.Round(totalAcquisitions ?? 0, 2),
             TotalCommissionsPaid = totalCommissionsPaid ?? 0,
-            ServiceBalance = Math.Round(totalServiceBalance ?? 0, 2)
+            ServiceBalance = totalServiceBalance ?? 0
         };
 
         if (amountRequests == 0m && response.ReverseBalance == 0m) return response;
