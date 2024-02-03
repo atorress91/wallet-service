@@ -898,7 +898,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return Context.SaveChangesAsync();
     }
     
-    public Task<double?> GetTotalServiceBalance(int affiliateId)
+    public Task<decimal?> GetTotalServiceBalance(int affiliateId)
     {
         return Context.WalletsServiceModel2
             .Where(x => x.AffiliateId == affiliateId)

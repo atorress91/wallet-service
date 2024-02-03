@@ -258,6 +258,11 @@ public class WalletModel1ARepository : BaseRepository, IWalletModel1ARepository
             Value = request.Concept,
             Size  = 255
         });
+        
+        cmd.Parameters.Add(new SqlParameter("@Points", SqlDbType.Decimal)
+        {
+            Value = request.Points
+        });
 
         cmd.Parameters.Add(new SqlParameter("@Commissionable", SqlDbType.Decimal)
         {
@@ -449,7 +454,7 @@ public class WalletModel1ARepository : BaseRepository, IWalletModel1ARepository
         return Convert.ToDecimal(reverseBalance);
     }
 
-    public Task<double?> GetTotalServiceBalance(int affiliateId)
+    public Task<decimal?> GetTotalServiceBalance(int affiliateId)
     {
         return Context.WalletsServiceModel1A
             .Where(x => x.AffiliateId == affiliateId)

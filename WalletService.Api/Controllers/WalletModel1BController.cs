@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver.Core.Events;
 using WalletService.Core.Services.IServices;
 using WalletService.Models.Requests.WalletRequest;
 
@@ -30,6 +29,14 @@ public class WalletModel1BController : BaseController
     public async Task<IActionResult> PayWithMyBalance([FromBody] WalletRequest request)
     {
         var response = await _walletModel1BService.PayWithMyBalance(request);
+
+        return response is false ? Ok(Fail("The payment could not be processed")) : Ok(Success(response));
+    }
+    
+    [HttpPost("payWithMyServiceBalance")]
+    public async Task<IActionResult> PayWithMyServiceBalance([FromBody] WalletRequest request)
+    {
+        var response = await _walletModel1BService.PayWithMyServiceBalance(request);
 
         return response is false ? Ok(Fail("The payment could not be processed")) : Ok(Success(response));
     }

@@ -9,30 +9,30 @@ namespace WalletService.Core.Services;
 
 public class WalletModel1BService : BaseService, IWalletModel1BService
 {
-    private readonly IWalletModel1BRepository       _walletModel1BRepository;
+    private readonly IWalletModel1BRepository _walletModel1BRepository;
     private readonly IBalancePaymentStrategyModel1B _balancePaymentStrategyModel1B;
 
     public WalletModel1BService(IMapper mapper, IWalletModel1BRepository walletModel1BRepository,
-        IBalancePaymentStrategyModel1B  balancePaymentStrategyModel1B) : base(mapper)
+        IBalancePaymentStrategyModel1B balancePaymentStrategyModel1B) : base(mapper)
     {
-        _walletModel1BRepository       = walletModel1BRepository;
+        _walletModel1BRepository = walletModel1BRepository;
         _balancePaymentStrategyModel1B = balancePaymentStrategyModel1B;
     }
 
     public async Task<BalanceInformationModel1BDto> GetBalanceInformationByAffiliateId(int affiliateId)
     {
-        var availableBalance  = await _walletModel1BRepository.GetAvailableBalanceByAffiliateId(affiliateId);
+        var availableBalance = await _walletModel1BRepository.GetAvailableBalanceByAffiliateId(affiliateId);
         var totalAcquisitions = await _walletModel1BRepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
-        var reverseBalance    = await _walletModel1BRepository.GetReverseBalanceByAffiliateId(affiliateId);
-        var serviceBalance    = await _walletModel1BRepository.GetTotalServiceBalance(affiliateId);
+        var reverseBalance = await _walletModel1BRepository.GetReverseBalanceByAffiliateId(affiliateId);
+        var serviceBalance = await _walletModel1BRepository.GetTotalServiceBalance(affiliateId);
 
         var response = new BalanceInformationModel1BDto
         {
-            AvailableBalance     = availableBalance,
-            ReverseBalance       = reverseBalance ?? 0,
-            TotalAcquisitions    = totalAcquisitions ?? 0,
+            AvailableBalance = availableBalance,
+            ReverseBalance = reverseBalance ?? 0,
+            TotalAcquisitions = totalAcquisitions ?? 0,
             TotalCommissionsPaid = 0,
-            ServiceBalance       = Math.Round(serviceBalance ?? 0, 2)
+            ServiceBalance = serviceBalance ?? 0,
         };
 
         if (response.ReverseBalance == 0m) return response;
@@ -49,6 +49,16 @@ public class WalletModel1BService : BaseService, IWalletModel1BService
 
         var response = await _balancePaymentStrategyModel1B.ExecuteEcoPoolPayment(request);
 
+        return response;
+    }
+
+    public async Task<bool> PayWithMyServiceBalance(WalletRequest request)
+    {
+        if (request.ProductsList.Count == 0)
+            return false;
+
+        var response = await _balancePaymentStrategyModel1B.ExecuteEcoPoolPaymentWithServiceBalance(request);
+        
         return response;
     }
 }

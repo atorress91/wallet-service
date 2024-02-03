@@ -13,5 +13,5 @@ public enum
     eco_pool_leon = 7,
     eco_pool_aguila = 8,
     eco_pool_cocodrilo = 9,
-    eco_pool_tiburon = 10,
+    eco_pool_tiburon = 10
 }
