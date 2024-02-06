@@ -1,14 +1,13 @@
-﻿using System.Reflection;
-using System.Text.Json;
+﻿using System.Text.Json;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Repositories.IRepositories;
-using WalletService.Models.DTO.BalanceInformationDto;
 using WalletService.Models.DTO.WalletModel1BDto;
 using WalletService.Models.Enums;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
+using WalletService.Utility.Extensions;
 using Constants = WalletService.Models.Constants.Constants;
 
 namespace WalletService.Core.PaymentStrategies;
@@ -32,34 +31,7 @@ public class BalancePaymentStrategy1B : IBalancePaymentStrategyModel1B
         _brevoEmailService = brevoEmailService;
         _mediatorPdfService = mediatorPdfService;
     }
-
-    private async Task<Dictionary<string, byte[]>> GetPdfContentFromProductIds(int[] productIds)
-    {
-        Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
-
-        var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        var separator = Path.DirectorySeparatorChar;
-
-        foreach (var id in productIds)
-        {
-            if (Enum.IsDefined(typeof(ProductPdfs), id))
-            {
-                var enumValue = (ProductPdfs)id;
-                var pdfName = $"{enumValue}.pdf";
-                var path = $"{workingDirectory}{separator}Assets{separator}EcoPooles{separator}{enumValue}.pdf";
-
-                var pdfContent = await File.ReadAllBytesAsync(path);
-                pdfContents[pdfName] = pdfContent;
-            }
-            else
-            {
-                Console.WriteLine($"The product ID {{id}} does not have an associated PDF.");
-            }
-        }
-
-        return pdfContents;
-    }
-
+    
     private async Task<BalanceInformationModel1BDto> GetBalanceInformationByAffiliateId(int affiliateId)
     {
         var availableBalance = await _walletModel1BRepository.GetAvailableBalanceByAffiliateId(affiliateId);
@@ -109,7 +81,8 @@ public class BalancePaymentStrategy1B : IBalancePaymentStrategyModel1B
         if (result.Data.Count != request.ProductsList.Count)
             return false;
 
-
+        var productNames = result.Data.Select(item => item.Name).ToArray();
+        
         foreach (var item in result.Data)
         {
             var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
@@ -186,7 +159,7 @@ public class BalancePaymentStrategy1B : IBalancePaymentStrategyModel1B
         var invoicePdf =
             await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
-        var productPdfsContents = await GetPdfContentFromProductIds(productIds);
+        var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
         {
@@ -233,7 +206,8 @@ public class BalancePaymentStrategy1B : IBalancePaymentStrategyModel1B
         if (result.Data.Count != request.ProductsList.Count)
             return false;
 
-
+        var productNames = result.Data.Select(item => item.Name).ToArray();
+        
         foreach (var item in result.Data)
         {
             var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
@@ -310,7 +284,7 @@ public class BalancePaymentStrategy1B : IBalancePaymentStrategyModel1B
         var invoicePdf =
             await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
-        var productPdfsContents = await GetPdfContentFromProductIds(productIds);
+        var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
         {
