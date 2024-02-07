@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+using WalletService.Models.Enums;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace WalletService.Utility.Extensions;
@@ -232,6 +233,39 @@ public static class CommonExtensions
         if (daysUntilMonday == 0) 
             daysUntilMonday = 7;
         return currentDate.AddDays(daysUntilMonday);
+    }
+    
+    public static async Task<Dictionary<string, byte[]>> GetPdfContentFromProductNames(string[] productNames)
+    {
+        Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
+
+        var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        var separator = Path.DirectorySeparatorChar;
+
+        foreach (var productName in productNames)
+        {
+            if (ProductPdfMapping.ProductToPdfMap.TryGetValue(productName, out var pdfFileName))
+            {
+                var pdfName = $"{pdfFileName}.pdf";
+                var path = $"{workingDirectory}{separator}Assets{separator}EcoPooles{separator}{pdfName}";
+
+                if (File.Exists(path))
+                {
+                    var pdfContent = await File.ReadAllBytesAsync(path);
+                    pdfContents[pdfName] = pdfContent;
+                }
+                else
+                {
+                    Console.WriteLine($"PDF file '{pdfName}' for product '{productName}' does not exist.");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"No PDF mapping found for product name '{productName}'.");
+            }
+        }
+
+        return pdfContents;
     }
 
     #region ..Assigned..
