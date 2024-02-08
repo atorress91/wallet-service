@@ -4,6 +4,6 @@ namespace WalletService.Core.Kafka.Messages;
 
 public class PaymentModelTwoThreeMessage
 {
-    public IEnumerable<ResultsEcoPool> EcoPools { get; set; }
-    public EcoPoolConfiguration EcoPoolConfiguration { get; set; }
+    public IEnumerable<ResultsModel2> EcoPools { get; set; }
+    public ModelConfiguration ModelConfiguration { get; set; }
 }

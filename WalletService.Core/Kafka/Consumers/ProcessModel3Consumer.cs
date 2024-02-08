@@ -10,9 +10,9 @@ using WalletService.Utility.Extensions;
 
 namespace WalletService.Core.Kafka.Consumers;
 
-public class ProcessModelTwoConsumer : BaseKafkaConsumer
+public class ProcessModel3Consumer : BaseKafkaConsumer
 {
-      public ProcessModelTwoConsumer(
+      public ProcessModel3Consumer(
         ConsumerSettings         consumerSettings,
         ApplicationConfiguration configuration,
         ILogger                  logger,
@@ -23,7 +23,7 @@ public class ProcessModelTwoConsumer : BaseKafkaConsumer
 
     protected override Task<bool> OnMessage(ConsumeResult<Ignore, string> e)
     {
-        var message = JsonSerializer.Deserialize<ModelTwoMessage>(e.Message.Value);
+        var message = JsonSerializer.Deserialize<Model3Message>(e.Message.Value);
         try
         {
             Logger.LogInformation("[ProcessModelTwoConsumer] OnMessage | Init");
@@ -40,15 +40,15 @@ public class ProcessModelTwoConsumer : BaseKafkaConsumer
         }
     }
 
-    private async Task<bool> Process(ModelTwoMessage message)
+    private async Task<bool> Process(Model3Message message)
     {
         using var scope            = ServiceScopeFactory.CreateScope();
         var       walletRepository = scope.ServiceProvider.GetService<IWalletRepository>();
 
-        var ecoPoolsType = new List<ModelTwoType>();
-        var levelsType   = new List<ModelTwoLevelsType>();
+        var ecoPoolsType = new List<Model3Type>();
+        var levelsType   = new List<Model3LevelsType>();
 
-        var request = new ModelTwoTransactionRequest
+        var request = new Model3TransactionRequest
         {
             EcoPoolConfigurationId = message.Configuration.Id,
             Percentage             = message.Configuration.PercentageModelTwo,
@@ -75,7 +75,7 @@ public class ProcessModelTwoConsumer : BaseKafkaConsumer
                 continue;
             }
             
-            var levelsMapped = affiliate.FamilyTree.Select(s => new ModelTwoLevelsType
+            var levelsMapped = affiliate.FamilyTree.Select(s => new Model3LevelsType
             {
                 Percentage    = message.Configuration.Levels.FirstOrDefault(x => x.Level == s.Level)!.Percentage,
                 Level         = s.Level,
@@ -88,7 +88,7 @@ public class ProcessModelTwoConsumer : BaseKafkaConsumer
 
             var productName = product?.Name ?? string.Empty;
             levelsType.AddRange(levelsMapped);
-            ecoPoolsType.Add(new ModelTwoType
+            ecoPoolsType.Add(new Model3Type
             {
                 AffiliateId       = affiliate.Id,
                 AffiliateUserName = affiliate.UserName,
@@ -104,7 +104,7 @@ public class ProcessModelTwoConsumer : BaseKafkaConsumer
 
         request.LevelsType   = levelsType;
         request.EcoPoolsType = ecoPoolsType;
-        await walletRepository!.CreateModelTwoSp(request);
+        await walletRepository!.CreateModel3Sp(request);
         Logger.LogInformation($"[ProcessModelTwoConsumer] | EcoPoolProcess | Batch Completed");
 
         return true;

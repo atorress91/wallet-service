@@ -1,4 +1,3 @@
-using WalletService.Data.Database.Models;
 using WalletService.Models.DTO.InvoiceDetailDto;
 using WalletService.Models.DTO.ProcessGradingDto;
 using WalletService.Models.DTO.ProductWalletDto;
@@ -6,10 +5,10 @@ using WalletService.Models.Responses;
 
 namespace WalletService.Core.Kafka.Messages;
 
-public class ModelTwoMessage
+public class Model3Message
 {
     public ICollection<InvoiceDetailDto> EducatedCourses { get; set; }
     public ICollection<ProductWalletDto> ListResultProducts { get; set; }
-    public ICollection<UserModelTwoThreeResponse> ListResultAccounts { get; set; }
-    public EcoPoolConfigurationDto Configuration { get; set; }
+    public ICollection<UserModelResponse> ListResultAccounts { get; set; }
+    public ModelConfigurationDto Configuration { get; set; }
 }

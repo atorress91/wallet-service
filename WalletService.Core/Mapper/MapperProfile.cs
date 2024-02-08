@@ -48,11 +48,11 @@ public class MapperProfile : Profile
         CreateMap<Invoices, InvoiceDto>();
         CreateMap<Invoices, InvoiceDTO>();
         CreateMap<InvoicesDetails, InvoiceDetailDto>();
-        CreateMap<EcoPoolConfiguration, EcoPoolConfigurationDto>();
-        CreateMap<EcoPoolLevels, EcoPoolLevelDto>();
+        CreateMap<ModelConfiguration, ModelConfigurationDto>();
+        CreateMap<ModelConfigurationLevels, EcoPoolLevelDto>();
         CreateMap<WalletTransactionRequest, Wallets>();
-        CreateMap<ResultsEcoPool, ResultsEcoPoolDto>();
-        CreateMap<ResultEcoPoolLevels, ResultEcoPoolLevelsDto>();
+        CreateMap<ResultsModel2, ResultsEcoPoolDto>();
+        CreateMap<ResultsModel2Levels, ResultEcoPoolLevelsDto>();
         CreateMap<PaymentTransaction, PaymentTransactionDto>();
         CreateMap<InvoicesTradingAcademyResponse, InvoiceTradingAcademyDto>();
         CreateMap<InvoiceModelOneAndTwoResponse, InvoiceModelOneAndTwoDto>();
@@ -110,11 +110,11 @@ public class MapperProfile : Profile
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());
 
-        CreateMap<ResultsEcoPoolDto, ResultsEcoPool>()
+        CreateMap<ResultsEcoPoolDto, ResultsModel2>()
             .ForMember(d => d.Id, map => map.Ignore())
-            .ForMember(dest => dest.ResultEcoPoolLevels, opt => opt.MapFrom(src => src.ResultEcoPoolLevels));
+            .ForMember(dest => dest.ResultsModel2Levels, opt => opt.MapFrom(src => src.ResultEcoPoolLevels));
 
-        CreateMap<ResultEcoPoolLevelsDto, ResultEcoPoolLevels>()
+        CreateMap<ResultEcoPoolLevelsDto, ResultsModel2Levels>()
             .ForMember(d => d.Id, map => map.Ignore());
 
         CreateMap<CoinPaymentTransactionRequest, PaymentTransaction>()

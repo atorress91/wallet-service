@@ -1,6 +1,6 @@
 ﻿namespace WalletService.Data.Database.Models;
 
-public class ResultsEcoPool
+public class ResultsModel2
 {
     public int Id { get; set; }
     public int EcoPoolConfigurationId { get; set; }
@@ -25,6 +25,6 @@ public class ResultsEcoPool
     public DateTime PeriodPool { get; set; }
     public DateTime? CompletedAt { get; set; }
     public DateTime? UserCreatedAt { get; set; }
-    public virtual ICollection<ResultEcoPoolLevels> ResultEcoPoolLevels { get; set; }
-    public virtual EcoPoolConfiguration EcoPoolConfiguration { get; set; }
+    public virtual ICollection<ResultsModel2Levels> ResultsModel2Levels { get; set; }
+    public virtual ModelConfiguration ModelConfiguration { get; set; }
 }

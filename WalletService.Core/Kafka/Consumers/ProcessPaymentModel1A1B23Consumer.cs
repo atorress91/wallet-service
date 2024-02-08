@@ -19,10 +19,10 @@ using WalletService.Utility.Extensions;
 
 namespace WalletService.Core.Kafka.Consumers;
 
-public class ProcessPaymentModel2TwoThreeConsumer : BaseKafkaConsumer
+public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
 {
 
-    public ProcessPaymentModel2TwoThreeConsumer(
+    public ProcessPaymentModel1A1B23Consumer(
         ConsumerSettings         consumerSettings,
         ApplicationConfiguration configuration,
         ILogger                  logger,
@@ -56,20 +56,33 @@ public class ProcessPaymentModel2TwoThreeConsumer : BaseKafkaConsumer
         using var                       scope                    = ServiceScopeFactory.CreateScope();
         var                             resultsEcoPoolRepository = scope.ServiceProvider.GetService<IResultsEcoPoolRepository>();
         var                             walletRepository         = scope.ServiceProvider.GetService<IWalletRepository>();
+        var                             wallet1ARepository         = scope.ServiceProvider.GetService<IWalletModel1ARepository>();
+        var                             wallet1BRepository         = scope.ServiceProvider.GetService<IWalletModel1BRepository>();
         var                             configurationAdapter     = scope.ServiceProvider.GetService<IConfigurationAdapter>();
         var                             kafkaProducer            = scope.ServiceProvider.GetService<KafkaProducer>();
         ICollection<UserGradingRequest> listGrading              = new List<UserGradingRequest>();
         var                             responseGradings         = new GradingResponse();
-        var                             listEcoPools             = await resultsEcoPoolRepository!.GetResultsEcoPoolToPayment();
         
-        var listModelTwoResults      = await resultsEcoPoolRepository!.GetResultsModelTwoToPayment();
-        var dictionaryPointsModelTwo = new Dictionary<int, double>();
-        var dictionary = listEcoPools.GroupBy(x
+        var listModel1AResults = await resultsEcoPoolRepository!.GetResultsModel1AToPayment();
+        var listModel1BResults = await resultsEcoPoolRepository!.GetResultsModel1BToPayment();
+        var listModel2Results = await resultsEcoPoolRepository!.GetResultsModel2ToPayment();
+        var listModel3Results = await resultsEcoPoolRepository!.GetResultsMode3ToPayment();
+        
+        var dictionaryPointsModelTotal = new Dictionary<int, double>();
+        
+        var dictionaryModel1A = listModel1AResults.GroupBy(x
             => x.AffiliateId).ToDictionary(group => group.Key, group => group.ToList());
-        var dictionaryModelTwo = listModelTwoResults.GroupBy(x
+        
+        var dictionaryModel1B = listModel1BResults.GroupBy(x
+            => x.AffiliateId).ToDictionary(group => group.Key, group => group.ToList());
+        
+        var dictionaryModel2 = listModel2Results.GroupBy(x
+            => x.AffiliateId).ToDictionary(group => group.Key, group => group.ToList());
+        
+        var dictionaryModel3 = listModel3Results.GroupBy(x
             => x.AffiliateId).ToDictionary(group => group.Key, group => group.ToList());
 
-        if (listEcoPools is { Count: 0 } && listModelTwoResults is { Count: 0 })
+        if (listModel2Results is { Count: 0 } && listModel3Results is { Count: 0 })
             return false;
 
         var gradingResponse = await configurationAdapter!.GetGradings();
@@ -78,9 +91,13 @@ public class ProcessPaymentModel2TwoThreeConsumer : BaseKafkaConsumer
 
         ICollection<GradingDto> gradings = responseGradings!.Data;
         
-        await CommissionsModelTwo(dictionaryModelTwo, walletRepository, dictionaryPointsModelTwo);
+        await CommissionsModel1A(dictionaryModel1A, wallet1ARepository, dictionaryPointsModelTotal);
+
+        await CommissionsModel1B(dictionaryModel1B, wallet1BRepository, dictionaryPointsModelTotal);
+
+        await CommissionsModel3(dictionaryModel3, walletRepository, dictionaryPointsModelTotal);
         
-        var model = await CommissionsModelThree(dictionary, walletRepository, dictionaryPointsModelTwo, listGrading, gradings);
+        var model = await CommissionsModel2(dictionaryModel2, walletRepository, dictionaryPointsModelTotal, listGrading, gradings);
 
         _ = Task.Run(async ()
             => await kafkaProducer!.ProduceAsync(KafkaTopics.ProcessModelFourFiveSixTopic, model.ToJsonString()));
@@ -88,8 +105,8 @@ public class ProcessPaymentModel2TwoThreeConsumer : BaseKafkaConsumer
             return true;
     }
 
-    private static async Task<ModelFourFiveSixMessage> CommissionsModelThree(
-        Dictionary<int, List<ResultsEcoPool>>  dictionary,
+    private static async Task<ModelFourFiveSixMessage> CommissionsModel2(
+        Dictionary<int, List<ResultsModel2>>  dictionary,
         IWalletRepository?                     walletRepository,
         Dictionary<int, double>                dictionaryPointsModelTwo,
         ICollection<UserGradingRequest>        listGrading,
@@ -109,7 +126,7 @@ public class ProcessPaymentModel2TwoThreeConsumer : BaseKafkaConsumer
                     Constants.CommissionModelThreeDescriptionNormal,
                     WalletConceptType.purchasing_pool.ToString());
 
-            var listPerLevels = listPoolsPerUser.SelectMany(x => x.ResultEcoPoolLevels);
+            var listPerLevels = listPoolsPerUser.SelectMany(x => x.ResultsModel2Levels);
             var dictionaryPerLevels = listPerLevels.GroupBy(x
                 => x.AffiliateId).ToDictionary(group => group.Key, group => group.ToList());
 
@@ -157,8 +174,8 @@ public class ProcessPaymentModel2TwoThreeConsumer : BaseKafkaConsumer
         return model;
     }
 
-    private static async Task CommissionsModelTwo(
-        Dictionary<int, List<ResultsModelTwo>> dictionaryModelTwo,
+    private static async Task CommissionsModel3(
+        Dictionary<int, List<ResultsModel3>> dictionaryModelTwo,
         IWalletRepository?                     walletRepository,
         Dictionary<int, double>                dictionaryPointsModelTwo)
     {
@@ -176,7 +193,7 @@ public class ProcessPaymentModel2TwoThreeConsumer : BaseKafkaConsumer
                     Constants.CommissionModelTwoDescriptionNormal,
                     WalletConceptType.purchasing_pool.ToString());
 
-            var listPerLevels = listPoolsPerUser.SelectMany(x => x.ResultsModelTwoLevels);
+            var listPerLevels = listPoolsPerUser.SelectMany(x => x.ResultsModel3Levels);
             var dictionaryPerLevels = listPerLevels.GroupBy(x
                 => x.AffiliateId).ToDictionary(group => group.Key, group => group.ToList());
 
@@ -198,6 +215,106 @@ public class ProcessPaymentModel2TwoThreeConsumer : BaseKafkaConsumer
                     dictionaryPointsModelTwo.Add(userLevel, globalPaymentLevel);
 
                 await CreateCreditPayment(
+                    walletRepository,
+                    userLevel,
+                    userNameLevel,
+                    globalPaymentLevel,
+                    string.Format(Constants.CommissionModelTwoDescription, userName, level),
+                    WalletConceptType.pool_commission.ToString());
+            }
+        }
+    }   
+    private static async Task CommissionsModel1A(
+        Dictionary<int, List<ResultsModel1A>> dictionaryModel1A,
+        IWalletModel1ARepository?             walletRepository,
+        Dictionary<int, double>               dictionaryPointsModel1A)
+    {
+        foreach (var (key, listPoolsPerUser) in dictionaryModel1A)
+        {
+
+            var globalPayment = (double)listPoolsPerUser.Sum(x => x.PaymentAmount);
+            var userName      = listPoolsPerUser.First().AffiliateName;
+            if (walletRepository is not null && globalPayment is not 0)
+                await CreateCredit1APayment(
+                    walletRepository,
+                    key,
+                    userName,
+                    globalPayment,
+                    Constants.CommissionModelTwoDescriptionNormal,
+                    WalletConceptType.purchasing_pool.ToString());
+
+            var listPerLevels = listPoolsPerUser.SelectMany(x => x.ResultsModel1ALevels);
+            var dictionaryPerLevels = listPerLevels.GroupBy(x
+                => x.AffiliateId).ToDictionary(group => group.Key, group => group.ToList());
+
+            foreach (var (userLevel, ecoPoolLevelsList) in dictionaryPerLevels)
+            {
+                if (ecoPoolLevelsList.Any(x => x.CompletedAt != null))
+                    continue;
+
+                var userNameLevel      = ecoPoolLevelsList.First().AffiliateName;
+                var level              = ecoPoolLevelsList.First().Level;
+                var globalPaymentLevel = (double)ecoPoolLevelsList.Sum(x => x.PaymentAmount);
+
+                if (walletRepository is null || globalPaymentLevel is 0)
+                    continue;
+
+                if (dictionaryPointsModel1A.ContainsKey(userLevel))
+                    dictionaryPointsModel1A[userLevel] += globalPaymentLevel;
+                else
+                    dictionaryPointsModel1A.Add(userLevel, globalPaymentLevel);
+
+                await CreateCredit1APayment(
+                    walletRepository,
+                    userLevel,
+                    userNameLevel,
+                    globalPaymentLevel,
+                    string.Format(Constants.CommissionModelTwoDescription, userName, level),
+                    WalletConceptType.pool_commission.ToString());
+            }
+        }
+    }
+    private static async Task CommissionsModel1B(
+        Dictionary<int, List<ResultsModel1B>> dictionaryModel1B,
+        IWalletModel1BRepository?                     walletRepository,
+        Dictionary<int, double>                dictionaryPointsModel1B)
+    {
+        foreach (var (key, listPoolsPerUser) in dictionaryModel1B)
+        {
+
+            var globalPayment = (double)listPoolsPerUser.Sum(x => x.PaymentAmount);
+            var userName      = listPoolsPerUser.First().AffiliateName;
+            if (walletRepository is not null && globalPayment is not 0)
+                await CreateCredit1BPayment(
+                    walletRepository,
+                    key,
+                    userName,
+                    globalPayment,
+                    Constants.CommissionModelTwoDescriptionNormal,
+                    WalletConceptType.purchasing_pool.ToString());
+
+            var listPerLevels = listPoolsPerUser.SelectMany(x => x.ResultsModel1BLevels);
+            var dictionaryPerLevels = listPerLevels.GroupBy(x
+                => x.AffiliateId).ToDictionary(group => group.Key, group => group.ToList());
+
+            foreach (var (userLevel, ecoPoolLevelsList) in dictionaryPerLevels)
+            {
+                if (ecoPoolLevelsList.Any(x => x.CompletedAt != null))
+                    continue;
+
+                var userNameLevel      = ecoPoolLevelsList.First().AffiliateName;
+                var level              = ecoPoolLevelsList.First().Level;
+                var globalPaymentLevel = (double)ecoPoolLevelsList.Sum(x => x.PaymentAmount);
+
+                if (walletRepository is null || globalPaymentLevel is 0)
+                    continue;
+
+                if (dictionaryPointsModel1B.ContainsKey(userLevel))
+                    dictionaryPointsModel1B[userLevel] += globalPaymentLevel;
+                else
+                    dictionaryPointsModel1B.Add(userLevel, globalPaymentLevel);
+
+                await CreateCredit1BPayment(
                     walletRepository,
                     userLevel,
                     userNameLevel,
@@ -262,7 +379,59 @@ public class ProcessPaymentModel2TwoThreeConsumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        return Task.CompletedTask;
+        // return Task.CompletedTask;
+
+        var creditTransaction = new CreditTransactionRequest
+        {
+            AffiliateId       = userId,
+            AffiliateUserName = userName,
+            Credit            = globalPayment,
+            UserId            = Constants.AdminUserId,
+            Concept           = concept,
+            AdminUserName     = Constants.AdminEcosystemUserName,
+            ConceptType       = conceptType
+        };
+        return walletRepository.CreditTransaction(creditTransaction);
+    }
+    
+    private static Task CreateCredit1APayment(
+        IWalletModel1ARepository walletRepository,
+        int               userId,
+        string            userName,
+        double            globalPayment,
+        string            concept,
+        string            conceptType)
+    {
+        if (globalPayment <= 0)
+            return Task.CompletedTask;
+        
+        // return Task.CompletedTask;
+
+        var creditTransaction = new CreditTransactionRequest
+        {
+            AffiliateId       = userId,
+            AffiliateUserName = userName,
+            Credit            = globalPayment,
+            UserId            = Constants.AdminUserId,
+            Concept           = concept,
+            AdminUserName     = Constants.AdminEcosystemUserName,
+            ConceptType       = conceptType
+        };
+        return walletRepository.CreditTransaction(creditTransaction);
+    }
+    
+    private static Task CreateCredit1BPayment(
+        IWalletModel1BRepository walletRepository,
+        int                      userId,
+        string                   userName,
+        double                   globalPayment,
+        string                   concept,
+        string                   conceptType)
+    {
+        if (globalPayment <= 0)
+            return Task.CompletedTask;
+        
+        // return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {

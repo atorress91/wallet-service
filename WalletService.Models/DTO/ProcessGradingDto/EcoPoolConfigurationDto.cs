@@ -1,6 +1,6 @@
 ﻿namespace WalletService.Models.DTO.ProcessGradingDto;
 
-public class EcoPoolConfigurationDto
+public class ModelConfigurationDto
 {
     public int Id { get; set; }
     public double CompanyPercentage { get; set; }
