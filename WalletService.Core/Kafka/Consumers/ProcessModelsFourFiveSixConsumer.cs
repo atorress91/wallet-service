@@ -63,7 +63,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             var dictionary = await DebitModelFourFiveProcess(model, listUsersGraded, walletRepository, accountServiceAdapter);
         
             
-            var treeUsersInformation = await LeaderBoardModelFourProcess(listUsersGraded, accountServiceAdapter, dictionary);
+            var treeUsersInformation = await LeaderBoardModelFourProcess(accountServiceAdapter, dictionary);
 
             var leaderBoardModel5 = new List<LeaderBoardModel5>();
             var leaderBoardModel6 = new List<LeaderBoardModel6>();
@@ -151,27 +151,12 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
     }
 
     private static async Task<ICollection<UserBinaryInformation>> LeaderBoardModelFourProcess(
-        ICollection<UserGradingRequest> listUsersGraded, 
         IAccountServiceAdapter? accountServiceAdapter, 
         Dictionary<int, decimal> dictionary)
     {
         var result = new List<UserBinaryInformation>();
 
-        var leaderBoardModel4 = listUsersGraded.Select(s => new LeaderBoardModel4
-        {
-            AffiliateId   = s.AffiliateId,
-            Amount        = (decimal)s.Commissions,
-            UserName      = s.UserName,
-            CreatedAt     = DateTime.Now,
-            UserCreatedAt = s.UserCreatedAt,
-            GradingId     = s.Grading!.Id,
-            Points        = dictionary[s.AffiliateId]
-        }).ToList();
-
-        leaderBoardModel4 = leaderBoardModel4.OrderModel4();
-        var test = leaderBoardModel4.ToJsonString();
-        await accountServiceAdapter!.DeleteTreeModel4();
-        var response = await accountServiceAdapter.AddTreeModel4(leaderBoardModel4);
+        var response = await accountServiceAdapter!.GetTreeModel4(dictionary);
         
         if (string.IsNullOrEmpty(response.Content))
             return result;
@@ -273,16 +258,6 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                 rightPoints = oldRightPoints + userPointsInformation.PointsRight;
             }
 
-            if (user.Key is 1049 or 1008  or 1035 or 1053 or 1088 or 1961)
-            {
-                Console.WriteLine("here");
-            }
-            
-            if (user.Key is 1000 or 1001 or 1002 or 1003 or 1004)
-            {
-                Console.WriteLine("here");
-            }
-
             if (leftPoints == rightPoints && leftPoints > 0)
             {
                 payment        = leftPoints;
@@ -379,7 +354,6 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                     userPointsInformation.PointsRight);
             
         }
-        
     }
 
     private static void AddUsersLeaderBoard5(

@@ -84,9 +84,9 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
         return Post($"/matrix/have_2_children/", data);
     }
 
-    public Task<IRestResponse> AddTreeModel4(IEnumerable<LeaderBoardModel4> leaderBoard)
+    public Task<IRestResponse> GetTreeModel4(Dictionary<int, decimal>       dictionary)
     {
-        return Post($"/leaderboard/model4/addTree/", leaderBoard.ToJsonString());
+        return Post($"/leaderboard/model4/getResultTree/", dictionary.ToJsonString());
     }
     
     public Task<IRestResponse> AddTreeModel5(IEnumerable<LeaderBoardModel5> leaderBoard)
@@ -102,11 +102,6 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
     public Task<IRestResponse> DeleteTreeModel6()
     {
         return Post($"/leaderboard/model6/deleteTree/", new Dictionary<string,string>().ToJsonString());
-    }
-
-    public Task<IRestResponse> DeleteTreeModel4()
-    {
-        return Post($"/leaderboard/model4/deleteTree/", new Dictionary<string,string>().ToJsonString());
     }
 
     public Task<IRestResponse> DeleteTreeModel5()

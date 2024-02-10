@@ -57,6 +57,10 @@ public static class Constants
     public const string CommissionModelTwoDescription         = "Comisión Modelo 3 por {0}, nivel {1}";
     public const string CommissionModelTwoDescriptionNormal   = "Comisión Modelo 3";
     public const string CommissionModelThreeDescription       = "Comisión Modelo 2 por {0}, nivel {1}";
+    public const string CommissionModel1ADescriptionNormal   = "Comisión Modelo 1A";
+    public const string CommissionModel1BDescriptionNormal   = "Comisión Modelo 1B";
+    public const string CommissionModel1ADescription       = "Comisión Modelo 1A por {0}, nivel {1}";
+    public const string CommissionModel1BDescription       = "Comisión Modelo 1B por {0}, nivel {1}";
     public const string CommissionModelThreeDescriptionNormal = "Comisión Modelo 2";
     public const string CommissionMembership                  = "Comisión de membresía por";
     public const string ConceptBinaryPayment                  = "Pago Modelo 4 - ${0} - Calificacion {1}";
@@ -94,8 +98,10 @@ public static class Constants
     public static string[] PartitionKeys =
         { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "12", "13", "14", "18", "29", "30" };
     
-    public const string DebitEcoPoolTransactionServiceSpModel1A      = "dbo.Debit_Transaction_SP_Service_Model1A";
-    public const string DebitEcoPoolTransactionServiceSpModel1B      = "dbo.Debit_Transaction_SP_Service_Model1B";
-    public const string DebitEcoPoolTransactionServiceSpModel2      = "dbo.Debit_Transaction_SP_Service_Model2";
+    public const string DebitEcoPoolTransactionServiceSpModel1A   = "dbo.Debit_Transaction_SP_Service_Model1A";
+    public const string CreditEcoPoolTransactionServiceSpModel1A  = "dbo.Credit_Transaction_SP_Service_Model1A";
+    public const string CreditEcoPoolTransactionServiceSpModel1B  = "dbo.Credit_Transaction_SP_Service_Model1B";
+    public const string DebitEcoPoolTransactionServiceSpModel1B   = "dbo.Debit_Transaction_SP_Service_Model1B";
+    public const string DebitEcoPoolTransactionServiceSpModel2    = "dbo.Debit_Transaction_SP_Service_Model2";
 
 }
