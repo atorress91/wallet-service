@@ -164,8 +164,14 @@ public class ProcessGradingService : BaseService, IProcessGradingService
     private async Task ProcessModel3(ModelConfiguration model3Configuration)
     {
         var configuration3Mapped = Mapper.Map<ModelConfigurationDto>(model3Configuration);
-        var lastMonth            = DateTime.Today.AddMonths(-1);
-        var itemForModel3        = await _walletRepository.GetInvoicesDetailsItemsForModel3(lastMonth.Month, lastMonth.Year);
+        
+        var starDate = new DateTime(model3Configuration.DateInit.Year, model3Configuration.DateInit.Month, model3Configuration.DateInit.Day,
+            00, 00, 00);
+        
+        var endDate = new DateTime(model3Configuration.DateEnd.Year, model3Configuration.DateEnd.Month, model3Configuration.DateEnd.Day, 23,
+            59, 59);
+        
+        var itemForModel3        = await _walletRepository.GetInvoicesDetailsItemsForModel3(starDate, endDate);
 
         var accountsModel3 = itemForModel3.Select(x => x.Invoice.AffiliateId).Distinct().ToArray();
         var productsModel3 = itemForModel3.Select(x => x.ProductId).Distinct().ToArray();

@@ -909,12 +909,12 @@ public class WalletRepository : BaseRepository, IWalletRepository
                         x.Invoice.CancellationDate == null).ToListAsync();
 
     
-    public Task<List<InvoicesDetails>> GetInvoicesDetailsItemsForModel3(int month, int year)
+    public Task<List<InvoicesDetails>> GetInvoicesDetailsItemsForModel3(DateTime from, DateTime to)
     {
         return Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
             .Where(x 
-                => (x.PaymentGroupId == 6 || x.PaymentGroupId == 5) && x.CreatedAt.Month == month && 
-                   x.CreatedAt.Year == year && x.Invoice.Status == true && x.Invoice.CancellationDate == null).ToListAsync();
+                => (x.PaymentGroupId == 6 || x.PaymentGroupId == 5) &&
+               x.Date >= from && x.Date <= to && x.Invoice.Status && x.Invoice.CancellationDate == null).ToListAsync();
     }
 
     public async Task<bool> CreateTransferBalance(Wallets debitTransaction, Wallets creditTransaction)

@@ -91,9 +91,9 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
 
         ICollection<GradingDto> gradings = responseGradings!.Data;
         
-        await CommissionsModel1A(dictionaryModel1A, wallet1ARepository, dictionaryPointsModelTotal);
+        await CommissionsModel1A(dictionaryModel1A, wallet1ARepository, walletRepository, dictionaryPointsModelTotal);
 
-        await CommissionsModel1B(dictionaryModel1B, wallet1BRepository, dictionaryPointsModelTotal);
+        await CommissionsModel1B(dictionaryModel1B, wallet1BRepository, walletRepository, dictionaryPointsModelTotal);
 
         await CommissionsModel3(dictionaryModel3, walletRepository, dictionaryPointsModelTotal);
         
@@ -226,7 +226,8 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
     }   
     private static async Task CommissionsModel1A(
         Dictionary<int, List<ResultsModel1A>> dictionaryModel1A,
-        IWalletModel1ARepository?             walletRepository,
+        IWalletModel1ARepository?             walletRepository1A,
+        IWalletRepository?                    walletRepository,
         Dictionary<int, double>               dictionaryPointsModel1A)
     {
         foreach (var (key, listPoolsPerUser) in dictionaryModel1A)
@@ -235,8 +236,8 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
             var globalPayment = (double)listPoolsPerUser.Sum(x => x.PaymentAmount);
             var userName      = listPoolsPerUser.First().AffiliateName;
             if (walletRepository is not null && globalPayment is not 0)
-                await CreateCredit1APayment(
-                    walletRepository,
+                await CreateCredit1APaymentServices(
+                    walletRepository1A!,
                     key,
                     userName,
                     globalPayment,
@@ -264,7 +265,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
                 else
                     dictionaryPointsModel1A.Add(userLevel, globalPaymentLevel);
 
-                await CreateCredit1APayment(
+                await CreateCreditPayment(
                     walletRepository,
                     userLevel,
                     userNameLevel,
@@ -276,8 +277,9 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
     }
     private static async Task CommissionsModel1B(
         Dictionary<int, List<ResultsModel1B>> dictionaryModel1B,
-        IWalletModel1BRepository?                     walletRepository,
-        Dictionary<int, double>                dictionaryPointsModel1B)
+        IWalletModel1BRepository?             walletRepository1B,
+        IWalletRepository?                    walletRepository,
+        Dictionary<int, double>               dictionaryPointsModel1B)
     {
         foreach (var (key, listPoolsPerUser) in dictionaryModel1B)
         {
@@ -285,8 +287,8 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
             var globalPayment = (double)listPoolsPerUser.Sum(x => x.PaymentAmount);
             var userName      = listPoolsPerUser.First().AffiliateName;
             if (walletRepository is not null && globalPayment is not 0)
-                await CreateCredit1BPayment(
-                    walletRepository,
+                await CreateCredit1BPaymentServices(
+                    walletRepository1B!,
                     key,
                     userName,
                     globalPayment,
@@ -314,7 +316,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
                 else
                     dictionaryPointsModel1B.Add(userLevel, globalPaymentLevel);
 
-                await CreateCredit1BPayment(
+                await CreateCreditPayment(
                     walletRepository,
                     userLevel,
                     userNameLevel,
@@ -420,6 +422,32 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         return walletRepository.CreditTransaction(creditTransaction);
     }
     
+    private static Task CreateCredit1APaymentServices(
+        IWalletModel1ARepository walletRepository,
+        int                      userId,
+        string                   userName,
+        double                   globalPayment,
+        string                   concept,
+        string                   conceptType)
+    {
+        if (globalPayment <= 0)
+            return Task.CompletedTask;
+        
+        // return Task.CompletedTask;
+
+        var creditTransaction = new CreditTransactionRequest
+        {
+            AffiliateId       = userId,
+            AffiliateUserName = userName,
+            Credit            = globalPayment,
+            UserId            = Constants.AdminUserId,
+            Concept           = concept,
+            AdminUserName     = Constants.AdminEcosystemUserName,
+            ConceptType       = conceptType
+        };
+        return walletRepository.CreditServiceBalanceTransaction(creditTransaction);
+    }
+    
     private static Task CreateCredit1BPayment(
         IWalletModel1BRepository walletRepository,
         int                      userId,
@@ -444,6 +472,32 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
             ConceptType       = conceptType
         };
         return walletRepository.CreditTransaction(creditTransaction);
+    }
+    
+    private static Task CreateCredit1BPaymentServices(
+        IWalletModel1BRepository walletRepository,
+        int                      userId,
+        string                   userName,
+        double                   globalPayment,
+        string                   concept,
+        string                   conceptType)
+    {
+        if (globalPayment <= 0)
+            return Task.CompletedTask;
+        
+        // return Task.CompletedTask;
+
+        var creditTransaction = new CreditTransactionRequest
+        {
+            AffiliateId       = userId,
+            AffiliateUserName = userName,
+            Credit            = globalPayment,
+            UserId            = Constants.AdminUserId,
+            Concept           = concept,
+            AdminUserName     = Constants.AdminEcosystemUserName,
+            ConceptType       = conceptType
+        };
+        return walletRepository.CreditServiceBalanceTransaction(creditTransaction);
     }
 
 }

@@ -7,21 +7,21 @@ namespace WalletService.Data.Repositories.IRepositories;
 public interface IWalletRepository
 {
     Task<List<Wallets>> GetWalletByAffiliateId(int                              affiliateId);
-    Task<List<InvoicesDetails>> GetDebitsModel2WithinMonth(DateTime            from, DateTime to);
+    Task<List<InvoicesDetails>> GetDebitsModel2WithinMonth(DateTime             from, DateTime to);
     Task<List<InvoicesDetails>> GetDebitsModel1AWithinMonth(DateTime            from, DateTime to);
     Task<List<InvoicesDetails>> GetDebitsModel1BWithinMonth(DateTime            from, DateTime to);
     Task<InvoicesSpResponse?> DebitEcoPoolTransactionSp(DebitTransactionRequest request);
-    Task<List<InvoicesDetails>> GetDebitsModel2OutsideMonth(DateTime           date);
+    Task<List<InvoicesDetails>> GetDebitsModel2OutsideMonth(DateTime            date);
     Task<List<InvoicesDetails>> GetDebitsModel1AOutsideMonth(DateTime           date);
     Task<List<InvoicesDetails>> GetDebitsModel1BOutsideMonth(DateTime           date);
-    Task<List<InvoicesDetails>> GetInvoicesDetailsItemsForModel3(int          month, int year);
+    Task<List<InvoicesDetails>> GetInvoicesDetailsItemsForModel3(DateTime       from, DateTime to);
     Task<List<Wallets>> GetWalletByUserId(int                                   userId);
     Task<List<Wallets>> GetWalletsRequest(int                                   userId);
     Task<Wallets?> GetWalletById(int                                            id);
-    Task<bool> CreateModel2Sp(Model2TransactionRequest                  request);
-    Task<bool> CreateModel1ASp(Model1ATransactionRequest                  request);
-    Task<bool> CreateModel1BSp(Model1BTransactionRequest                  request);
-    Task<bool> CreateModel3Sp(Model3TransactionRequest                      request);
+    Task<bool> CreateModel2Sp(Model2TransactionRequest                          request);
+    Task<bool> CreateModel1ASp(Model1ATransactionRequest                        request);
+    Task<bool> CreateModel1BSp(Model1BTransactionRequest                        request);
+    Task<bool> CreateModel3Sp(Model3TransactionRequest                          request);
     Task<Wallets> CreateWalletAsync(Wallets                                     request);
     Task<Wallets> UpdateWalletAsync(Wallets                                     request);
     Task<Wallets> DeleteWalletAsync(Wallets                                     request);
