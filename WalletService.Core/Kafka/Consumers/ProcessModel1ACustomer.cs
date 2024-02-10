@@ -130,13 +130,14 @@ public class ProcessModel1AConsumer : BaseKafkaConsumer
             var affiliate = message.ListResultAccounts.FirstOrDefault(x => x.Id == pool.Invoice.AffiliateId);
             var product   = message.ListResultProducts.FirstOrDefault(x => x.Id == pool.ProductId);
             var daysDelay = product?.DaysWait ?? 0;
+            
 
             if (affiliate is null)
             {
                 Logger.LogWarning($"[ProcessModel1AConsumer] | EcoPoolProcess | Affiliate: {affiliate.ToJsonString()}");
                 continue;
             }
-
+            
             if (pool.Invoice.Date is null)
             {
                 Logger.LogWarning($"[ProcessModel1AConsumer] | EcoPoolProcess | Date wrong");

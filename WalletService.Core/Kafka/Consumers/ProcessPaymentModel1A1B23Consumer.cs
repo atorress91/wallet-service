@@ -241,7 +241,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
                     key,
                     userName,
                     globalPayment,
-                    Constants.CommissionModelTwoDescriptionNormal,
+                    Constants.CommissionModel1ADescriptionNormal,
                     WalletConceptType.purchasing_pool.ToString());
 
             var listPerLevels = listPoolsPerUser.SelectMany(x => x.ResultsModel1ALevels);
@@ -270,7 +270,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
                     userLevel,
                     userNameLevel,
                     globalPaymentLevel,
-                    string.Format(Constants.CommissionModelTwoDescription, userName, level),
+                    string.Format(Constants.CommissionModel1ADescription, userName, level),
                     WalletConceptType.pool_commission.ToString());
             }
         }
@@ -292,7 +292,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
                     key,
                     userName,
                     globalPayment,
-                    Constants.CommissionModelTwoDescriptionNormal,
+                    Constants.CommissionModel1BDescriptionNormal,
                     WalletConceptType.purchasing_pool.ToString());
 
             var listPerLevels = listPoolsPerUser.SelectMany(x => x.ResultsModel1BLevels);
@@ -321,7 +321,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
                     userLevel,
                     userNameLevel,
                     globalPaymentLevel,
-                    string.Format(Constants.CommissionModelTwoDescription, userName, level),
+                    string.Format(Constants.CommissionModel1BDescription, userName, level),
                     WalletConceptType.pool_commission.ToString());
             }
         }
@@ -381,7 +381,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        // return Task.CompletedTask;
+        return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {
@@ -407,7 +407,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        // return Task.CompletedTask;
+        return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {
@@ -433,7 +433,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        // return Task.CompletedTask;
+        return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {
@@ -459,7 +459,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        // return Task.CompletedTask;
+        return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {
@@ -485,7 +485,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        // return Task.CompletedTask;
+        return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {
