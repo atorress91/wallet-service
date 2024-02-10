@@ -51,7 +51,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
     {
         var model1AConfiguration = await _configurationRepository.GetConfigurationByType(ModelTypeConfiguration.Model_1A.ToString());
         var model1BConfiguration = await _configurationRepository.GetConfigurationByType(ModelTypeConfiguration.Model_1B.ToString());
-        var model2Configuration  = await _configurationRepository.GetConfigurationByType(ModelTypeConfiguration.Model_2.ToString());
+        var model2Configuration  = await _configurationRepository.GetConfiguration();
         var model3Configuration  = await _configurationRepository.GetConfigurationByType(ModelTypeConfiguration.Model_3.ToString());
         
         if (model1AConfiguration is not null)
@@ -73,7 +73,8 @@ public class ProcessGradingService : BaseService, IProcessGradingService
             59, 59);
 
         var poolsModel2Within  = await _walletRepository.GetDebitsModel2WithinMonth(starDate, model2Configuration.DateEnd);
-        var poolsModel2Outside = await _walletRepository.GetDebitsModel2OutsideMonth(starDate);
+        // var poolsModel2Outside = await _walletRepository.GetDebitsModel2OutsideMonth(starDate);
+        var poolsModel2Outside = new List<InvoicesDetails>();
 
         var accountsModel2 = poolsModel2Within.Union(poolsModel2Outside)
             .Select(x  => x.Invoice.AffiliateId).Distinct().ToArray();

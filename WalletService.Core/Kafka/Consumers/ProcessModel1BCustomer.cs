@@ -51,10 +51,10 @@ public class ProcessModel1BConsumer : BaseKafkaConsumer
             EcoPoolConfigurationId  = message.Configuration.Id,
             CompanyPercentageLevels = message.Configuration.CompanyPercentageLevels.ToDecimal(),
             CompanyPercentage       = message.Configuration.CompanyPercentage.ToDecimal(),
-            EcoPoolPercentage       = message.Configuration.EcoPoolPercentage.ToDecimal(),
+            EcoPoolPercentage       = message.Configuration.ModelPercentage.ToDecimal(),
             Points                  = message.Points,
             Case                    = message.Configuration.Case,
-            TotalPercentageLevels   = message.Configuration.Levels.Sum(x => x.Percentage)
+            TotalPercentageLevels   = message.Configuration.ModelConfigurationLevels.Sum(x => x.Percentage)
         };
         Logger.LogInformation($"[ProcessModel1BConsumer] | EcoPoolProcess | Data: {request.ToJsonString()}");
 
@@ -95,7 +95,7 @@ public class ProcessModel1BConsumer : BaseKafkaConsumer
 
             var levelsMapped = affiliate.FamilyTree.Select(s => new Model1BLevelsType
             {
-                Percentage    = message.Configuration.Levels.FirstOrDefault(x => x.Level == s.Level)!.Percentage,
+                Percentage    = message.Configuration.ModelConfigurationLevels.FirstOrDefault(x => x.Level == s.Level)!.Percentage,
                 Level         = s.Level,
                 AffiliateId   = s.Id,
                 PoolId        = pool.Id,
@@ -125,7 +125,7 @@ public class ProcessModel1BConsumer : BaseKafkaConsumer
 
     private void CalculateModelTwoWithInMonth(Model1BMessage message, List<Model1BLevelsType> levelsType, List<Model1BType> ecoPoolsType)
     {
-        foreach (var pool in message.ItemWithOutMonth)
+        foreach (var pool in message.ItemWithInMonth)
         {
             var affiliate = message.ListResultAccounts.FirstOrDefault(x => x.Id == pool.Invoice.AffiliateId);
             var product   = message.ListResultProducts.FirstOrDefault(x => x.Id == pool.ProductId);
@@ -150,7 +150,7 @@ public class ProcessModel1BConsumer : BaseKafkaConsumer
 
             var levelsMapped = affiliate.FamilyTree.Select(s => new Model1BLevelsType
             {
-                Percentage    = message.Configuration.Levels.FirstOrDefault(x => x.Level == s.Level)!.Percentage,
+                Percentage    = message.Configuration.ModelConfigurationLevels.FirstOrDefault(x => x.Level == s.Level)!.Percentage,
                 Level         = s.Level,
                 PoolId        = pool.Id,
                 AffiliateId   = s.Id,

@@ -43,10 +43,10 @@ public static class Constants
     public const string CreditTransactionSp                   = "dbo.Credit_Transation_SP";
     public const string CreditTransactionSpModel1A            = "dbo.Credit_Transaction_SP_Model1A";
     public const string CreditTransactionSpModel1B            = "dbo.Credit_Transaction_SP_Model1B";
-    public const string Model2RequestSp                   = "dbo.CreateEcoPoolSP";
-    public const string Model1ARequestSp                   = "dbo.CreateModel1ASP";
-    public const string Model1BRequestSp                   = "dbo.CreateModel1BSP";
-    public const string Model3RequestSp                     = "dbo.CreateModel2ResultsSP";
+    public const string Model2RequestSp                       = "dbo.CreateEcoPoolSP";
+    public const string Model1ARequestSp                      = "dbo.CreateModel1ASP";
+    public const string Model1BRequestSp                      = "dbo.CreateModel1BSP";
+    public const string Model3RequestSp                       = "dbo.CreateModel2ResultsSP";
     public const string RevertDebitTransaction                = "dbo.Revert_Debit_Transaction_SP";
     public const string CoinPaymentRevertTransactions         = "dbo.CoinPaymentsRevertTransactions_SP";
     public const string HandleMembershipTransactions          = "dbo.HandleMembershipTransactionSp";

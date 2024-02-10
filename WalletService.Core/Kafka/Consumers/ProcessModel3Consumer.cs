@@ -51,9 +51,9 @@ public class ProcessModel3Consumer : BaseKafkaConsumer
         var request = new Model3TransactionRequest
         {
             EcoPoolConfigurationId = message.Configuration.Id,
-            Percentage             = message.Configuration.PercentageModelTwo,
+            Percentage             = (decimal)message.Configuration.ModelPercentage,
             Case                   = message.Configuration.Case,
-            TotalPercentageLevels  = message.Configuration.Levels.Sum(x => x.Percentage)
+            TotalPercentageLevels  = message.Configuration.ModelConfigurationLevels.Sum(x => x.Percentage)
         };
         
         Logger.LogInformation($"[ProcessModelTwoConsumer] | EcoPoolProcess | Data: {request.ToJsonString()}");
@@ -77,7 +77,7 @@ public class ProcessModel3Consumer : BaseKafkaConsumer
             
             var levelsMapped = affiliate.FamilyTree.Select(s => new Model3LevelsType
             {
-                Percentage    = message.Configuration.Levels.FirstOrDefault(x => x.Level == s.Level)!.Percentage,
+                Percentage    = message.Configuration.ModelConfigurationLevels.FirstOrDefault(x => x.Level == s.Level)!.Percentage,
                 Level         = s.Level,
                 PoolId        = item.Id,
                 AffiliateId   = s.Id,

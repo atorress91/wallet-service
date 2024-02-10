@@ -2,6 +2,7 @@
 using WalletService.Data.Database;
 using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
+using WalletService.Models.Enums;
 
 namespace WalletService.Data.Repositories;
 
@@ -10,11 +11,11 @@ public class EcoPoolConfigurationRepository : BaseRepository, IEcoPoolConfigurat
     public EcoPoolConfigurationRepository(WalletServiceDbContext context) : base(context) { }
 
     public Task<ModelConfiguration?> GetConfigurationByType(string modelType)
-        => Context.ModelConfiguration.Include(x => x.ResultsModel2).FirstOrDefaultAsync(x => !x.CompletedAt.HasValue && x.ModelType == modelType);
+        => Context.ModelConfiguration.Include(x => x.ModelConfigurationLevels).FirstOrDefaultAsync(x => !x.CompletedAt.HasValue && x.ModelType == modelType);
 
     
     public Task<ModelConfiguration?> GetConfiguration()
-        => Context.ModelConfiguration.Include(x => x.ResultsModel2).FirstOrDefaultAsync(x => !x.CompletedAt.HasValue);
+        => Context.ModelConfiguration.Include(x => x.ModelConfigurationLevels).FirstOrDefaultAsync(x => !x.CompletedAt.HasValue && x.ModelType == ModelTypeConfiguration.Model_2.ToString());
 
     public Task<ModelConfiguration> GetProgressPercentage(int configurationId)
     {
