@@ -1,6 +1,6 @@
 ﻿namespace WalletService.Data.Database.Models;
 
-public class ResultEcoPoolLevels
+public class ResultsModel2Levels
 {
     public int Id { get; set; }
     public int ResultEcoPoolId { get; set; }
@@ -17,5 +17,5 @@ public class ResultEcoPoolLevels
     public int BinarySide { get; set; }
     public DateTime? UserCreatedAt { get; set; }
     
-    public virtual ResultsEcoPool ResultsEcoPool { get; set; }
+    public virtual ResultsModel2 ResultsModel2 { get; set; }
 }

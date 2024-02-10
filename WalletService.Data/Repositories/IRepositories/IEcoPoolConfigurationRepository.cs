@@ -4,10 +4,11 @@ namespace WalletService.Data.Repositories.IRepositories;
 
 public interface IEcoPoolConfigurationRepository
 {
-    Task<EcoPoolConfiguration?> GetConfiguration();
-    Task<EcoPoolConfiguration> CreateConfiguration(EcoPoolConfiguration poolConfiguration);
-    Task CreateConfigurationLevels(IEnumerable<EcoPoolLevels>           levels);
-    Task<EcoPoolConfiguration> UpdateConfiguration(EcoPoolConfiguration poolConfiguration);
+    Task<ModelConfiguration?> GetConfigurationByType(string modelType);
+    Task<ModelConfiguration?> GetConfiguration();
+    Task<ModelConfiguration> CreateConfiguration(ModelConfiguration poolConfiguration);
+    Task CreateConfigurationLevels(IEnumerable<ModelConfigurationLevels>           levels);
+    Task<ModelConfiguration> UpdateConfiguration(ModelConfiguration poolConfiguration);
     Task DeleteAllLevelsConfiguration(int                               configurationId);
-    Task<EcoPoolConfiguration> GetProgressPercentage(int                configurationId);
+    Task<ModelConfiguration> GetProgressPercentage(int                configurationId);
 }

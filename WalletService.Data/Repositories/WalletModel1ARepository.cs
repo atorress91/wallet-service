@@ -496,8 +496,25 @@ public class WalletModel1ARepository : BaseRepository, IWalletModel1ARepository
         throw new NotImplementedException();
     }
 
-    public Task<bool> CreditServiceBalanceTransaction(CreditTransactionRequest                             request)
+    public async Task<bool> CreditServiceBalanceTransaction(CreditTransactionRequest request)
     {
-        throw new NotImplementedException();
+        try
+        {
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var cmd = new SqlCommand(Constants.CreditEcoPoolTransactionServiceSpModel1A, sql);
+
+            CreateCreditListParameters(request, cmd);
+
+            await sql.OpenAsync();
+            await cmd.ExecuteNonQueryAsync();
+            await sql.CloseAsync();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return false;
+        }
     }
 }

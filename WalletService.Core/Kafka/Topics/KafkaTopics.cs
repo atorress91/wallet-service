@@ -4,18 +4,18 @@ namespace WalletService.Core.Kafka.Topics;
 
 public static class KafkaTopics
 {
-    public static string ProcessModelThreeWithOutTopic { get; set; } = "ecoPool-out";
-    public static string ProcessModelThreeWithInTopic { get; set; } = "ecoPool-in";
+    public static string ProcessModel1ATopic { get; set; } = "process-model-1A";
+    public static string ProcessModel1BTopic { get; set; } = "process-model-1B";
+    public static string ProcessModel2Topic { get; set; } = "process-model-2";
     public static string ProcessPaymentModelTwoThreeTopic { get; set; } = "process-payment";
     public static string ProcessModelFourFiveSixTopic { get; set; } = "process-model-four";
-    public static string ProcessModelTwoTopic { get; set; } = "process-model-two";
+    public static string ProcessModel3Topic { get; set; } = "process-model-3";
 
     public static void RegisterKafkaTopics(this IServiceCollection services, string env)
     {
         var envLower = env.ToLower();
-        ProcessModelThreeWithOutTopic    += "-" + envLower;
-        ProcessModelThreeWithInTopic     += "-" + envLower;
+        ProcessModel2Topic     += "-" + envLower;
         ProcessPaymentModelTwoThreeTopic += "-" + envLower;
-        ProcessModelTwoTopic             += "-" + envLower;
+        ProcessModel3Topic             += "-" + envLower;
     }
 }

@@ -27,17 +27,25 @@ public class WalletServiceDbContext : DbContext
     public virtual DbSet<Invoices> Invoices { get; set; }
     public virtual DbSet<InvoicesDetails> InvoicesDetails { get; set; }
     public virtual DbSet<NetworkPurchases> NetworkPurchases { get; set; }
-    public virtual DbSet<EcoPoolConfiguration> EcoPoolConfiguration { get; set; }
-    public virtual DbSet<EcoPoolLevels> EcoPoolLevels { get; set; }
-    public virtual DbSet<ResultsEcoPool> ResultsEcoPool { get; set; }
+    public virtual DbSet<ModelConfiguration> ModelConfiguration { get; set; }
+    public virtual DbSet<ModelConfigurationLevels> ModelConfigurationLevels { get; set; }
+    public virtual DbSet<ResultsModel2> ResultsModel2 { get; set; }
 
-    public virtual DbSet<ResultEcoPoolLevels> ResultEcoPoolLevels { get; set; }
+    public virtual DbSet<ResultsModel2Levels> ResultsModel2Levels { get; set; }
+    
+    public virtual DbSet<ResultsModel1A> ResultsModel1A { get; set; }
+
+    public virtual DbSet<ResultsModel1ALevels> ResultsModel1ALevels { get; set; }
+    
+    public virtual DbSet<ResultsModel1B> ResultsModel1B { get; set; }
+
+    public virtual DbSet<ResultsModel1BLevels> ResultsModel1BLevels { get; set; }
     public virtual DbSet<ApiClient> ApiClient { get; set; }
     public virtual DbSet<PaymentTransaction> PaymentTransaction { get; set; }
     public virtual DbSet<ModelFourStatistics> ModelFourStatistics { get; set; }
     public virtual DbSet<Commissions> Commissions { get; set; }
-    public virtual DbSet<ResultsModelTwo> ResultsModelTwo { get; set; }
-    public virtual DbSet<ResultsModelTwoLevels> ResultsModelTwoLevels { get; set; }
+    public virtual DbSet<ResultsModel3> ResultsModel3 { get; set; }
+    public virtual DbSet<ResultsModel3Levels> ResultsModel3Levels { get; set; }
     public virtual DbSet<WalletsServiceModel1A> WalletsServiceModel1A { get; set; }
     public virtual DbSet<WalletsServiceModel1B> WalletsServiceModel1B { get; set; }
     public virtual DbSet<WalletsServiceModel2> WalletsServiceModel2 { get; set; }
@@ -602,17 +610,17 @@ public class WalletServiceDbContext : DbContext
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
-        modelBuilder.Entity<EcoPoolConfiguration>(entity =>
+        modelBuilder.Entity<ModelConfiguration>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.CompanyPercentage).IsRequired().HasColumnType("decimal(10,2)");
-            entity.Property(e => e.EcoPoolPercentage).IsRequired().HasColumnType("decimal(10,2)");
+            entity.Property(e => e.ModelPercentage).IsRequired().HasColumnType("decimal(10,2)");
             entity.Property(e => e.CompanyPercentageLevels).IsRequired().HasColumnType("decimal(10,2)");
             entity.Property(e => e.MaxGainLimit).IsRequired().HasColumnType("decimal(10,2)");
-            entity.Property(e => e.PercentageModelTwo).HasColumnType("decimal(10,2)");
             entity.Property(e => e.DateInit).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.DateEnd).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.Case).IsRequired();
+            entity.Property(e => e.ModelType).IsRequired();
             entity.Property(e => e.CompletedAt).HasColumnType("datetime");
             entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.UpdatedAt).IsRequired().HasColumnType("datetime");
@@ -623,7 +631,7 @@ public class WalletServiceDbContext : DbContext
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
-        modelBuilder.Entity<EcoPoolLevels>(entity =>
+        modelBuilder.Entity<ModelConfigurationLevels>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.EcoPoolConfigurationId).IsRequired();
@@ -632,12 +640,89 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.UpdatedAt).IsRequired().HasColumnType("datetime");
 
-            entity.HasOne(d => d.EcoPoolConfiguration)
-                .WithMany(p => p.Levels)
+            entity.HasOne(d => d.ModelConfiguration)
+                .WithMany(p => p.ModelConfigurationLevels)
                 .HasForeignKey(d => d.EcoPoolConfigurationId);
         });
+        
+        modelBuilder.Entity<ResultsModel1A>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ProductExternalId).IsRequired();
+            entity.Property(e => e.AffiliateId).IsRequired();
+            entity.Property(e => e.AffiliateName).IsRequired().HasMaxLength(50).HasColumnType("varchar(50)");
+            entity.Property(e => e.ProductName).IsRequired().HasMaxLength(50).HasColumnType("varchar(50)");
+            entity.Property(e => e.BaseAmount).IsRequired().HasColumnType("decimal(10,5)");
+            entity.Property(e => e.ProfitDistributedLevels).IsRequired().HasColumnType("decimal(10,5)");
+            entity.Property(e => e.TotalPercentage).IsRequired().HasColumnType("decimal(10,2)");
+            entity.Property(e => e.PaymentAmount).IsRequired().HasColumnType("decimal(10,5)");
+            entity.Property(e => e.Points).IsRequired().HasMaxLength(50).HasColumnType("varchar(50)");
+            entity.Property(e => e.PeriodPool).IsRequired().HasColumnType("datetime");
+            entity.Property(e => e.CompletedAt).HasColumnType("datetime");
+            entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
+            
+        });
+        
+        
+        modelBuilder.Entity<ResultsModel1ALevels>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ResultsModel1AId).IsRequired();
+            entity.Property(e => e.AffiliateId).IsRequired();
+            entity.Property(e => e.AffiliateName).IsRequired().HasMaxLength(50).HasColumnType("varchar(50)");
+            entity.Property(e => e.Level).IsRequired();
+            entity.Property(e => e.PercentageLevel).IsRequired().HasColumnType("decimal(10,2)");
+            entity.Property(e => e.PaymentAmount).IsRequired().HasColumnType("decimal(10,5)");
+            entity.Property(e => e.Points).HasColumnType("decimal(10,5)");
+            entity.Property(e => e.CompletedAt).HasColumnType("datetime");
+            entity.Property(e => e.BinarySide).IsRequired().HasColumnType("int");
+            entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
 
-        modelBuilder.Entity<ResultsEcoPool>(entity =>
+            entity.HasOne(d => d.ResultsModel1A)
+                .WithMany(p => p.ResultsModel1ALevels)
+                .HasForeignKey(d => d.ResultsModel1AId);
+        });
+        
+                modelBuilder.Entity<ResultsModel1B>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ProductExternalId).IsRequired();
+            entity.Property(e => e.AffiliateId).IsRequired();
+            entity.Property(e => e.AffiliateName).IsRequired().HasMaxLength(50).HasColumnType("varchar(50)");
+            entity.Property(e => e.ProductName).IsRequired().HasMaxLength(50).HasColumnType("varchar(50)");
+            entity.Property(e => e.BaseAmount).IsRequired().HasColumnType("decimal(10,5)");
+            entity.Property(e => e.ProfitDistributedLevels).IsRequired().HasColumnType("decimal(10,5)");
+            entity.Property(e => e.TotalPercentage).IsRequired().HasColumnType("decimal(10,2)");
+            entity.Property(e => e.PaymentAmount).IsRequired().HasColumnType("decimal(10,5)");
+            entity.Property(e => e.Points).IsRequired().HasMaxLength(50).HasColumnType("varchar(50)");
+            entity.Property(e => e.PeriodPool).IsRequired().HasColumnType("datetime");
+            entity.Property(e => e.CompletedAt).HasColumnType("datetime");
+            entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
+            
+        });
+        
+        
+        modelBuilder.Entity<ResultsModel1BLevels>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ResultsModel1BId).IsRequired();
+            entity.Property(e => e.AffiliateId).IsRequired();
+            entity.Property(e => e.AffiliateName).IsRequired().HasMaxLength(50).HasColumnType("varchar(50)");
+            entity.Property(e => e.Level).IsRequired();
+            entity.Property(e => e.PercentageLevel).IsRequired().HasColumnType("decimal(10,2)");
+            entity.Property(e => e.PaymentAmount).IsRequired().HasColumnType("decimal(10,5)");
+            entity.Property(e => e.Points).HasColumnType("decimal(10,5)");
+            entity.Property(e => e.CompletedAt).HasColumnType("datetime");
+            entity.Property(e => e.BinarySide).IsRequired().HasColumnType("int");
+            entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.ResultsModel1B)
+                .WithMany(p => p.ResultsModel1BLevels)
+                .HasForeignKey(d => d.ResultsModel1BId);
+        });
+
+
+        modelBuilder.Entity<ResultsModel2>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.EcoPoolConfigurationId).IsRequired();
@@ -663,12 +748,12 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.CompletedAt).HasColumnType("datetime");
             entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
 
-            entity.HasOne(d => d.EcoPoolConfiguration)
-                .WithMany(p => p.ResultsEcoPools)
+            entity.HasOne(d => d.ModelConfiguration)
+                .WithMany(p => p.ResultsModel2)
                 .HasForeignKey(d => d.EcoPoolConfigurationId);
         });
 
-        modelBuilder.Entity<ResultEcoPoolLevels>(entity =>
+        modelBuilder.Entity<ResultsModel2Levels>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ResultEcoPoolId).IsRequired();
@@ -685,8 +770,8 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.BinarySide).IsRequired().HasColumnType("int");
             entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
 
-            entity.HasOne(d => d.ResultsEcoPool)
-                .WithMany(p => p.ResultEcoPoolLevels)
+            entity.HasOne(d => d.ResultsModel2)
+                .WithMany(p => p.ResultsModel2Levels)
                 .HasForeignKey(d => d.ResultEcoPoolId);
         });
 
@@ -761,7 +846,7 @@ public class WalletServiceDbContext : DbContext
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
-        modelBuilder.Entity<ResultsModelTwo>(entity =>
+        modelBuilder.Entity<ResultsModel3>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ProductExternalId).IsRequired();
@@ -776,10 +861,10 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
         });
 
-        modelBuilder.Entity<ResultsModelTwoLevels>(entity =>
+        modelBuilder.Entity<ResultsModel3Levels>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.ResultsModelTwoId).IsRequired();
+            entity.Property(e => e.ResultsModel3Id).IsRequired();
             entity.Property(e => e.AffiliateId).IsRequired();
             entity.Property(e => e.AffiliateName).IsRequired();
             entity.Property(e => e.Level).IsRequired();
@@ -790,9 +875,9 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.BinarySide).IsRequired();
             entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
 
-            entity.HasOne(d => d.ResultsModelTwo)
-                .WithMany(p => p.ResultsModelTwoLevels)
-                .HasForeignKey(d => d.ResultsModelTwoId);
+            entity.HasOne(d => d.ResultsModel3)
+                .WithMany(p => p.ResultsModel3Levels)
+                .HasForeignKey(d => d.ResultsModel3Id);
         });
 
         modelBuilder.Entity<WalletsServiceModel1A>(entity =>

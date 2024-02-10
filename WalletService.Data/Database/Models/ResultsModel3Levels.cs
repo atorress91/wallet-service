@@ -1,9 +1,9 @@
 namespace WalletService.Data.Database.Models;
 
-public class ResultsModelTwoLevels
+public class ResultsModel3Levels
 {
     public int Id { get; set; }
-    public int ResultsModelTwoId { get; set; }
+    public int ResultsModel3Id { get; set; }
     public int AffiliateId { get; set; }
     public string AffiliateName { get; set; }
     public int Level { get; set; }
@@ -14,7 +14,7 @@ public class ResultsModelTwoLevels
     public DateTime? UserCreatedAt { get; set; }
     public int BinarySide { get; set; }
     
-    public virtual ResultsModelTwo ResultsModelTwo { get; set; }
+    public virtual ResultsModel3 ResultsModel3 { get; set; }
 
 }
 

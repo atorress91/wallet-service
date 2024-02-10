@@ -251,18 +251,116 @@ public class WalletRepository : BaseRepository, IWalletRepository
         }
     }
     
-    public async Task<bool> CreateModelThreeSp(ModelThreeTransactionRequest request)
+    public async Task<bool> CreditModel1ATransaction(CreditTransactionRequest request)
+    {
+        try
+        {
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var cmd = new SqlCommand(Constants.CreditTransactionSpModel1A, sql);
+
+            CreateCreditListParameters(request, cmd);
+
+            await sql.OpenAsync();
+            await cmd.ExecuteNonQueryAsync();
+            await sql.CloseAsync();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return false;
+        }
+    }
+    
+    public async Task<bool> CreditModel1BTransaction(CreditTransactionRequest request)
+    {
+        try
+        {
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var cmd = new SqlCommand(Constants.CreditTransactionSpModel1B, sql);
+
+            CreateCreditListParameters(request, cmd);
+
+            await sql.OpenAsync();
+            await cmd.ExecuteNonQueryAsync();
+            await sql.CloseAsync();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return false;
+        }
+    }
+    
+    public async Task<bool> CreateModel2Sp(Model2TransactionRequest request)
     {
         try
         {
             await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
 
-            await using var cmd = new SqlCommand(Constants.ModelThreeRequestSp, sqlConnection);
+            await using var cmd = new SqlCommand(Constants.Model2RequestSp, sqlConnection);
 
             var levelTypeDataTable = ConvertToDataTable(request.LevelsType);
             var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
 
-            CreateModelThreeParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
+            CreateModel2Parameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
+
+            await sqlConnection.OpenAsync();
+            await using var oReader = await cmd.ExecuteReaderAsync();
+
+            await sqlConnection.CloseAsync();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+    
+    public async Task<bool> CreateModel1ASp(Model1ATransactionRequest request)
+    {
+        try
+        {
+            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+
+            await using var cmd = new SqlCommand(Constants.Model1ARequestSp, sqlConnection);
+
+            var levelTypeDataTable   = ConvertToDataTable(request.LevelsType);
+            var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
+
+            CreateModel1AParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
+
+            await sqlConnection.OpenAsync();
+            await using var oReader = await cmd.ExecuteReaderAsync();
+
+            await sqlConnection.CloseAsync();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+    
+    public async Task<bool> CreateModel1BSp(Model1BTransactionRequest request)
+    {
+        try
+        {
+            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+
+            await using var cmd = new SqlCommand(Constants.Model1BRequestSp, sqlConnection);
+
+            var levelTypeDataTable   = ConvertToDataTable(request.LevelsType);
+            var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
+
+            CreateModel1BParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
 
             await sqlConnection.OpenAsync();
             await using var oReader = await cmd.ExecuteReaderAsync();
@@ -278,18 +376,19 @@ public class WalletRepository : BaseRepository, IWalletRepository
         }
     }
 
-    public async Task<bool> CreateModelTwoSp(ModelTwoTransactionRequest request)
+
+    public async Task<bool> CreateModel3Sp(Model3TransactionRequest request)
     {
         try
         {
             await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
 
-            await using var cmd = new SqlCommand(Constants.ModelTwoRequestSp, sqlConnection);
+            await using var cmd = new SqlCommand(Constants.Model3RequestSp, sqlConnection);
 
             var levelTypeDataTable   = ConvertToDataTable(request.LevelsType);
             var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
 
-            CreateModelTwoParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
+            CreateModel3Parameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
 
             await sqlConnection.OpenAsync();
             await using var oReader = await cmd.ExecuteReaderAsync();
@@ -501,7 +600,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         });
     }
 
-    private void CreateModelThreeParameters(ModelThreeTransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
+    private void CreateModel2Parameters(Model2TransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -552,7 +651,110 @@ public class WalletRepository : BaseRepository, IWalletRepository
             TypeName = "dbo.EcoPoolType"
         });
     }
-    private void CreateModelTwoParameters(ModelTwoTransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
+    private void CreateModel1AParameters(Model1ATransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
+    {
+        cmd.CommandType = CommandType.StoredProcedure;
+
+        cmd.Parameters.Add(new SqlParameter("@EcoPoolConfigurationId", SqlDbType.Int)
+        {
+            Value = request.EcoPoolConfigurationId
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@TotalPercentageLevels", SqlDbType.Decimal)
+        {
+            Value = request.TotalPercentageLevels
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@EcoPoolPercentage", SqlDbType.Decimal)
+        {
+            Value = request.EcoPoolPercentage
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@CompanyPercentage", SqlDbType.Decimal)
+        {
+            Value = request.CompanyPercentage
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@CompanyPercentageLevels", SqlDbType.Decimal)
+        {
+            Value = request.CompanyPercentageLevels
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Case", SqlDbType.Int)
+        {
+            Value = request.Case
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Points", SqlDbType.Int)
+        {
+            Value = request.Points
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Levels", SqlDbType.Structured)
+        {
+            Value = levels,
+            TypeName = "dbo.LevelsType"
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Pools", SqlDbType.Structured)
+        {
+            Value = ecoPools,
+            TypeName = "dbo.EcoPoolType"
+        });
+    }
+    private void CreateModel1BParameters(Model1BTransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
+    {
+        cmd.CommandType = CommandType.StoredProcedure;
+
+        cmd.Parameters.Add(new SqlParameter("@EcoPoolConfigurationId", SqlDbType.Int)
+        {
+            Value = request.EcoPoolConfigurationId
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@TotalPercentageLevels", SqlDbType.Decimal)
+        {
+            Value = request.TotalPercentageLevels
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@EcoPoolPercentage", SqlDbType.Decimal)
+        {
+            Value = request.EcoPoolPercentage
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@CompanyPercentage", SqlDbType.Decimal)
+        {
+            Value = request.CompanyPercentage
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@CompanyPercentageLevels", SqlDbType.Decimal)
+        {
+            Value = request.CompanyPercentageLevels
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Case", SqlDbType.Int)
+        {
+            Value = request.Case
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Points", SqlDbType.Int)
+        {
+            Value = request.Points
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Levels", SqlDbType.Structured)
+        {
+            Value = levels,
+            TypeName = "dbo.LevelsType"
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@Pools", SqlDbType.Structured)
+        {
+            Value = ecoPools,
+            TypeName = "dbo.EcoPoolType"
+        });
+    }
+    
+    private void CreateModel3Parameters(Model3TransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -678,22 +880,41 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return request;
     }
 
-    public Task<List<InvoicesDetails>> GetDebitsEcoPoolWithinMonth(DateTime from, DateTime to)
+    public Task<List<InvoicesDetails>> GetDebitsModel2WithinMonth(DateTime from, DateTime to)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
-            .Where(x => x.ProductPack && x.Invoice.Status == true && x.Invoice.CancellationDate == null &&
+            .Where(x => x.ProductPack && x.PaymentGroupId == 2 && x.Invoice.Status == true && x.Invoice.CancellationDate == null &&
+                        x.Date >= from && x.Date <= to).ToListAsync();   
+    
+    public Task<List<InvoicesDetails>> GetDebitsModel1AWithinMonth(DateTime from, DateTime to)
+        => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
+            .Where(x => x.PaymentGroupId == 7 && x.Invoice.Status == true && x.Invoice.CancellationDate == null &&
+                        x.Date >= from && x.Date <= to).ToListAsync();
+    
+    public Task<List<InvoicesDetails>> GetDebitsModel1BWithinMonth(DateTime from, DateTime to)
+        => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
+            .Where(x => x.PaymentGroupId == 8 && x.Invoice.Status == true && x.Invoice.CancellationDate == null &&
                         x.Date >= from && x.Date <= to).ToListAsync();
 
-    public Task<List<InvoicesDetails>> GetDebitsEcoPoolOutsideMonth(DateTime date)
+    public Task<List<InvoicesDetails>> GetDebitsModel2OutsideMonth(DateTime date)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
-            .Where(x => x.ProductPack && x.Date < date && x.Invoice.Status == true && 
+            .Where(x => x.ProductPack && x.PaymentGroupId == 2 && x.Date < date && x.Invoice.Status == true && 
                         x.Invoice.CancellationDate == null).ToListAsync();
+    public Task<List<InvoicesDetails>> GetDebitsModel1AOutsideMonth(DateTime date)
+        => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
+            .Where(x => x.PaymentGroupId == 7 && x.Date < date && x.Invoice.Status == true && 
+                        x.Invoice.CancellationDate == null).ToListAsync();
+    public Task<List<InvoicesDetails>> GetDebitsModel1BOutsideMonth(DateTime date)
+        => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
+            .Where(x => x.PaymentGroupId == 8 && x.Date < date && x.Invoice.Status == true && 
+                        x.Invoice.CancellationDate == null).ToListAsync();
+
     
-    public Task<List<InvoicesDetails>> GetInvoicesDetailsItemsForModelTwo(int month, int year)
+    public Task<List<InvoicesDetails>> GetInvoicesDetailsItemsForModel3(DateTime from, DateTime to)
     {
         return Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
             .Where(x 
-                => (x.PaymentGroupId == 6 || x.PaymentGroupId == 5) && x.CreatedAt.Month == month && 
-                   x.CreatedAt.Year == year && x.Invoice.Status == true && x.Invoice.CancellationDate == null).ToListAsync();
+                => (x.PaymentGroupId == 6 || x.PaymentGroupId == 5) &&
+               x.Date >= from && x.Date <= to && x.Invoice.Status && x.Invoice.CancellationDate == null).ToListAsync();
     }
 
     public async Task<bool> CreateTransferBalance(Wallets debitTransaction, Wallets creditTransaction)

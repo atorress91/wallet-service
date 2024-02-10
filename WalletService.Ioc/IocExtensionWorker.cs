@@ -9,6 +9,8 @@ using NLog.Extensions.Logging;
 using WalletService.Core.Kafka.Producer;
 using WalletService.Core.Kafka.Topics;
 using WalletService.Core.Mapper;
+using WalletService.Core.PaymentStrategies;
+using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters;
@@ -31,6 +33,7 @@ public static class IocExtensionWorker
         InjectServices(services);
         InjectAdapters(services);
         InjectLogging(services);
+        InjectStrategies(services);
         InjectSingletonsAndFactories(services);
         RegisterServiceProvider(services);
     }
@@ -53,6 +56,18 @@ public static class IocExtensionWorker
         services.Configure<ApplicationConfiguration>(appSettingsSection);
         services.AddSingleton(configuration);
         services.RegisterKafkaTopics(lowercaseEnvironment);
+    }
+    
+    private static void InjectStrategies(IServiceCollection services)
+    {
+        services.AddScoped<IBalancePaymentStrategy,BalancePaymentStrategy>();
+        services.AddScoped<IBalancePaymentStrategyModel2,BalancePaymentStrategyModel2>();
+        services.AddScoped<ToThirdPartiesPaymentStrategy>();
+        services.AddScoped<ICoinPayPaymentStrategy,CoinPayPaymentStrategy>();
+        services.AddScoped<ICoinPaymentsPaymentStrategy,CoinPaymentsPaymentStrategy>();
+        services.AddScoped<IWireTransferStrategy,WireTransferStrategy>();
+        services.AddScoped<IBalancePaymentStrategyModel1A,BalancePaymentStrategy1A>();
+        services.AddScoped<IBalancePaymentStrategyModel1B,BalancePaymentStrategy1B>();
     }
 
     private static void InjectDataBases(IServiceCollection services)
@@ -102,7 +117,8 @@ public static class IocExtensionWorker
         services.AddScoped<IResultsEcoPoolRepository, ResultsEcoPoolRepository>();
         services.AddScoped<IApiClientRepository, ApiClientRepository>();
         services.AddScoped<ICoinPaymentTransactionRepository, CoinPaymentTransactionRepository>();
-        
+        services.AddScoped<IWalletModel1ARepository, WalletModel1ARepository>();
+        services.AddScoped<IWalletModel1BRepository, WalletModel1BRepository>();
     }
 
     private static void InjectAdapters(IServiceCollection services)
@@ -132,6 +148,8 @@ public static class IocExtensionWorker
         services.AddScoped<IConPaymentService, ConPaymentService>();
         services.AddScoped<IBrevoEmailService, BrevoEmailService>();
         services.AddScoped<IPaymentTransactionService, PaymentTransactionService>();
+        services.AddScoped<IWalletModel1AService, WalletModel1AService>();
+        services.AddScoped<IWalletModel1BService, WalletModel1BService>();
     }
 
     private static void InjectPackages(IServiceCollection services)
