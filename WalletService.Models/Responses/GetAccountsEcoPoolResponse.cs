@@ -8,7 +8,7 @@ public class GetAccountsEcoPoolResponse
     public bool Success { get; set; }
     
     [JsonPropertyName("data")]
-    public List<UserModelTwoThreeResponse> Data { get; set; }
+    public List<UserModelResponse> Data { get; set; }
     
     [JsonPropertyName("message")]
     public string Message { get; set; }
@@ -17,7 +17,7 @@ public class GetAccountsEcoPoolResponse
     public int Code { get; set; }
 }
 
-public class UserModelTwoThreeResponse
+public class UserModelResponse
 {
     [JsonPropertyName("id")]
     public int Id { get; set; }

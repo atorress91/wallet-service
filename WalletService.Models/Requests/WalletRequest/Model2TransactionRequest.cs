@@ -1,17 +1,19 @@
-namespace WalletService.Models.Requests.WalletRequest;
-
-public class ModelTwoTransactionRequest
+﻿namespace WalletService.Models.Requests.WalletRequest;
+public class Model2TransactionRequest
 {
     public int Case { get; set; }
-    public decimal Percentage { get; set; }
+    public decimal Points { get; set; }
+    public decimal EcoPoolPercentage { get; set; }
+    public decimal CompanyPercentage { get; set; }
+    public decimal CompanyPercentageLevels { get; set; }
     public int EcoPoolConfigurationId { get; set; }
     public double TotalPercentageLevels { get; set; }
-    public ICollection<ModelTwoType> EcoPoolsType { get; set; }
-    public ICollection<ModelTwoLevelsType> LevelsType { get; set; }
+    public ICollection<Model2Type> EcoPoolsType { get; set; }
+    public ICollection<Model2LevelsType> LevelsType { get; set; }
     
 }
 
-public class ModelTwoLevelsType
+public class Model2LevelsType
 {
     public int Level { get; set; }
     public double Percentage { get; set; }
@@ -23,7 +25,7 @@ public class ModelTwoLevelsType
     
 }
 
-public class ModelTwoType
+public class Model2Type
 {
     public int AffiliateId { get; set; }
     public int ProductExternalId { get; set; }

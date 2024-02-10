@@ -1,5 +1,5 @@
 ﻿namespace WalletService.Models.Requests.WalletRequest;
-public class ModelThreeTransactionRequest
+public class Model1ATransactionRequest
 {
     public int Case { get; set; }
     public decimal Points { get; set; }
@@ -8,12 +8,12 @@ public class ModelThreeTransactionRequest
     public decimal CompanyPercentageLevels { get; set; }
     public int EcoPoolConfigurationId { get; set; }
     public double TotalPercentageLevels { get; set; }
-    public ICollection<ModelThreeType> EcoPoolsType { get; set; }
-    public ICollection<ModelThreeLevelsType> LevelsType { get; set; }
+    public ICollection<Model1AType> EcoPoolsType { get; set; }
+    public ICollection<Model1ALevelsType> LevelsType { get; set; }
     
 }
 
-public class ModelThreeLevelsType
+public class Model1ALevelsType
 {
     public int Level { get; set; }
     public double Percentage { get; set; }
@@ -25,7 +25,7 @@ public class ModelThreeLevelsType
     
 }
 
-public class ModelThreeType
+public class Model1AType
 {
     public int AffiliateId { get; set; }
     public int ProductExternalId { get; set; }

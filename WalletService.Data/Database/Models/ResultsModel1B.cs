@@ -1,6 +1,6 @@
 namespace WalletService.Data.Database.Models;
 
-public class ResultsModelTwo
+public class ResultsModel1B
 {
     public int Id { get; set; }
     public int ProductExternalId { get; set; }
@@ -16,5 +16,5 @@ public class ResultsModelTwo
     public DateTime? CompletedAt { get; set; }
     public DateTime? UserCreatedAt { get; set; }
     
-    public virtual ICollection<ResultsModelTwoLevels> ResultsModelTwoLevels { get; set; }
+    public virtual ICollection<ResultsModel1BLevels> ResultsModel1BLevels { get; set; }
 }

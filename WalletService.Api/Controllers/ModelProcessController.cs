@@ -7,13 +7,13 @@ namespace WalletService.Api.Controllers;
 [ApiController]
 [ApiVersion("1")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class ProcessGradingController : BaseController
+public class ModelProcessController : BaseController
 {
 
     private readonly IProcessGradingService       _processGradingService;
     private readonly IEcoPoolConfigurationService _configurationService;
 
-    public ProcessGradingController(
+    public ModelProcessController(
         IProcessGradingService       processGradingService,
         IEcoPoolConfigurationService configurationService)
     {
@@ -21,18 +21,18 @@ public class ProcessGradingController : BaseController
         _configurationService  = configurationService;
     }
 
-    [HttpPost("eco_pool_process")]
-    public async Task<IActionResult> EcoPoolProcess()
+    [HttpPost("execute_process_first")]
+    public async Task<IActionResult> ExecuteFirstProcess()
     {
-        await _processGradingService.EcoPoolProcess();
+        await _processGradingService.ExecuteFirstProcess();
 
         return Ok(Success("ok"));
     }
     
-    [HttpPost("payment")]
-    public async Task<IActionResult> PaymentProcess()
+    [HttpPost("execute_process_second")]
+    public async Task<IActionResult> ExecuteSecondProcess()
     {
-        await _processGradingService.PaymentProcess();
+        await _processGradingService.ExecuteSecondProcess();
 
         return Ok(Success("ok"));
     }

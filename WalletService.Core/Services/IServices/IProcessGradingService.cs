@@ -4,6 +4,6 @@ namespace WalletService.Core.Services.IServices;
 
 public interface IProcessGradingService
 {
-    Task EcoPoolProcess();
-    Task PaymentProcess();
+    Task ExecuteFirstProcess();
+    Task ExecuteSecondProcess();
 }

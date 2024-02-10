@@ -19,14 +19,14 @@ public class EcoPoolConfigurationService : BaseService, IEcoPoolConfigurationSer
         => _poolConfigurationRepository = poolConfigurationRepository;
 
 
-    public async Task<EcoPoolConfigurationDto?> GetEcoPoolDefaultConfiguration()
+    public async Task<ModelConfigurationDto?> GetEcoPoolDefaultConfiguration()
     {
         var configuration = await _poolConfigurationRepository.GetConfiguration();
 
-        return configuration is null ? null : Mapper.Map<EcoPoolConfigurationDto>(configuration);
+        return configuration is null ? null : Mapper.Map<ModelConfigurationDto>(configuration);
     }
 
-    public async Task<EcoPoolConfigurationDto> CreateOrUpdateEcoPoolConfiguration(EcoPoolConfigurationRequest request)
+    public async Task<ModelConfigurationDto> CreateOrUpdateEcoPoolConfiguration(EcoPoolConfigurationRequest request)
     {
         var configuration = await _poolConfigurationRepository.GetConfiguration();
         
@@ -35,20 +35,20 @@ public class EcoPoolConfigurationService : BaseService, IEcoPoolConfigurationSer
         else
             configuration = await UpdateEcoPoolModel(request, configuration);
 
-        return Mapper.Map<EcoPoolConfigurationDto>(configuration);
+        return Mapper.Map<ModelConfigurationDto>(configuration);
     }
     
 
-    private async Task<EcoPoolConfiguration> CreateEcoPoolModel(EcoPoolConfigurationRequest request)
+    private async Task<ModelConfiguration> CreateEcoPoolModel(EcoPoolConfigurationRequest request)
     {
-        var listLevels = new List<EcoPoolLevels>();
+        var listLevels = new List<ModelConfigurationLevels>();
         var today      = DateTime.Today;
 
-        var configuration = new EcoPoolConfiguration
+        var configuration = new ModelConfiguration
         {
             CompanyPercentageLevels = request.CompanyPercentageLevels,
             CompanyPercentage       = request.CompanyPercentage,
-            EcoPoolPercentage       = request.EcoPoolPercentage,
+            ModelPercentage       = request.EcoPoolPercentage,
             MaxGainLimit            = request.MaxGainLimit,
             DateInit                = request.DateInit,
             DateEnd                 = request.DateEnd,
@@ -63,7 +63,7 @@ public class EcoPoolConfigurationService : BaseService, IEcoPoolConfigurationSer
         foreach (var level in request.Levels)
         {
             index++;
-            var ecoPoolLevels = new EcoPoolLevels
+            var ecoPoolLevels = new ModelConfigurationLevels
             {
                 Level                  = index,
                 EcoPoolConfigurationId = configuration.Id,
@@ -81,14 +81,14 @@ public class EcoPoolConfigurationService : BaseService, IEcoPoolConfigurationSer
     }
 
 
-    private async Task<EcoPoolConfiguration> UpdateEcoPoolModel(EcoPoolConfigurationRequest request, EcoPoolConfiguration configuration)
+    private async Task<ModelConfiguration> UpdateEcoPoolModel(EcoPoolConfigurationRequest request, ModelConfiguration configuration)
     {
-        var listLevels = new List<EcoPoolLevels>();
+        var listLevels = new List<ModelConfigurationLevels>();
         var today      = DateTime.Today;
         
         configuration.CompanyPercentageLevels = request.CompanyPercentageLevels;
         configuration.CompanyPercentage       = request.CompanyPercentage;
-        configuration.EcoPoolPercentage       = request.EcoPoolPercentage;
+        configuration.ModelPercentage       = request.EcoPoolPercentage;
         configuration.MaxGainLimit            = request.MaxGainLimit;
         configuration.DateInit                = request.DateInit;
         configuration.DateEnd                 = request.DateEnd;
@@ -103,7 +103,7 @@ public class EcoPoolConfigurationService : BaseService, IEcoPoolConfigurationSer
         foreach (var level in request.Levels)
         {
             index++;
-            var ecoPoolLevels = new EcoPoolLevels
+            var ecoPoolLevels = new ModelConfigurationLevels
             {
                 Level                  = index,
                 EcoPoolConfigurationId = configuration.Id,

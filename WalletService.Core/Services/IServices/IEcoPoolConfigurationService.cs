@@ -5,7 +5,7 @@ namespace WalletService.Core.Services.IServices;
 
 public interface IEcoPoolConfigurationService
 {
-    Task<EcoPoolConfigurationDto?> GetEcoPoolDefaultConfiguration();
-    Task<EcoPoolConfigurationDto> CreateOrUpdateEcoPoolConfiguration(EcoPoolConfigurationRequest request);
+    Task<ModelConfigurationDto?> GetEcoPoolDefaultConfiguration();
+    Task<ModelConfigurationDto> CreateOrUpdateEcoPoolConfiguration(EcoPoolConfigurationRequest request);
     Task<int> GetProgressPercentage(int                                                          configurationId);
 }
