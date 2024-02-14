@@ -108,7 +108,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         var total = await Context.Wallets
             .Where(x => x.AffiliateId == affiliateId &&
-                        (x.ConceptType == "commission_passed_wallet" || x.ConceptType == "purchasing_pool") &&
+                        x.ConceptType == "pool_commission" &&
                         x.Status == true)
             .SumAsync(x => x.Credit);
 
