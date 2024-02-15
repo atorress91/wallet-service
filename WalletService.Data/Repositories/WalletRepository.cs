@@ -106,10 +106,18 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
     public async Task<double?> GetTotalCommissionsPaid(int affiliateId)
     {
+        var status = new HashSet<string>
+        {
+            "commission_passed_wallet",
+            "purchasing_pool",
+            "pool_commission",
+            "model_four_payment",
+            "model_five_payment",
+            "model_six_payment",
+            "membership_bonus"
+        };
         var total = await Context.Wallets
-            .Where(x => x.AffiliateId == affiliateId &&
-                        x.ConceptType == "pool_commission" &&
-                        x.Status == true)
+            .Where(x => x.AffiliateId == affiliateId && x.ConceptType != null && status.Contains(x.ConceptType) && x.Status == true)
             .SumAsync(x => x.Credit);
 
         return total;
