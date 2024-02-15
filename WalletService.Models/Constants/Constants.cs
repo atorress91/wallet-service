@@ -103,5 +103,9 @@ public static class Constants
     public const string CreditEcoPoolTransactionServiceSpModel1B  = "dbo.Credit_Transaction_SP_Service_Model1B";
     public const string DebitEcoPoolTransactionServiceSpModel1B   = "dbo.Debit_Transaction_SP_Service_Model1B";
     public const string DebitEcoPoolTransactionServiceSpModel2    = "dbo.Debit_Transaction_SP_Service_Model2";
-
+    public const string PagaditoConnectKey                        = "f3f191ce3326905ff4403bb05b0de150";
+    public const string PagaditoExecuteKey                        = "41216f8caf94aaa598db137e36d4673e";
+    public const string PagaditoGetStatusKey                      = "0b50820c65b0de71ce78f6221a5cf876";
+    public const string PagaditoCurrency                          = "USD";
+    public const string PagaditoFormatReturn                      = "json";
 }

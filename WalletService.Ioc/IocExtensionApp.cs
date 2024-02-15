@@ -163,6 +163,7 @@ public static class IocExtensionApp
         services.AddScoped<IAccountServiceAdapter, AccountServiceAdapter>();
         services.AddScoped<IInventoryServiceAdapter, InventoryServiceAdapter>();
         services.AddScoped<IConfigurationAdapter, ConfigurationAdapter>();
+        services.AddScoped<IPagaditoAdapter, PagaditoAdapter>();
     }
     
     private static void InjectStrategies(IServiceCollection services)
@@ -198,6 +199,7 @@ public static class IocExtensionApp
         services.AddScoped<IPaymentTransactionService, PaymentTransactionService>();
         services.AddScoped<IWalletModel1AService, WalletModel1AService>();
         services.AddScoped<IWalletModel1BService, WalletModel1BService>();
+        services.AddScoped<IPagaditoService, PagaditoService>();
     }
 
     private static void InjectPackages(IServiceCollection services)
