@@ -4,5 +4,5 @@ namespace WalletService.Core.Services.IServices;
 
 public interface IPagaditoService
 {
-    Task<string?> CreateTransaction(TransactionRequest request);
+    Task<string?> CreateTransaction(CreatePagaditoTransactionRequest request);
 }

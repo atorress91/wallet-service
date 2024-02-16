@@ -17,9 +17,9 @@ public class PagaditoController : BaseController
     }
 
     [HttpPost("createTransaction")]
-    public async Task<IActionResult> CreateTransaction([FromBody] TransactionRequest request)
+    public async Task<IActionResult> CreateTransaction([FromBody] CreatePagaditoTransactionRequest request)
     {
         var result = await _pagaditoService.CreateTransaction(request);
-        return result is null ? Ok(Fail("Error")) : Ok(result);
+        return result is null ? Ok(Fail("Error")) : Ok(Success(result));
     }
 }

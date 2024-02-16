@@ -1,11 +1,13 @@
 ﻿using System.Globalization;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using WalletService.Data.Adapters.IAdapters;
+using System.Text.Json;
 using WalletService.Models.Configuration;
+
+using WalletService.Data.Adapters.IAdapters;
+using WalletService.Data.Database.CustomModels;
 using WalletService.Models.Constants;
-using WalletService.Models.Requests.PagaditoRequest;
 using WalletService.Models.Responses.BaseResponses;
+
 
 namespace WalletService.Data.Adapters;
 
@@ -40,8 +42,8 @@ public class PagaditoAdapter : IPagaditoAdapter
             var responseString = await response.Content.ReadAsStringAsync();
             if (response.IsSuccessStatusCode)
             {
-                var connectResponse = JsonConvert.DeserializeObject<PagaditoResponse>(responseString);
-                if (connectResponse != null && !string.IsNullOrEmpty(connectResponse.Value))
+                var connectResponse = JsonSerializer.Deserialize<PagaditoResponse>(responseString);
+                if (connectResponse != null && connectResponse.Code == "PG1001")
                 {
                     return connectResponse;
                 }
@@ -59,12 +61,12 @@ public class PagaditoAdapter : IPagaditoAdapter
         }
     }
 
-    public async Task<PagaditoResponse?> ExecuteTransaction(TransactionRequest request)
+    public async Task<PagaditoResponse?> ExecuteTransaction(CreatePagaditoTransaction request)
     {
         var url = _appSettings.Pagadito!.Url;
 
-        string jsonDetails = JsonConvert.SerializeObject(request.Details);
-        string jsonCustomParams = JsonConvert.SerializeObject(request.CustomParams);
+        string jsonDetails = JsonSerializer.Serialize(request.Details);
+        string jsonCustomParams = JsonSerializer.Serialize(request.CustomParams);
 
         var parameters = new Dictionary<string, string>
         {
@@ -83,7 +85,7 @@ public class PagaditoAdapter : IPagaditoAdapter
         var response = await client.PostAsync(url, content);
 
         var responseContent = await response.Content.ReadAsStringAsync();
-        var execTransResponse = JsonConvert.DeserializeObject<PagaditoResponse>(responseContent);
+        var execTransResponse = JsonSerializer.Deserialize<PagaditoResponse>(responseContent);
 
         if (execTransResponse != null && execTransResponse.Code == "PG1002")
         {
