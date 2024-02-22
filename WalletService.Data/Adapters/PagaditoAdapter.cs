@@ -42,6 +42,7 @@ public class PagaditoAdapter : IPagaditoAdapter
             var responseString = await response.Content.ReadAsStringAsync();
             if (response.IsSuccessStatusCode)
             {
+                
                 var connectResponse = JsonSerializer.Deserialize<PagaditoResponse>(responseString);
                 if (connectResponse != null && connectResponse.Code == "PG1001")
                 {
