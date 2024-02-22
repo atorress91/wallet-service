@@ -5,14 +5,14 @@ namespace WalletService.Models.Requests.PagaditoRequest;
 public class PagaditoTransactionDetailRequest
 {
     [JsonPropertyName("quantity")] 
-    public int Quantity { get; set; }
+    public string? Quantity { get; set; }
     
     [JsonPropertyName("description")]
-    public string Description { get; set; } = String.Empty;
+    public string? Description { get; set; } 
     
     [JsonPropertyName("price")] 
-    public decimal Price { get; set; }
+    public string? Price { get; set; }
     
     [JsonPropertyName("url_product")] 
-    public string UrlProduct { get; set; } = String.Empty;
+    public string? UrlProduct { get; set; }
 }

@@ -25,6 +25,7 @@ public static class Constants
     public const int    DaysToPayQuantity                     = 999;
     public const string CoinPayments                          = "CoinPayments";
     public const string CoinPay                               = "CoinPay";
+    public const string Pagadito                              = "Pagadito";
     public const int    Batches                               = 1000;
     public const string WithdrawalBalance                     = "Retiro de saldo";
     public const int    None                                  = 0;
@@ -108,4 +109,10 @@ public static class Constants
     public const string PagaditoGetStatusKey                      = "0b50820c65b0de71ce78f6221a5cf876";
     public const string PagaditoCurrency                          = "USD";
     public const string PagaditoFormatReturn                      = "json";
+    public const string RegisteredStatus                          = "REGISTERED";
+    public const int    RegisteredStatusCode                      = 1;
+    public const string ExpiredStatus                             = "EXPIRED";
+    public const int    ExpiredStatusCode                         = -1;
+    public const string CompletedStatus                           = "COMPLETED";
+    public const int    CompletedStatusCode                       = 100;
 }
