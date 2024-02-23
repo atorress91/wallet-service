@@ -11,7 +11,7 @@ public class ResultsModel1BLevels
     public decimal PaymentAmount { get; set; }
     public decimal? Points { get; set; }
     public DateTime? CompletedAt { get; set; }
-    public DateTime? UserCreatedAt { get; set; }
+    public DateTime UserCreatedAt { get; set; }
     public int BinarySide { get; set; }
     
     public virtual ResultsModel1B ResultsModel1B { get; set; }

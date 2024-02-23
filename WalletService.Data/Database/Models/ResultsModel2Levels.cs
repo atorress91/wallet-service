@@ -15,7 +15,7 @@ public class ResultsModel2Levels
     public decimal? Points { get; set; }
     public DateTime? CompletedAt { get; set; }
     public int BinarySide { get; set; }
-    public DateTime? UserCreatedAt { get; set; }
+    public DateTime UserCreatedAt { get; set; }
     
     public virtual ResultsModel2 ResultsModel2 { get; set; }
 }

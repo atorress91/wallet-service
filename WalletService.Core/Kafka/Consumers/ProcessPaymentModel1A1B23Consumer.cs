@@ -68,7 +68,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         var listModel2Results = await resultsEcoPoolRepository!.GetResultsModel2ToPayment();
         var listModel3Results = await resultsEcoPoolRepository!.GetResultsMode3ToPayment();
         
-        var dictionaryPointsModelTotal = new Dictionary<int, double>();
+        var dictionaryPointsModelTotal = new Dictionary<int, UserGradingRequest>();
         
         var dictionaryModel1A = listModel1AResults.GroupBy(x
             => x.AffiliateId).ToDictionary(group => group.Key, group => group.ToList());
@@ -97,20 +97,47 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
 
         await CommissionsModel3(dictionaryModel3, walletRepository, dictionaryPointsModelTotal);
         
-        var model = await CommissionsModel2(dictionaryModel2, walletRepository, dictionaryPointsModelTotal, listGrading, gradings);
+        await CommissionsModel2(dictionaryModel2, walletRepository, dictionaryPointsModelTotal);
 
+        var model = CreateGradingList(dictionaryPointsModelTotal, listGrading, gradings);
         _ = Task.Run(async ()
             => await kafkaProducer!.ProduceAsync(KafkaTopics.ProcessModelFourFiveSixTopic, model.ToJsonString()));
 
             return true;
     }
-
-    private static async Task<ModelFourFiveSixMessage> CommissionsModel2(
-        Dictionary<int, List<ResultsModel2>>  dictionary,
-        IWalletRepository?                     walletRepository,
-        Dictionary<int, double>                dictionaryPointsModelTwo,
+    
+    
+        private static ModelFourFiveSixMessage CreateGradingList(
+        Dictionary<int, UserGradingRequest>                dictionaryPoints,
         ICollection<UserGradingRequest>        listGrading,
         ICollection<GradingDto>                gradings)
+    {
+        foreach (var (key, value) in dictionaryPoints)
+        {
+            AddOrUpdateGrading(
+                ref listGrading,
+                key,
+                value.AffiliateOwnerId,
+                value.UserName,
+                value.Commissions,
+                value.Points,
+                value.Side,
+                value.UserCreatedAt,
+                gradings);
+        }
+
+        var model = new ModelFourFiveSixMessage
+        {
+            Gradings     = gradings.Where(x => x.ScopeLevel >= 1).ToList(),
+            UserGradings = listGrading.Where(x => x.Grading is { ScopeLevel: >= 1 }).ToList()
+        };
+        return model;
+    }
+
+    private static async Task CommissionsModel2(
+        Dictionary<int, List<ResultsModel2>> dictionary,
+        IWalletRepository?                   walletRepository,
+        Dictionary<int, UserGradingRequest>  dictionaryPointsModelTwo)
     {
         foreach (var (key, listPoolsPerUser) in dictionary)
         {
@@ -135,22 +162,29 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
                 if (ecoPoolLevelsList.Any(x => x.CompletedAt != null))
                     continue;
 
-                var    userNameLevel      = ecoPoolLevelsList.First().AffiliateName;
-                var    level              = ecoPoolLevelsList.First().Level;
-                var    side               = ecoPoolLevelsList.First().BinarySide;
-                var    userCreatedAt      = ecoPoolLevelsList.First().UserCreatedAt ?? DateTime.Now;
-                var    globalPaymentLevel = (double)ecoPoolLevelsList.Sum(x => x.PaymentAmount);
-                double globalCommissionLevel;
-
-                if (dictionaryPointsModelTwo.Any(x => x.Key == userLevel))
-                    globalCommissionLevel = (double)ecoPoolLevelsList.Sum(x => x.CommisionAmount) + dictionaryPointsModelTwo[userLevel];
-                else
-                    globalCommissionLevel = (double)ecoPoolLevelsList.Sum(x => x.CommisionAmount);
-
-                var globalPointsLevel = (double)ecoPoolLevelsList.Sum(x => x.Points)!;
+                var userNameLevel      = ecoPoolLevelsList.First().AffiliateName;
+                var level              = ecoPoolLevelsList.First().Level;
+                var globalPaymentLevel = (double)ecoPoolLevelsList.Sum(x => x.PaymentAmount);
 
                 if (walletRepository is null || globalPaymentLevel is 0)
                     continue;
+                
+                if (dictionaryPointsModelTwo.ContainsKey(userLevel))
+                {
+                    dictionaryPointsModelTwo[userLevel].Points      +=  globalPaymentLevel;
+                    dictionaryPointsModelTwo[userLevel].Commissions += globalPaymentLevel;
+                }
+                else
+                    dictionaryPointsModelTwo.Add(userLevel, new UserGradingRequest()
+                    {
+                        Commissions      = globalPaymentLevel,
+                        Points           = globalPaymentLevel,
+                        AffiliateId      = userLevel,
+                        Side             = ecoPoolLevelsList.First().BinarySide,
+                        AffiliateOwnerId = key,
+                        UserName         = ecoPoolLevelsList.First().AffiliateName,
+                        UserCreatedAt    = ecoPoolLevelsList.First().UserCreatedAt
+                    });
 
                 await CreateCreditPayment(
                     walletRepository,
@@ -159,27 +193,16 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
                     globalPaymentLevel,
                     string.Format(Constants.CommissionModelThreeDescription, userName, level),
                     WalletConceptType.pool_commission.ToString());
-
-                AddOrUpdateGrading(ref listGrading, userLevel, key, userNameLevel, globalCommissionLevel, globalPointsLevel, side,
-                    userCreatedAt,
-                    gradings);
             }
         }
-
-        var model = new ModelFourFiveSixMessage
-        {
-            Gradings     = gradings.Where(x => x.Id > 1).ToList(),
-            UserGradings = listGrading.Where(x => x.Grading is { Id: > 1 }).ToList()
-        };
-        return model;
     }
 
     private static async Task CommissionsModel3(
-        Dictionary<int, List<ResultsModel3>> dictionaryModelTwo,
-        IWalletRepository?                     walletRepository,
-        Dictionary<int, double>                dictionaryPointsModelTwo)
+        Dictionary<int, List<ResultsModel3>> dictionaryModelT3,
+        IWalletRepository?                   walletRepository,
+        Dictionary<int, UserGradingRequest>  dictionaryPointsModelTwo)
     {
-        foreach (var (key, listPoolsPerUser) in dictionaryModelTwo)
+        foreach (var (key, listPoolsPerUser) in dictionaryModelT3)
         {
 
             var globalPayment = (double)listPoolsPerUser.Sum(x => x.PaymentAmount);
@@ -199,6 +222,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
 
             foreach (var (userLevel, ecoPoolLevelsList) in dictionaryPerLevels)
             {
+
                 if (ecoPoolLevelsList.Any(x => x.CompletedAt != null))
                     continue;
 
@@ -208,11 +232,23 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
 
                 if (walletRepository is null || globalPaymentLevel is 0)
                     continue;
-
+                
                 if (dictionaryPointsModelTwo.ContainsKey(userLevel))
-                    dictionaryPointsModelTwo[userLevel] += globalPaymentLevel;
+                {
+                    dictionaryPointsModelTwo[userLevel].Points      =  globalPaymentLevel;
+                    dictionaryPointsModelTwo[userLevel].Commissions += globalPaymentLevel;
+                }
                 else
-                    dictionaryPointsModelTwo.Add(userLevel, globalPaymentLevel);
+                    dictionaryPointsModelTwo.Add(userLevel, new UserGradingRequest()
+                    {
+                        Commissions      = globalPaymentLevel,
+                        Points           = globalPaymentLevel,
+                        AffiliateId      = userLevel,
+                        Side             = ecoPoolLevelsList.First().BinarySide,
+                        AffiliateOwnerId = key,
+                        UserName         = ecoPoolLevelsList.First().AffiliateName,
+                        UserCreatedAt    = ecoPoolLevelsList.First().UserCreatedAt
+                    });
 
                 await CreateCreditPayment(
                     walletRepository,
@@ -228,11 +264,10 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         Dictionary<int, List<ResultsModel1A>> dictionaryModel1A,
         IWalletModel1ARepository?             walletRepository1A,
         IWalletRepository?                    walletRepository,
-        Dictionary<int, double>               dictionaryPointsModel1A)
+        Dictionary<int, UserGradingRequest>   dictionaryPointsModel1A)
     {
         foreach (var (key, listPoolsPerUser) in dictionaryModel1A)
         {
-
             var globalPayment = (double)listPoolsPerUser.Sum(x => x.PaymentAmount);
             var userName      = listPoolsPerUser.First().AffiliateName;
             if (walletRepository is not null && globalPayment is not 0)
@@ -250,6 +285,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
 
             foreach (var (userLevel, ecoPoolLevelsList) in dictionaryPerLevels)
             {
+
                 if (ecoPoolLevelsList.Any(x => x.CompletedAt != null))
                     continue;
 
@@ -261,9 +297,21 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
                     continue;
 
                 if (dictionaryPointsModel1A.ContainsKey(userLevel))
-                    dictionaryPointsModel1A[userLevel] += globalPaymentLevel;
+                {
+                    dictionaryPointsModel1A[userLevel].Points = globalPaymentLevel;
+                    dictionaryPointsModel1A[userLevel].Commissions += globalPaymentLevel;
+                }
                 else
-                    dictionaryPointsModel1A.Add(userLevel, globalPaymentLevel);
+                    dictionaryPointsModel1A.Add(userLevel, new UserGradingRequest()
+                    {
+                        Commissions = globalPaymentLevel,
+                        Points = globalPaymentLevel,
+                        AffiliateId = userLevel,
+                        Side = ecoPoolLevelsList.First().BinarySide,
+                        AffiliateOwnerId = key,
+                        UserName = ecoPoolLevelsList.First().AffiliateName,
+                        UserCreatedAt = ecoPoolLevelsList.First().UserCreatedAt
+                    });
 
                 await CreateCreditPayment(
                     walletRepository,
@@ -279,11 +327,11 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         Dictionary<int, List<ResultsModel1B>> dictionaryModel1B,
         IWalletModel1BRepository?             walletRepository1B,
         IWalletRepository?                    walletRepository,
-        Dictionary<int, double>               dictionaryPointsModel1B)
+        Dictionary<int, UserGradingRequest>   dictionaryPointsModel1B)
     {
         foreach (var (key, listPoolsPerUser) in dictionaryModel1B)
         {
-
+            
             var globalPayment = (double)listPoolsPerUser.Sum(x => x.PaymentAmount);
             var userName      = listPoolsPerUser.First().AffiliateName;
             if (walletRepository is not null && globalPayment is not 0)
@@ -301,6 +349,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
 
             foreach (var (userLevel, ecoPoolLevelsList) in dictionaryPerLevels)
             {
+
                 if (ecoPoolLevelsList.Any(x => x.CompletedAt != null))
                     continue;
 
@@ -312,10 +361,22 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
                     continue;
 
                 if (dictionaryPointsModel1B.ContainsKey(userLevel))
-                    dictionaryPointsModel1B[userLevel] += globalPaymentLevel;
+                {
+                    dictionaryPointsModel1B[userLevel].Points      =  globalPaymentLevel;
+                    dictionaryPointsModel1B[userLevel].Commissions += globalPaymentLevel;
+                }
                 else
-                    dictionaryPointsModel1B.Add(userLevel, globalPaymentLevel);
-
+                    dictionaryPointsModel1B.Add(userLevel, new UserGradingRequest()
+                    {
+                        Commissions      = globalPaymentLevel,
+                        Points           = globalPaymentLevel,
+                        AffiliateId      = userLevel,
+                        Side             = ecoPoolLevelsList.First().BinarySide,
+                        AffiliateOwnerId = key,
+                        UserName         = ecoPoolLevelsList.First().AffiliateName,
+                        UserCreatedAt    = ecoPoolLevelsList.First().UserCreatedAt
+                    });
+                
                 await CreateCreditPayment(
                     walletRepository,
                     userLevel,
@@ -341,8 +402,8 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         var userGrading = listGrading.FirstOrDefault(x => x.AffiliateId == userLevel);
         if (userGrading is not null)
         {
-            userGrading.Points      += points;
-            userGrading.Commissions += globalPaymentLevel;
+            userGrading.Points      = points;
+            userGrading.Commissions = globalPaymentLevel;
         }
         else
         {
@@ -361,11 +422,15 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
 
         if (gradings is null)
             return;
-        gradings = gradings.Where(x => x.Id != 1).ToList();
+        gradings = gradings.Where(x => x.ScopeLevel >= 1).ToList();
 
         var gradingTempPoints = gradings.OrderByDescending(x
-            => x.ScopeLevel).FirstOrDefault(x => x.VolumePoints < userGrading.Commissions);
+            => x.ScopeLevel).FirstOrDefault(x => x.VolumePoints <= userGrading.Commissions);
 
+        if (userGrading.AffiliateId == 1316)
+        {
+            Console.WriteLine("here");
+        }
         if (gradingTempPoints is not null)
             userGrading.Grading = gradingTempPoints;
     }
