@@ -78,6 +78,8 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                 leaderBoardModel6,
                 treeUsersInformation);
 
+            
+            
             await LeaderBoardModelFiveProcess(leaderBoardModel5, accountServiceAdapter, walletRepository!, model.Gradings);
             await LeaderBoardModelSixProcess(leaderBoardModel6, accountServiceAdapter, walletRepository!, model.Gradings);
 
@@ -174,22 +176,21 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         var userDictionary = listUsersGraded.ToDictionary(x => x.AffiliateId, _ => 0m);
         foreach (var item in listUsersGraded)
         {
-            if (item.Grading!.ScopeLevel >= Constants.CustomerModel5Scope)
+            if (item.Grading!.ScopeLevel >= 1)
             {
-                var model4Grading = model.Gradings.First(x => x.ScopeLevel == Constants.CustomerModel4Scope[2]);
                 if (walletRepository is not null)
                     await CreateDebitPayment(
                         walletRepository,
                         item.AffiliateId,
                         item.UserName,
-                        model4Grading.PersonalPurchases,
-                        string.Format(Constants.ConceptBinaryPayment, model4Grading.PersonalPurchases, model4Grading.Name),
+                        item.Grading.PersonalPurchases,
+                        string.Format(Constants.ConceptBinaryPayment, item.Grading.PersonalPurchases, item.Grading.Name),
                         WalletConceptType.model_four_payment.ToString());
 
-                userDictionary[item.AffiliateId] = model4Grading.PurchasesNetwork;
+                userDictionary[item.AffiliateId] = item.Grading.PurchasesNetwork;
                 
                 var description = item.Grading!.ScopeLevel > Constants.CustomerModel5Scope ? Constants.ConceptModelSixPayment : Constants.ConceptModelFivePayment;
-                if (walletRepository is not null)
+                if (walletRepository is not null && item.Grading!.ScopeLevel >= Constants.CustomerModel5Scope)
                     await CreateDebitPayment(
                         walletRepository,
                         item.AffiliateId,
@@ -198,7 +199,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                         string.Format(description, item.Grading.PersonalPurchases, item.Grading.Name),
                         WalletConceptType.model_five_payment.ToString());
                 
-                // await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
+                await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
             }
             else
             {
@@ -213,7 +214,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                     );
                 userDictionary[item.AffiliateId] = item.Grading.PurchasesNetwork;
                 
-                // await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
+                await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
             }
         }
 
@@ -239,7 +240,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         if (string.IsNullOrEmpty(responseCondition.Content))
             return;
         
-        userIds = responseCondition.Content.ToJsonObject<int[]>();
+        var resultUserIds = responseCondition.Content.ToJsonObject<int[]>();
         
         foreach (var user in userDictionary)
         {
@@ -262,7 +263,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             {
                 payment        = leftPoints;
                 var points         = payment + (decimal)userInformation.Commissions;
-                var hasTwoChildren = userIds!.Contains(userInformation.AffiliateId);
+                var hasTwoChildren = resultUserIds!.Contains(userInformation.AffiliateId);
                 await CreditModel4(
                     walletRepository,
                     payment,
@@ -307,7 +308,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             {
                 payment                  = leftPoints < rightPoints ? leftPoints : rightPoints;
                 var points         = payment + (decimal)userInformation.Commissions;
-                var hasTwoChildren = userIds!.Contains(userInformation.AffiliateId);
+                var hasTwoChildren = resultUserIds!.Contains(userInformation.AffiliateId);
                 await CreditModel4(
                     walletRepository,
                     payment,
@@ -429,8 +430,10 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         UserGradingRequest             userInformation,
         bool                           hasTwoChildren)
     {
+        hasTwoChildren = true;
         if (hasTwoChildren)
         {
+            
             await CreateCreditPayment(
                 walletRepository,
                 userInformation.AffiliateId,
@@ -458,7 +461,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         if (payment <= 0)
             return Task.CompletedTask;
         
-        return Task.CompletedTask;
+        // return Task.CompletedTask;
 
         var creditTransaction = new DebitTransactionRequest
         {
@@ -485,7 +488,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        return Task.CompletedTask;
+        // return Task.CompletedTask;
 
 
         var creditTransaction = new CreditTransactionRequest
