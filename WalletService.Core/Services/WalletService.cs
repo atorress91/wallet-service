@@ -229,13 +229,13 @@ public class WalletService : BaseService, IWalletService
         var debitTransaction = new WalletTransactionRequest
         {
             Debit             = amount,
-            Deferred          = Constants.None,
+            Deferred          = Constants.EmptyValue,
             Detail            = null,
             AffiliateId       = request.FromAffiliateId,
             AdminUserName     = Constants.AdminEcosystemUserName,
             Status            = true,
             UserId            = Constants.AdminUserId,
-            Credit            = Constants.None,
+            Credit            = Constants.EmptyValue,
             Concept           = $"{Constants.TransferForMembership} {request.ToUserName}",
             Support           = null!,
             Date              = today,
@@ -246,8 +246,8 @@ public class WalletService : BaseService, IWalletService
 
         var creditTransaction = new WalletTransactionRequest
         {
-            Debit             = Constants.None,
-            Deferred          = Constants.None,
+            Debit             = Constants.EmptyValue,
+            Deferred          = Constants.EmptyValue,
             Detail            = null,
             AffiliateId       = result.Data!.Id,
             AdminUserName     = Constants.AdminEcosystemUserName,
@@ -488,7 +488,7 @@ public class WalletService : BaseService, IWalletService
         {
             AffiliateId       = request.AffiliateId,
             AffiliateUserName = request.AffiliateUserName!,
-            PurchaseFor       = Constants.None,
+            PurchaseFor       = Constants.EmptyValue,
             Bank              = Constants.WalletBalance,
             PaymentMethod     = 0,
             SecretKey         = null,

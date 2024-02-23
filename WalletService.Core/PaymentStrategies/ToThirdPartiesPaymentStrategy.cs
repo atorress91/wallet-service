@@ -59,7 +59,7 @@ public class ToThirdPartiesPaymentStrategy : BaseService
 
         var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
 
-        if (result?.Data.Count == 0)
+        if (result?.Data.Count == Constants.EmptyValue)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
             var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
@@ -71,7 +71,7 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             result.Data.Add(productResponse!.Data);
         }
 
-        if (result?.Data == null)
+        if (result?.Data is null)
             return false;
 
         if (result.Data.Count != request.ProductsList.Count)
@@ -98,29 +98,29 @@ public class ToThirdPartiesPaymentStrategy : BaseService
                 AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
                 ProductName           = item.Name!,
                 ProductPrice          = item.SalePrice,
-                ProductPriceBtc       = 0,
+                ProductPriceBtc       = Constants.EmptyValue,
                 ProductIva            = item.Tax,
                 ProductQuantity       = product.Count,
                 ProductCommissionable = item.CommissionableValue,
                 BinaryPoints          = item.BinaryPoints,
                 ProductPoints         = item.ValuePoints,
-                ProductDiscount       = 0,
-                CombinationId         = 0,
+                ProductDiscount       = Constants.EmptyValue,
+                CombinationId         = Constants.EmptyValue,
                 ProductPack           = Convert.ToByte(item.ProductPacks),
                 BaseAmount            = item.BaseAmount,
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = 0
+                ProductStart          = Constants.EmptyValue
             };
 
             invoiceDetails.Add(invoiceDetail);
         }
 
-        if (debit == 0)
+        if (debit == Constants.EmptyValue)
             return false;
 
-        if (invoiceDetails.Count == 0)
+        if (invoiceDetails.Count == Constants.EmptyValue)
             return false;
 
         if (debit > balanceInfo.ReverseBalance.GetValueOrDefault())
@@ -129,13 +129,13 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         var debitTransaction = new WalletTransactionRequest
         {
             Debit             = debit,
-            Deferred          = Constants.None,
+            Deferred          = Constants.EmptyValue,
             Detail            = null,
             AffiliateId       = request.AffiliateId,
             AdminUserName     = Constants.AdminEcosystemUserName,
             Status            = true,
             UserId            = Constants.AdminUserId,
-            Credit            = Constants.None,
+            Credit            = Constants.EmptyValue,
             Concept           = "Transferencia de saldo revertido al afiliado "+ purchaseFor!.UserName,
             Support           = null!,
             Date              = today,
@@ -146,8 +146,8 @@ public class ToThirdPartiesPaymentStrategy : BaseService
 
         var creditTransaction = new WalletTransactionRequest
         {
-            Debit             = Constants.None,
-            Deferred          = Constants.None,
+            Debit             = Constants.EmptyValue,
+            Deferred          = Constants.EmptyValue,
             Detail            = null,
             AffiliateId       = request.PurchaseFor,
             AdminUserName     = Constants.AdminEcosystemUserName,
@@ -182,11 +182,11 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             Bank              = request.Bank,
             PaymentMethod     = Constants.ReverseBalance,
             Origin            = origin,
-            Level             = 0,
+            Level             = Constants.EmptyValue,
             AffiliateUserName = purchaseFor.UserName!,
             AdminUserName     = Constants.AdminEcosystemUserName,
             ReceiptNumber     = request.ReceiptNumber,
-            Type              = 0,
+            Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
         };
@@ -212,7 +212,7 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             allPdfData[pdfDataEntry.Key] = pdfDataEntry.Value;
         }
 
-        if (invoicePdf.Length != 0)
+        if (invoicePdf.Length != Constants.EmptyValue)
         {
             await _brevoEmailService.SendEmailPurchaseConfirm(purchaseFor, allPdfData, spResponse);
         }
@@ -230,8 +230,8 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         var response = new BalanceInformationDto
         {
             AvailableBalance  = availableBalance,
-            ReverseBalance    = reverseBalance ?? 0,
-            TotalAcquisitions = totalAcquisitions ?? 0
+            ReverseBalance    = reverseBalance ?? Constants.EmptyValue,
+            TotalAcquisitions = totalAcquisitions ?? Constants.EmptyValue
         };
 
         if (amountRequests == 0m && response.ReverseBalance == 0m) return response;

@@ -27,7 +27,7 @@ public class PagaditoController : BaseController
     public async Task<IActionResult> HandleWebhook()
     {
         var headers = Request.Headers;
-        
+
         Request.EnableBuffering();
         string requestBody;
         using (var reader = new StreamReader(Request.Body, leaveOpen: true))
@@ -35,18 +35,9 @@ public class PagaditoController : BaseController
             requestBody = await reader.ReadToEndAsync();
         }
         Request.Body.Position = 0;
-        
+
         var isSignatureValid = await _pagaditoService.VerifySignature(headers, requestBody);
 
-        if (!isSignatureValid)
-        {
-            return BadRequest("The request is not valid.");
-        }
-        
-        var request = Newtonsoft.Json.JsonConvert.DeserializeObject<WebHookRequest>(requestBody);
-
-        var isPurchaseProcessed = await _pagaditoService.ProcessPurchase(request);
-
-        return isPurchaseProcessed ? Ok() : BadRequest("The purchase could not be processed.");
+        return isSignatureValid ? Ok() : BadRequest("The request is not valid or the purchase could not be processed.");
     }
 }
