@@ -86,7 +86,8 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
 
     public Task<IRestResponse> GetTreeModel4(Dictionary<int, decimal>       dictionary)
     {
-        return Post($"/leaderboard/model4/getResultTree/", dictionary.ToJsonString());
+        var json = dictionary.ToJsonString();
+        return Post($"/leaderboard/model4/getResultTree/", json);
     }
     
     public Task<IRestResponse> AddTreeModel5(IEnumerable<LeaderBoardModel5> leaderBoard)
