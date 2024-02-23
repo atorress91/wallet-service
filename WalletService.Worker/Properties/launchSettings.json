@@ -3,7 +3,7 @@
     "WalletService.Worker": {
       "commandName": "Project",
       "environmentVariables": {
-        "DOTNET_ENVIRONMENT": "production"
+        "DOTNET_ENVIRONMENT": "development"
       },
       "dotnetRunMessages": true
     },
