@@ -176,6 +176,7 @@ public static class IocExtensionApp
         services.AddScoped<IWireTransferStrategy,WireTransferStrategy>();
         services.AddScoped<IBalancePaymentStrategyModel1A,BalancePaymentStrategy1A>();
         services.AddScoped<IBalancePaymentStrategyModel1B,BalancePaymentStrategy1B>();
+        services.AddScoped<IPagaditoPaymentStrategy, PagaditoPaymentStrategy>();
     }
 
     private static void InjectServices(IServiceCollection services)
