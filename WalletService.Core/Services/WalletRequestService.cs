@@ -113,7 +113,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
             AttentionDate = null,
             OrderNumber   = CommonExtensions.GenerateOrderNumber(request.AffiliateId),
             Type          = WalletRequestType.withdrawal_request.ToString(),
-            InvoiceNumber = Constants.None
+            InvoiceNumber = Constants.EmptyValue
         };
 
         walletRequest = await _walletRequestRepository.CreateWalletRequestAsync(walletRequest);
@@ -306,13 +306,13 @@ public class WalletRequestService : BaseService, IWalletRequestService
                     AffiliateUserName = user.UserName,
                     AdminUserName     = Constants.AdminEcosystemUserName,
                     UserId            = Constants.AdminUserId,
-                    Credit            = Constants.None,
+                    Credit            = Constants.EmptyValue,
                     Debit             = Convert.ToDouble(correspondingRequest.Amount),
-                    Deferred          = Constants.None,
+                    Deferred          = Constants.EmptyValue,
                     Status            = true,
                     Concept           = Constants.WithdrawalBalance,
                     ConceptType       = WalletConceptType.wallet_withdrawal_request.ToString(),
-                    Support           = Constants.None,
+                    Support           = Constants.EmptyValue,
                     Date              = today,
                     Compression       = false,
                     Detail            = null,

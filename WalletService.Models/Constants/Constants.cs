@@ -28,7 +28,7 @@ public static class Constants
     public const string Pagadito                              = "Pagadito";
     public const int    Batches                               = 1000;
     public const string WithdrawalBalance                     = "Retiro de saldo";
-    public const int    None                                  = 0;
+    public const int    EmptyValue                                  = 0;
     public const string Membership                            = "Membresía";
     public const string TransferForMembership                 = "Transferencia para membresía al afiliado";
     public const string TransferToMembership                  = "Transferencia para membresía del afiliado";

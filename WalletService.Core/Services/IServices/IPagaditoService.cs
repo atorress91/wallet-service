@@ -7,5 +7,5 @@ public interface IPagaditoService
 {
     Task<string?> CreateTransaction(CreatePagaditoTransactionRequest request);
     Task<bool> VerifySignature(IHeaderDictionary headers, string requestBody);
-    Task<bool> ProcessPurchase(WebHookRequest? request);
+    Task<bool> UpdateTransactionStatus(WebHookRequest? request);
 }
