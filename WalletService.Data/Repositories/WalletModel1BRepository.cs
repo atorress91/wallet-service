@@ -490,6 +490,12 @@ public class WalletModel1BRepository : BaseRepository, IWalletModel1BRepository
             TypeName = "dbo.InvoicesDetailsType"
         });
     }
+    
+    public Task<double> GetTotalCommissionsPaidBalance(int affiliateId)
+    {
+        return Context.WalletsModel1B.Where(x => x.AffiliateId == affiliateId && x.Credit > 0)
+            .SumAsync(s => s.Credit);
+    }
 
     
     public Task<InvoicesSpResponse?> DebitServiceBalanceEcoPoolTransactionSp(DebitTransactionRequest request)

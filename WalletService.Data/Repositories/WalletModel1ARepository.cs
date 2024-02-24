@@ -462,6 +462,12 @@ public class WalletModel1ARepository : BaseRepository, IWalletModel1ARepository
             .SumAsync();
     }
 
+    public Task<double> GetTotalCommissionsPaidBalance(int affiliateId)
+    {
+        return Context.WalletsModel1A.Where(x => x.AffiliateId == affiliateId && x.Credit > 0)
+            .SumAsync(s => s.Credit);
+    }
+
     public async Task<InvoicesSpResponse?> DebitServiceBalanceTransaction(DebitTransactionRequest request)
     {
         try
