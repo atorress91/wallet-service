@@ -16,7 +16,8 @@ public interface IWalletModel1ARepository
     Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId);
     Task<decimal?> GetReverseBalanceByAffiliateId(int    affiliateId);
     
-    Task<decimal?> GetTotalServiceBalance(int affiliateId);
+    Task<decimal?> GetTotalServiceBalance(int       affiliateId);
+    Task<double> GetTotalCommissionsPaidBalance(int affiliateId);
     
     
     Task<InvoicesSpResponse?> DebitServiceBalanceTransaction(DebitTransactionRequest request);
