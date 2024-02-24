@@ -21,18 +21,19 @@ public class WalletModel1BService : BaseService, IWalletModel1BService
 
     public async Task<BalanceInformationModel1BDto> GetBalanceInformationByAffiliateId(int affiliateId)
     {
-        var availableBalance = await _walletModel1BRepository.GetAvailableBalanceByAffiliateId(affiliateId);
-        var totalAcquisitions = await _walletModel1BRepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
-        var reverseBalance = await _walletModel1BRepository.GetReverseBalanceByAffiliateId(affiliateId);
-        var serviceBalance = await _walletModel1BRepository.GetTotalServiceBalance(affiliateId);
+        var availableBalance     = await _walletModel1BRepository.GetAvailableBalanceByAffiliateId(affiliateId);
+        var totalAcquisitions    = await _walletModel1BRepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
+        var reverseBalance       = await _walletModel1BRepository.GetReverseBalanceByAffiliateId(affiliateId);
+        var serviceBalance       = await _walletModel1BRepository.GetTotalServiceBalance(affiliateId);
+        var totalCommissionsPaid = await _walletModel1BRepository.GetTotalCommissionsPaidBalance(affiliateId);
 
         var response = new BalanceInformationModel1BDto
         {
-            AvailableBalance = availableBalance,
-            ReverseBalance = reverseBalance ?? 0,
-            TotalAcquisitions = totalAcquisitions ?? 0,
-            TotalCommissionsPaid = 0,
-            ServiceBalance = serviceBalance ?? 0,
+            AvailableBalance     = availableBalance,
+            ReverseBalance       = reverseBalance ?? 0,
+            TotalAcquisitions    = totalAcquisitions ?? 0,
+            TotalCommissionsPaid = totalCommissionsPaid,
+            ServiceBalance       = serviceBalance ?? 0,
         };
 
         if (response.ReverseBalance == 0m) return response;

@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Text;
+using AutoMapper;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Repositories.IRepositories;
@@ -21,17 +22,18 @@ public class WalletModel1AService : BaseService, IWalletModel1AService
 
     public async Task<BalanceInformationModel1ADto> GetBalanceInformationByAffiliateId(int affiliateId)
     {
-        var availableBalance  = await _walletModel1ARepository.GetAvailableBalanceByAffiliateId(affiliateId);
-        var totalAcquisitions = await _walletModel1ARepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
-        var reverseBalance    = await _walletModel1ARepository.GetReverseBalanceByAffiliateId(affiliateId);
-        var serviceBalance    = await _walletModel1ARepository.GetTotalServiceBalance(affiliateId);
+        var availableBalance     = await _walletModel1ARepository.GetAvailableBalanceByAffiliateId(affiliateId);
+        var totalAcquisitions    = await _walletModel1ARepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
+        var reverseBalance       = await _walletModel1ARepository.GetReverseBalanceByAffiliateId(affiliateId);
+        var serviceBalance       = await _walletModel1ARepository.GetTotalServiceBalance(affiliateId);
+        var totalCommissionsPaid = await _walletModel1ARepository.GetTotalCommissionsPaidBalance(affiliateId);
 
         var response = new BalanceInformationModel1ADto
         {
             AvailableBalance     = availableBalance,
             ReverseBalance       = reverseBalance ?? 0,
             TotalAcquisitions    = totalAcquisitions ?? 0,
-            TotalCommissionsPaid = 0,
+            TotalCommissionsPaid = totalCommissionsPaid,
             ServiceBalance       = serviceBalance ?? 0
         };
 
