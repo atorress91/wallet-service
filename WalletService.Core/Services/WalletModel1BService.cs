@@ -32,7 +32,7 @@ public class WalletModel1BService : BaseService, IWalletModel1BService
             AvailableBalance     = availableBalance,
             ReverseBalance       = reverseBalance ?? 0,
             TotalAcquisitions    = totalAcquisitions ?? 0,
-            TotalCommissionsPaid = totalCommissionsPaid,
+            TotalCommissionsPaid = totalCommissionsPaid ?? 0,
             ServiceBalance       = serviceBalance ?? 0,
         };
 

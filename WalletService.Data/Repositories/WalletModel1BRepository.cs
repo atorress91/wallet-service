@@ -491,9 +491,10 @@ public class WalletModel1BRepository : BaseRepository, IWalletModel1BRepository
         });
     }
     
-    public Task<double> GetTotalCommissionsPaidBalance(int affiliateId)
+    public Task<decimal?> GetTotalCommissionsPaidBalance(int affiliateId)
     {
-        return Context.WalletsModel1B.Where(x => x.AffiliateId == affiliateId && x.Credit > 0)
+        return Context.WalletsServiceModel1B.Where(x 
+                => x.AffiliateId == affiliateId && x.Credit.HasValue && x.Credit > 0)
             .SumAsync(s => s.Credit);
     }
 
