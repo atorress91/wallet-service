@@ -1,5 +1,4 @@
-﻿using System.Text;
-using AutoMapper;
+﻿using AutoMapper;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Repositories.IRepositories;
@@ -33,7 +32,7 @@ public class WalletModel1AService : BaseService, IWalletModel1AService
             AvailableBalance     = availableBalance,
             ReverseBalance       = reverseBalance ?? 0,
             TotalAcquisitions    = totalAcquisitions ?? 0,
-            TotalCommissionsPaid = totalCommissionsPaid,
+            TotalCommissionsPaid = totalCommissionsPaid ?? 0,
             ServiceBalance       = serviceBalance ?? 0
         };
 

@@ -462,9 +462,9 @@ public class WalletModel1ARepository : BaseRepository, IWalletModel1ARepository
             .SumAsync();
     }
 
-    public Task<double> GetTotalCommissionsPaidBalance(int affiliateId)
+    public Task<decimal?> GetTotalCommissionsPaidBalance(int affiliateId)
     {
-        return Context.WalletsModel1A.Where(x => x.AffiliateId == affiliateId && x.Credit > 0)
+        return Context.WalletsServiceModel1A.Where(x => x.AffiliateId == affiliateId && x.Credit.HasValue && x.Credit > 0)
             .SumAsync(s => s.Credit);
     }
 
