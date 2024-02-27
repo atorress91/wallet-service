@@ -214,6 +214,7 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
         if (result.Data.Count != request.ProductsList.Count)
             return false;
 
+        var isAcademy = false;
         foreach (var item in result.Data)
         {
             var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
@@ -221,6 +222,7 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
             debit          += (item.SalePrice * product!.Count) * (1 + (tax / 100));
             points         += item.BinaryPoints * product.Count;
             commissionable += item.CommissionableValue * product.Count;
+            isAcademy     =  item.PaymentGroup == Constants.TradingAcademyGroup || isAcademy;
             if (item.CategoryId == 2)
             {
                 origin = 1;
@@ -267,8 +269,8 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
             Points            = points,
             Concept           = Constants.EcoPoolProductCategory,
             Commissionable    = commissionable,
-            Bank              = Constants.CoinPayments,
-            PaymentMethod     = Constants.CoinPayments,
+            Bank              = Constants.Pagadito,
+            PaymentMethod     = Constants.Pagadito,
             Origin            = origin,
             Level             = Constants.EmptyValue,
             AffiliateUserName = request.AffiliateUserName,
@@ -290,7 +292,7 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
 
         allPdfData["Invoice.pdf"] = invoicePdf;
 
-        if (!hasCourse && invoicePdf.Length != Constants.EmptyValue)
+        if (!hasCourse && invoicePdf.Length != Constants.EmptyValue && isAcademy)
         {
             var pdfContents = await GetPdfContentForTradingAcademy();
             foreach (var pdf in pdfContents)

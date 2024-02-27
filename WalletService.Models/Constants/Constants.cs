@@ -115,4 +115,5 @@ public static class Constants
     public const int    ExpiredStatusCode                         = -1;
     public const string CompletedStatus                           = "COMPLETED";
     public const int    CompletedStatusCode                       = 100;
+    public const int    TradingAcademyGroup                       = 6;
 }

@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Globalization;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
@@ -312,8 +313,10 @@ public class PagaditoService : BaseService, IPagaditoService
         else if (purchaseRequest.Resource.Status == Constants.CompletedStatus && existingTransaction.Acredited == false)
         {
             existingTransaction.Status = Constants.CompletedStatusCode;
-            existingTransaction.AmountReceived = decimal.Parse(purchaseRequest.Resource.Amount!.ToString()!);
+            decimal.TryParse(purchaseRequest.Resource.Amount!.Total!, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal amountReceived);
+            existingTransaction.AmountReceived = amountReceived;
             existingTransaction.Acredited = true;
+            existingTransaction.Reference = purchaseRequest.Resource.Reference;
             await ProcessPaymentTransaction(existingTransaction);
             _logger.LogInformation($"[PagaditoService] | UpdateTransactionStatus | Transaction processed");
         }
