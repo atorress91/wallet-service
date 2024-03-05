@@ -970,7 +970,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         var result = await Context.InvoicesDetails.Include(x => x.Invoice)
             .Where(x => x.ProductPack && x.Invoice.AffiliateId == affiliateId && x.Invoice.Status == true &&
-                        x.Invoice.CancellationDate == null).ToListAsync();
+                        x.Invoice.CancellationDate == null && x.PaymentGroupId == 2).ToListAsync();
 
         if (result is { Count: 0 })
             return false;
