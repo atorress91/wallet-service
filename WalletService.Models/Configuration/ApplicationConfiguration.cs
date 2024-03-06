@@ -15,6 +15,8 @@ public class ApplicationConfiguration
     public SendingBlue? SendingBlue { get; set; }
     
     public CoinPay? CoinPay { get; set; }
+    
+    public Pagadito? Pagadito { get; set; }
 }
 
 public class ConnectionStrings
@@ -78,4 +80,11 @@ public class CoinPay
     public string? SecretKey { get; set; }
     public string? InitialToken { get; set; }
     public int UserId { get; set; }
+}
+
+public class Pagadito
+{
+    public string? Url { get; set; }
+    public string? Uid { get; set; }
+    public string? Wsk { get; set; }
 }

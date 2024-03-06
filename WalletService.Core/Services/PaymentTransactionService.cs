@@ -44,8 +44,8 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
         var transaction = Mapper.Map<PaymentTransaction>(request);
 
         transaction.Acredited      = false;
-        transaction.Status         = 0;
-        transaction.AmountReceived = 0;
+        transaction.Status         = Constants.EmptyValue;
+        transaction.AmountReceived = Constants.EmptyValue;
         transaction.PaymentMethod  = "wire_transfer";
 
         var response = await _paymentTransactionRepository.CreateCoinPaymentTransaction(transaction);
@@ -148,9 +148,9 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
         {
             AffiliateId       = payment.AffiliateId,
             AffiliateUserName = request.UserName,
-            PurchaseFor       = Constants.None,
+            PurchaseFor       = Constants.EmptyValue,
             Bank              = Constants.WireTransfer,
-            PaymentMethod     = Constants.None,
+            PaymentMethod     = Constants.EmptyValue,
             SecretKey         = null,
             ReceiptNumber     = payment.IdTransaction,
             ProductsList = products?.Select(p => new ProductsRequests

@@ -103,29 +103,29 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
                 AccumMinPurchase = Convert.ToByte(item.AcumCompMin),
                 ProductName = item.Name!,
                 ProductPrice = item.SalePrice,
-                ProductPriceBtc = Constants.None,
+                ProductPriceBtc = Constants.EmptyValue,
                 ProductIva = item.Tax,
                 ProductQuantity = product.Count,
                 ProductCommissionable = item.CommissionableValue,
                 BinaryPoints = item.BinaryPoints,
                 ProductPoints = item.ValuePoints,
                 ProductDiscount = item.ProductDiscount,
-                CombinationId = Constants.None,
+                CombinationId = Constants.EmptyValue,
                 ProductPack = Convert.ToByte(item.ProductPacks),
                 BaseAmount = (item.BaseAmount * product.Count),
                 DailyPercentage = item.DailyPercentage,
                 WaitingDays = item.DaysWait,
                 DaysToPayQuantity = Constants.DaysToPayQuantity,
-                ProductStart = Constants.None,
+                ProductStart = Constants.EmptyValue,
             };
 
             invoiceDetails.Add(invoiceDetail);
         }
 
-        if (debit == 0)
+        if (debit == Constants.EmptyValue)
             return false;
 
-        if (invoiceDetails.Count == 0)
+        if (invoiceDetails.Count == Constants.EmptyValue)
             return false;
 
         if (debit > balanceInfo.ReverseBalance.GetValueOrDefault())
@@ -143,11 +143,11 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
             Bank = request.Bank,
             PaymentMethod = Constants.WalletModel1ABalance,
             Origin = origin,
-            Level = Constants.None,
+            Level = Constants.EmptyValue,
             AffiliateUserName = request.AffiliateUserName,
             AdminUserName = Constants.AdminEcosystemUserName,
             ReceiptNumber = request.ReceiptNumber,
-            Type = Constants.None,
+            Type = Constants.EmptyValue,
             SecretKey = request.SecretKey,
             invoices = invoiceDetails,
         };
@@ -172,7 +172,7 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
             allPdfData[pdfDataEntry.Key] = pdfDataEntry.Value;
         }
 
-        if (allPdfData.Count > 0)
+        if (allPdfData.Count > Constants.EmptyValue)
         {
             await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
         }
@@ -228,29 +228,29 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
                 AccumMinPurchase = Convert.ToByte(item.AcumCompMin),
                 ProductName = item.Name!,
                 ProductPrice = item.SalePrice,
-                ProductPriceBtc = Constants.None,
+                ProductPriceBtc = Constants.EmptyValue,
                 ProductIva = item.Tax,
                 ProductQuantity = product.Count,
                 ProductCommissionable = item.CommissionableValue,
                 BinaryPoints = item.BinaryPoints,
                 ProductPoints = item.ValuePoints,
                 ProductDiscount = item.ProductDiscount,
-                CombinationId = Constants.None,
+                CombinationId = Constants.EmptyValue,
                 ProductPack = Convert.ToByte(item.ProductPacks),
                 BaseAmount = (item.BaseAmount * product.Count),
                 DailyPercentage = item.DailyPercentage,
                 WaitingDays = item.DaysWait,
                 DaysToPayQuantity = Constants.DaysToPayQuantity,
-                ProductStart = Constants.None,
+                ProductStart = Constants.EmptyValue,
             };
 
             invoiceDetails.Add(invoiceDetail);
         }
 
-        if (debit == 0)
+        if (debit == Constants.EmptyValue)
             return false;
 
-        if (invoiceDetails.Count == 0)
+        if (invoiceDetails.Count == Constants.EmptyValue)
             return false;
 
         if (debit > balanceInfo.ServiceBalance.GetValueOrDefault())
@@ -268,11 +268,11 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
             Bank = Constants.ServiceBalanceModel1A,
             PaymentMethod = Constants.ServiceBalanceModel1A,
             Origin = origin,
-            Level = Constants.None,
+            Level = Constants.EmptyValue,
             AffiliateUserName = request.AffiliateUserName,
             AdminUserName = Constants.AdminEcosystemUserName,
             ReceiptNumber = request.ReceiptNumber,
-            Type = Constants.None,
+            Type = Constants.EmptyValue,
             SecretKey = request.SecretKey,
             invoices = invoiceDetails,
         };
@@ -297,7 +297,7 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
             allPdfData[pdfDataEntry.Key] = pdfDataEntry.Value;
         }
 
-        if (allPdfData.Count > 0)
+        if (allPdfData.Count > Constants.EmptyValue)
         {
             await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
         }

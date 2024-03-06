@@ -9,10 +9,9 @@ using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
 using WalletService.Utility.Extensions;
 using Constants = WalletService.Models.Constants.Constants;
-
 namespace WalletService.Core.PaymentStrategies;
 
-public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
+public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
 {
     private readonly IInvoiceRepository       _invoiceRepository;
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
@@ -21,7 +20,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
     private readonly IBrevoEmailService       _brevoEmailService;
     private readonly IWalletRepository        _walletRepository;
 
-    public CoinPaymentsPaymentStrategy(IInvoiceRepository invoiceRepository,     IInventoryServiceAdapter inventoryServiceAdapter,
+    public PagaditoPaymentStrategy(IInvoiceRepository invoiceRepository,     IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter                            accountServiceAdapter, IBrevoEmailService       brevoEmailService, IMediatorPdfService mediatorPdfService, IWalletRepository walletRepository)
     {
         _invoiceRepository       = invoiceRepository;
@@ -31,8 +30,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         _mediatorPdfService      = mediatorPdfService;
         _walletRepository        = walletRepository;
     }
-    
-    private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
+      private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
     {
         Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
 
@@ -73,7 +71,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
 
         var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
 
-        if (result?.Data.Count == Constants.EmptyValue)
+        if (result?.Data.Count == 0)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
             var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
@@ -126,7 +124,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = Constants.EmptyValue
+                ProductStart          = Constants.EmptyValue,
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -147,8 +145,8 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             Points            = points,
             Concept           = Constants.EcoPoolProductCategory,
             Commissionable    = commissionable,
-            Bank              = Constants.CoinPayments,
-            PaymentMethod     = Constants.CoinPayments,
+            Bank              = Constants.Pagadito,
+            PaymentMethod     = Constants.Pagadito,
             Origin            = origin,
             Level             = Constants.EmptyValue,
             AffiliateUserName = request.AffiliateUserName,
@@ -216,6 +214,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         if (result.Data.Count != request.ProductsList.Count)
             return false;
 
+        var isAcademy = false;
         foreach (var item in result.Data)
         {
             var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
@@ -223,6 +222,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             debit          += (item.SalePrice * product!.Count) * (1 + (tax / 100));
             points         += item.BinaryPoints * product.Count;
             commissionable += item.CommissionableValue * product.Count;
+            isAcademy     =  item.PaymentGroup == Constants.TradingAcademyGroup || isAcademy;
             if (item.CategoryId == 2)
             {
                 origin = 1;
@@ -248,7 +248,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = Constants.EmptyValue
+                ProductStart          = Constants.EmptyValue,
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -269,8 +269,8 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             Points            = points,
             Concept           = Constants.EcoPoolProductCategory,
             Commissionable    = commissionable,
-            Bank              = Constants.CoinPayments,
-            PaymentMethod     = Constants.CoinPayments,
+            Bank              = Constants.Pagadito,
+            PaymentMethod     = Constants.Pagadito,
             Origin            = origin,
             Level             = Constants.EmptyValue,
             AffiliateUserName = request.AffiliateUserName,
@@ -292,7 +292,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
 
         allPdfData["Invoice.pdf"] = invoicePdf;
 
-        if (!hasCourse && invoicePdf.Length != Constants.EmptyValue)
+        if (!hasCourse && invoicePdf.Length != Constants.EmptyValue && isAcademy)
         {
             var pdfContents = await GetPdfContentForTradingAcademy();
             foreach (var pdf in pdfContents)
@@ -381,8 +381,8 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             Points            = points,
             Concept           = Constants.Membership,
             Commissionable    = commissionable,
-            Bank              = Constants.CoinPayments,
-            PaymentMethod     = Constants.CoinPayments,
+            Bank              = Constants.Pagadito,
+            PaymentMethod     = Constants.Pagadito,
             Origin            = origin,
             Level             = Constants.EmptyValue,
             AffiliateUserName = request.AffiliateUserName,

@@ -267,6 +267,38 @@ public static class CommonExtensions
 
         return pdfContents;
     }
+    
+    public static uint Crc32(string input)
+    {
+        var table = new uint[256];
+        for (uint i = 0; i < 256; i++)
+        {
+            var temp = i;
+            for (var j = 0; j < 8; j++)
+            {
+                if ((temp & 1) == 1)
+                {
+                    temp = (temp >> 1) ^ 0xEDB88320;
+                }
+                else
+                {
+                    temp >>= 1;
+                }
+            }
+
+            table[i] = temp;
+        }
+
+        var bytes = Encoding.UTF8.GetBytes(input);
+        uint crc = 0xffffffff;
+        foreach (var b in bytes)
+        {
+            var index = (byte)((crc & 0xff) ^ b);
+            crc = (crc >> 8) ^ table[index];
+        }
+
+        return ~crc;
+    }
 
     #region ..Assigned..
 

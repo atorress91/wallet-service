@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using QuestPDF.Infrastructure;
 using WalletService.Core.Middlewares;
 using WalletService.Ioc;
@@ -7,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHealthChecks();
 builder.Services.IocAppInjectDependencies();
+
 
 QuestPDF.Settings.License = LicenseType.Community;
 
