@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+﻿using Newtonsoft.Json;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -48,14 +48,14 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
+        var result = responseList.Content.ToJsonObject<ProductsResponse>();
 
         if (result?.Data.Count == 0)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
             var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
 
-            var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
+            var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
             await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
 
@@ -180,7 +180,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         var firstProductId   = request.ProductsList.First().IdProduct;
         var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
 
-        var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
+        var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
         if (productResponse?.Data == null)
             return false;

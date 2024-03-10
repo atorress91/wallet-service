@@ -13,6 +13,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using NLog.Extensions.Logging;
 using WalletService.Core.Kafka.Producer;
 using WalletService.Core.Kafka.Topics;
@@ -100,22 +102,31 @@ public static class IocExtensionApp
         Console.WriteLine($"IocLoggingRegister -> nlog.{lowerCaseEnvironment}.config");
     }
 
-    private static void InjectControllersAndDocumentation(IServiceCollection services, int majorVersion = 1, int minorVersion = 0)
+    private static void InjectControllersAndDocumentation(IServiceCollection services, int majorVersion = 1,
+        int                                                                  minorVersion = 0)
     {
         services.AddResponseCompression(options =>
         {
             options.Providers.Add<GzipCompressionProvider>();
             options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "text/plain" });
         });
-
-        services.AddControllers().AddJsonOptions(options =>
-        {
-            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-            options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
-        });
-
+        services
+            .AddControllers()
+            .AddNewtonsoftJson(options =>
+            {
+                options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                options.SerializerSettings.DateFormatString      = "yyyy-MM-dd HH:mm:ss";
+                options.SerializerSettings.ContractResolver      = new DefaultContractResolver();
+            });
+        
         services.AddFluentValidationAutoValidation();
         services.AddFluentValidationClientsideAdapters();
+        services.AddApiVersioning(config =>
+        {
+            config.DefaultApiVersion                   = new ApiVersion(majorVersion, minorVersion);
+            config.AssumeDefaultVersionWhenUnspecified = true;
+        });
+        
         services.AddApiVersioning(config =>
         {
             config.DefaultApiVersion                   = new ApiVersion(majorVersion, minorVersion);

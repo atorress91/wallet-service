@@ -82,14 +82,14 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
+        var result = responseList.Content.ToJsonObject<ProductsResponse>();
 
         if (result?.Data.Count == 0)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
             var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
 
-            var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
+            var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
             await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
 
@@ -218,14 +218,14 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
+        var result = responseList.Content.ToJsonObject<ProductsResponse>();
 
         if (result?.Data.Count == 0)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
             var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
 
-            var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
+            var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
             await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
 
@@ -350,7 +350,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
+        var result = responseList.Content.ToJsonObject<ProductsResponse>();
 
         if (result?.Data == null)
             return false;
@@ -465,7 +465,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
+        var result = responseList.Content.ToJsonObject<ProductsResponse>();
 
         if (result?.Data == null)
             return false;
@@ -577,7 +577,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         var firstProductId   = request.ProductsList.First().IdProduct;
         var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
 
-        var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
+        var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
         if (productResponse?.Data == null)
             return false;

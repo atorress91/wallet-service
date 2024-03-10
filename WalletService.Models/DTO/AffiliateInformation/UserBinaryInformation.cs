@@ -1,28 +1,28 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace WalletService.Models.DTO.AffiliateInformation;
 
 public class UserBinaryInformation
 {
-    [JsonPropertyName("affiliateId")]
+    [JsonProperty("affiliateId")]
     public int UserId { get; set; }
 
-    [JsonPropertyName("leftVolume")] public decimal PointsLeft { get; set; }
+    [JsonProperty("leftVolume")] public decimal PointsLeft { get; set; }
 
-    [JsonPropertyName("rightVolume")] public decimal PointsRight { get; set; } 
+    [JsonProperty("rightVolume")] public decimal PointsRight { get; set; } 
 }
 
 public class UserBinaryResponse
 {
-    [JsonPropertyName("success")]
+    [JsonProperty("success")]
     public bool Success { get; set; }
     
-    [JsonPropertyName("data")]
+    [JsonProperty("data")]
     public List<UserBinaryInformation> Data { get; set; }
     
-    [JsonPropertyName("message")]
+    [JsonProperty("message")]
     public string Message { get; set; }
     
-    [JsonPropertyName("code")]
+    [JsonProperty("code")]
     public int Code { get; set; }
 }

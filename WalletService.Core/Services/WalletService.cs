@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using AutoMapper;
+﻿using AutoMapper;
+using Newtonsoft.Json;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -131,7 +131,7 @@ public class WalletService : BaseService, IWalletService
     public async Task<BalanceInformationAdminDto> GetBalanceInformationAdmin()
     {
         var responseAffiliates = await _accountServiceAdapter.GetTotalActiveMembers();
-        var response           = JsonSerializer.Deserialize<GetTotalActiveMembersResponse>(responseAffiliates.Content!);
+        var response           = responseAffiliates.Content!.ToJsonObject<GetTotalActiveMembersResponse>();
 
         var enabledAffiliates     = response!.Data;
         var walletProfit          = await _walletRepository.GetAvailableBalanceAdmin();
@@ -210,8 +210,8 @@ public class WalletService : BaseService, IWalletService
         if (string.IsNullOrEmpty(userInfo.Content))
             return false;
 
-        var result      = JsonSerializer.Deserialize<UserAffiliateResponse>(userInfo.Content!);
-        var userResult  = JsonSerializer.Deserialize<UserAffiliateResponse>(currentUser.Content!);
+        var result      = userInfo.Content!.ToJsonObject<UserAffiliateResponse>();
+        var userResult  = currentUser.Content!.ToJsonObject<UserAffiliateResponse>();
         var userBalance = await GetBalanceInformationByAffiliateId(request.FromAffiliateId);
 
         if (userResult?.Data?.VerificationCode != request.SecurityCode)
@@ -297,8 +297,8 @@ public class WalletService : BaseService, IWalletService
         if (string.IsNullOrEmpty(userInfo.Content))
             return new ServicesResponse { Success = false, Message = "Error", Code = 400 };
 
-        var currentUserResult = JsonSerializer.Deserialize<UserAffiliateResponse>(currentUser.Content!);
-        var result            = JsonSerializer.Deserialize<UserAffiliateResponse>(userInfo.Content!);
+        var currentUserResult = currentUser.Content!.ToJsonObject<UserAffiliateResponse>();
+        var result            = userInfo.Content!.ToJsonObject<UserAffiliateResponse>();
         var userBalance       = await GetBalanceInformationByAffiliateId(data.FromAffiliateId);
 
         if (currentUserResult?.Data?.VerificationCode != data.SecurityCode)
@@ -445,7 +445,7 @@ public class WalletService : BaseService, IWalletService
         if (networkResult.Content == null || !networkResult.Content.Any())
             return null;
 
-        var result = JsonSerializer.Deserialize<UserPersonalNetworkResponse>(networkResult.Content!);
+        var result =  networkResult.Content!.ToJsonObject<UserPersonalNetworkResponse>();
 
         if (result?.Data == null || !result.Data.Any())
             return null;

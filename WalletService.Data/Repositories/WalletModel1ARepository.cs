@@ -59,7 +59,7 @@ public class WalletModel1ARepository : BaseRepository, IWalletModel1ARepository
             await using var oReader    = await cmd.ExecuteReaderAsync();
             var             dd         = oReader.ToDynamicList();
             var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+            var             response   = jsonString.ToJsonObject<InvoicesSpResponse>();
 
 
             await sql.CloseAsync();
@@ -88,7 +88,7 @@ public class WalletModel1ARepository : BaseRepository, IWalletModel1ARepository
             await using var oReader    = await cmd.ExecuteReaderAsync();
             var             dd         = oReader.ToDynamicList();
             var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+            var             response   = jsonString.ToJsonObject<InvoicesSpResponse>();
 
 
             await sql.CloseAsync();
@@ -483,7 +483,7 @@ public class WalletModel1ARepository : BaseRepository, IWalletModel1ARepository
             await using var oReader    = await cmd.ExecuteReaderAsync();
             var             dd         = oReader.ToDynamicList();
             var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+            var             response   = jsonString.ToJsonObject<InvoicesSpResponse>();
 
 
             await sql.CloseAsync();
