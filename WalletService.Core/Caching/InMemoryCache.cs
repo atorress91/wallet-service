@@ -82,7 +82,5 @@ public class InMemoryCache : ICache
     }
 
     public Task<bool> KeyExists(string key)
-    {
-        return Task.FromResult(_memoryCache.TryGetValue(key, out _));
-    }
+        => Task.FromResult(_memoryCache.TryGetValue(key, out _));
 }

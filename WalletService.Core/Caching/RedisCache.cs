@@ -46,23 +46,38 @@ public class RedisCache : ICache
         return deserializeObject;
     }
 
-    public Task Delete(string key)
+    public async Task Delete(string key)
+        => await _db.KeyDeleteAsync(key);
+
+    public async Task<List<T?>> GetMultiple<T>(List<string> keys)
     {
-        throw new NotImplementedException();
+        var redisKeys = keys.Select(x => new RedisKey(x)).ToArray();
+        var data      = await _db.StringGetAsync(redisKeys);
+
+        if (data.Assigned())
+        {
+            return data
+                .Where(x => x.Assigned() && x.HasValue)
+                .Select(s => s.ToString().ToJsonObject<T>())
+                .ToList();
+        }
+
+        return new List<T?>();
     }
 
-    public Task<List<T?>> GetMultiple<T>(List<string> keys)
+    public async Task<T> Remember<T>(string key, TimeSpan? timeOut, Func<Task<T>> action)
     {
-        throw new NotImplementedException();
-    }
+        var value = await Get<T>(key);
 
-    public Task<T> Remember<T>(string key, TimeSpan? timeOut, Func<Task<T>> action)
-    {
-        throw new NotImplementedException();
+        if (value is null || value.NotAssigned())
+        {
+            value = await action();
+            await Set(key, value, timeOut);
+        }
+
+        return value;
     }
 
     public Task<bool> KeyExists(string key)
-    {
-        throw new NotImplementedException();
-    }
+        => _db.KeyDeleteAsync(new RedisKey(key));
 }
