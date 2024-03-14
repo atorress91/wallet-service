@@ -446,7 +446,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        return Task.CompletedTask;
+        // return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {
@@ -472,7 +472,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        return Task.CompletedTask;
+        // return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {
@@ -498,7 +498,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        return Task.CompletedTask;
+        // return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {
@@ -524,7 +524,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        return Task.CompletedTask;
+        // return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {
@@ -550,7 +550,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        return Task.CompletedTask;
+        // return Task.CompletedTask;
 
         var creditTransaction = new CreditTransactionRequest
         {

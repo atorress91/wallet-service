@@ -11,8 +11,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+using Newtonsoft.Json.Linq;
 using WalletService.Models.Enums;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace WalletService.Utility.Extensions;
 
@@ -48,15 +48,29 @@ public static class CommonExtensions
 
     #endregion
 
+
+    public static bool IsValidJson(this string value)
+    {
+        try
+        {
+            JToken.Parse(value);
+        }
+        catch
+        {
+            return false;
+        }
+        return true;
+    }
+
     public static T? ToJsonObject<T>(this string source)
-        => JsonSerializer.Deserialize<T>(source);
+        => JsonConvert.DeserializeObject<T>(source);
 
-    public static string ToJsonString(this object? source)
-        => JsonSerializer.Serialize(source);
+    public static string ToJsonString(this object source)
+        => JsonConvert.SerializeObject(source);
 
-    public static string ToJsonString(this object source, JsonSerializerOptions jsonSerializerSettings)
-        => JsonSerializer.Serialize(source, jsonSerializerSettings);
-
+    public static string ToJsonString(this object source, JsonSerializerSettings jsonSerializerSettings)
+        => JsonConvert.SerializeObject(source, jsonSerializerSettings);
+    
     public static IEnumerable<TResult> ZipThree<T1, T2, T3, TResult>(
         this IEnumerable<T1>      source,
         IEnumerable<T2>           second,
@@ -156,7 +170,7 @@ public static class CommonExtensions
         byte[] decryptedBytes = memoryStream.ToArray();
         string decryptedData  = Encoding.UTF8.GetString(decryptedBytes);
 
-        var objectDeserialize = JsonConvert.DeserializeObject<T>(decryptedData);
+        var objectDeserialize = decryptedData.ToJsonObject<T>();
 
         return objectDeserialize!;
     }

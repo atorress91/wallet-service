@@ -1,45 +1,45 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace WalletService.Models.Responses;
 
 
 public class GetConfigurationResponse
 {
-    [JsonPropertyName("success")]
+    [JsonProperty("success")]
     public bool Success { get; set; }
     
-    [JsonPropertyName("data")]
+    [JsonProperty("data")]
     public ProductConfigurationDto Data { get; set; }
     
-    [JsonPropertyName("message")]
+    [JsonProperty("message")]
     public string Message { get; set; }
     
-    [JsonPropertyName("code")]
+    [JsonProperty("code")]
     public int Code { get; set; }
 }
 
 public class ProductConfigurationDto
 {
-    [JsonPropertyName("activate_shipping_system")]
+    [JsonProperty("activate_shipping_system")]
     public bool ActivateShippingSystem { get; set; }
 
-    [JsonPropertyName("activate_passive_payments_module")]
+    [JsonProperty("activate_passive_payments_module")]
     public bool ActivatePassivePaymentsModule { get; set; }
 
-    [JsonPropertyName("activate_public_shop")]
+    [JsonProperty("activate_public_shop")]
     public bool ActivatePublicShop { get; set; }
 
-    [JsonPropertyName("currency_symbol")] public string? CurrencySymbol { get; set; }
+    [JsonProperty("currency_symbol")] public string? CurrencySymbol { get; set; }
 
-    [JsonPropertyName("symbol_commissionable_value")]
+    [JsonProperty("symbol_commissionable_value")]
     public string? SymbolCommissionableValue { get; set; }
 
-    [JsonPropertyName("symbol_points_qualify")]
+    [JsonProperty("symbol_points_qualify")]
     public string? SymbolPointsQualify { get; set; }
 
-    [JsonPropertyName("binary_points_symbol")]
+    [JsonProperty("binary_points_symbol")]
     public string? BinaryPointsSymbol { get; set; }
 
-    [JsonPropertyName("new_product_label")]
+    [JsonProperty("new_product_label")]
     public int NewProductLabel { get; set; }
 }

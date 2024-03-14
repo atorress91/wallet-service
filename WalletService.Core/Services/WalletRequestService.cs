@@ -1,5 +1,5 @@
-using System.Text.Json;
 using AutoMapper;
+using Newtonsoft.Json;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -93,7 +93,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         if (string.IsNullOrEmpty(response.Content))
             return null;
 
-        var result = JsonSerializer.Deserialize<ServicesValidCodeAccountResponse>(response.Content);
+        var result = response.Content.ToJsonObject<ServicesValidCodeAccountResponse>();
         if (result is { Data: false })
             return null;
 
@@ -370,7 +370,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         if (response.Content is null)
             return false;
 
-        var userInfo = JsonSerializer.Deserialize<AffiliateBtcResponse>(response.Content);
+        var userInfo = response.Content.ToJsonObject<AffiliateBtcResponse>();
 
         if (userInfo?.Data is null)
             return false;

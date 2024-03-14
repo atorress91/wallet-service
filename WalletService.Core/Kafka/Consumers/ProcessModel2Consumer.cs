@@ -2,6 +2,7 @@
 using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using WalletService.Core.Kafka.Messages;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Configuration;
@@ -21,7 +22,7 @@ public class ProcessModel2Consumer : BaseKafkaConsumer
 
     protected override Task<bool> OnMessage(ConsumeResult<Ignore, string> e)
     {
-        var message = JsonSerializer.Deserialize<Model2Message>(e.Message.Value);
+        var message = e.Message.Value.ToJsonObject<Model2Message>();
         try
         {
             Logger.LogInformation("[ProcessModel2Consumer] OnMessage | Init");
