@@ -41,7 +41,7 @@ public class RedisCache : ICache
             TypeNameHandling = TypeNameHandling.All,
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore
         };
-        var deserializeObject = JsonConvert.DeserializeObject<T?>(keyValue.ToString(), jsonSerializerSettings);
+        var deserializeObject = JsonConvert.DeserializeObject<T>(keyValue.ToString(), jsonSerializerSettings);
         
         return deserializeObject;
     }
@@ -79,5 +79,5 @@ public class RedisCache : ICache
     }
 
     public Task<bool> KeyExists(string key)
-        => _db.KeyDeleteAsync(new RedisKey(key));
+        => _db.KeyExistsAsync(new RedisKey(key));
 }

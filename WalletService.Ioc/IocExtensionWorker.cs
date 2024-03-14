@@ -6,6 +6,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NLog.Extensions.Logging;
+using StackExchange.Redis;
+using WalletService.Core.Caching;
+using WalletService.Core.Caching.Interface;
 using WalletService.Core.Kafka.Producer;
 using WalletService.Core.Kafka.Topics;
 using WalletService.Core.Mapper;
@@ -27,6 +30,7 @@ public static class IocExtensionWorker
     public static void IocWorkerInjectDependencies(this IServiceCollection services, string[]? args = null)
     {
         InjectConfiguration(services);
+        InjectCaching(services);
         InjectDataBases(services);
         InjectPackages(services);
         InjectRepositories(services);
@@ -37,7 +41,17 @@ public static class IocExtensionWorker
         InjectSingletonsAndFactories(services);
         RegisterServiceProvider(services);
     }
-    
+
+    private static void InjectCaching(IServiceCollection services)
+    {
+        var serviceProvider = services.BuildServiceProvider();
+        var settings        = serviceProvider.GetRequiredService<IOptions<ApplicationConfiguration>>().Value;
+        var multiplexer     = ConnectionMultiplexer.Connect(settings.ConnectionStrings!.RedisConnection!);
+        
+        services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+        services.AddSingleton<ICache, RedisCache>();
+        services.AddSingleton<ICache, InMemoryCache>();
+    }
 
     private static void InjectConfiguration(IServiceCollection services)
     {

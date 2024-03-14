@@ -55,7 +55,7 @@ public static class CommonExtensions
         {
             JToken.Parse(value);
         }
-        catch (Exception e)
+        catch
         {
             return false;
         }
