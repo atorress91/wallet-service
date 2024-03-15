@@ -303,4 +303,20 @@ public class InvoiceService : BaseService, IInvoiceService
 
         return generatedInvoice;
     }
+    
+    public async Task<byte[]> CreateInvoiceByReference(string reference)
+    {
+        var invoice = await _invoiceRepository.GetInvoiceByReceiptNumber(reference);
+        if (invoice is null)
+            return Array.Empty<byte>();
+
+        var user = await _accountServiceAdapter.GetUserInfo(invoice.AffiliateId);
+    
+        if (user is null)
+            return Array.Empty<byte>();
+    
+        var generatedInvoice = await _mediatorPdfService.RegenerateInvoice(user,invoice);
+
+        return generatedInvoice;
+    }
 }

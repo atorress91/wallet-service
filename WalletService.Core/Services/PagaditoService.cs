@@ -149,7 +149,7 @@ public class PagaditoService : BaseService, IPagaditoService
             PurchaseFor = Constants.EmptyValue,
             Bank = Constants.Pagadito,
             PaymentMethod = 4,
-            ReceiptNumber = transactionResult.IdTransaction,
+            ReceiptNumber = transactionResult.Reference,
             ProductsList = productsList
         };
 
