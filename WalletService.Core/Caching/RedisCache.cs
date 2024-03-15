@@ -48,6 +48,7 @@ public class RedisCache : ICache
 
     public async Task Delete(string key)
         => await _db.KeyDeleteAsync(key);
+    
 
     public async Task<List<T?>> GetMultiple<T>(List<string> keys)
     {

@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+﻿using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -20,10 +20,12 @@ public class BalancePaymentStrategyModel2 : IBalancePaymentStrategyModel2
     private readonly IMediatorPdfService      _mediatorPdfService;
     private readonly IBrevoEmailService       _brevoEmailService;
     private readonly IWalletRequestRepository _walletRequestRepository;
+    private readonly RedisCache               _redisCache;
 
     public BalancePaymentStrategyModel2(IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter                                     accountServiceAdapter, IWalletRepository walletRepository, IMediatorPdfService mediatorPdfService,
-        IBrevoEmailService                                         brevoEmailService, IWalletRequestRepository walletRequestRepository)
+        IBrevoEmailService                                         brevoEmailService, IWalletRequestRepository walletRequestRepository,
+        RedisCache                                                 redisCache)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter   = accountServiceAdapter;
@@ -31,6 +33,7 @@ public class BalancePaymentStrategyModel2 : IBalancePaymentStrategyModel2
         _brevoEmailService       = brevoEmailService;
         _mediatorPdfService      = mediatorPdfService;
         _walletRequestRepository = walletRequestRepository;
+        _redisCache              = redisCache;
     }
     public async Task<bool> ExecutePayment(WalletRequest request)
     {
@@ -145,7 +148,9 @@ public class BalancePaymentStrategyModel2 : IBalancePaymentStrategyModel2
 
         if (spResponse is null)
             return false;
-
+        
+        await RemoveCacheKey(request);
+        
         var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
@@ -185,5 +190,14 @@ public class BalancePaymentStrategyModel2 : IBalancePaymentStrategyModel2
         response.AvailableBalance -= amountRequests;
 
         return response;
+    }
+    
+    private async Task RemoveCacheKey(WalletRequest request)
+    {
+        var key       = string.Format(CacheKeys.BalanceInformationModel2, request.AffiliateId);
+        var existsKey = await _redisCache.KeyExists(key);
+
+        if (existsKey)
+            await _redisCache.Delete(key);
     }
 }
