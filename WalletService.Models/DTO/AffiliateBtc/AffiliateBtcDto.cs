@@ -1,14 +1,14 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace WalletService.Models.DTO.AffiliateBtc;
 
 public class AffiliateBtcDto
 {
-    [JsonProperty("id")] public int Id { get; set; }
-    [JsonProperty("affiliateId")] public int AffiliateId { get; set; }
-    [JsonProperty("address")] public string Address { get; set; } = String.Empty;
-    [JsonProperty("status")] public byte Status { get; set; }
-    [JsonProperty("createdAt")] public DateTime CreatedAt { get; set; }
-    [JsonProperty("updatedAt")] public DateTime? UpdatedAt { get; set; }
-    [JsonProperty("deletedAt")] public DateTime? DeletedAt { get; set; }
+    [JsonPropertyName("id")] public int Id { get; set; }
+    [JsonPropertyName("affiliateId")] public int AffiliateId { get; set; }
+    [JsonPropertyName("address")] public string Address { get; set; } = String.Empty;
+    [JsonPropertyName("status")] public byte Status { get; set; }
+    [JsonPropertyName("createdAt")] public DateTime CreatedAt { get; set; }
+    [JsonPropertyName("updatedAt")] public DateTime? UpdatedAt { get; set; }
+    [JsonPropertyName("deletedAt")] public DateTime? DeletedAt { get; set; }
 }

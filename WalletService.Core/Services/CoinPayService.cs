@@ -2,7 +2,6 @@
 using System.Text;
 using AutoMapper;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.Models;
@@ -12,7 +11,7 @@ using WalletService.Models.Constants;
 using WalletService.Models.Requests.CoinPayRequest;
 using WalletService.Models.Responses;
 using WalletService.Models.Responses.BaseResponses;
-using WalletService.Utility.Extensions;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace WalletService.Core.Services;
 
@@ -39,7 +38,7 @@ public class CoinPayService:BaseService,ICoinPayService
         {
             Amount = request.Amount,
             IdCurrency = Constants.UsdtIdCurrency,
-            Details = JsonConvert.SerializeObject(request.Products)
+            Details = JsonSerializer.Serialize(request.Products)
         };
         
         var response                   = await _coinPayAdapter.CreateTransaction(paymentRequest);
@@ -47,12 +46,12 @@ public class CoinPayService:BaseService,ICoinPayService
         if (response.Content is null)
             return new CreateTransactionResponse();
                 
-        var result= response.Content!.ToJsonObject<CreateTransactionResponse>() ??
-                    new CreateTransactionResponse();
+        var result= JsonSerializer.Deserialize<CreateTransactionResponse>(response.Content!) ??
+            new CreateTransactionResponse();
 
         var paymentTransaction = new PaymentTransaction
         {
-            IdTransaction  = result.Data!.IdTransaction.ToString(),
+            IdTransaction  = result.Data?.IdTransaction.ToString(),
             AffiliateId    = request.AffiliateId,
             Amount         = result.Data!.Amount,
             AmountReceived = Constants.EmptyValue,
@@ -77,7 +76,7 @@ public class CoinPayService:BaseService,ICoinPayService
             IdCurrency               = Constants.UsdtIdCurrency,
             IdExternalIdentification = request.AffiliateId,
             IdNetwork                = Constants.UsdtIdNetwork,
-            TagName                  = JsonConvert.SerializeObject(request.Products),
+            TagName                  = JsonSerializer.Serialize(request.Products),
         };
         
         var channelResponse = await _coinPayAdapter.CreateChannel(channelRequest);
@@ -85,14 +84,14 @@ public class CoinPayService:BaseService,ICoinPayService
         if (channelResponse.Content is null) 
             return null;
 
-        var channel = channelResponse.Content.ToJsonObject<CreateChannelResponse>();
+        var channel = JsonSerializer.Deserialize<CreateChannelResponse>(channelResponse.Content);
 
         if (channel is null)
             return null;
         
         var paymentTransaction = new PaymentTransaction
         {
-            IdTransaction  = channel.Data!.Id.ToString(),
+            IdTransaction  = channel.Data?.Id.ToString(),
             AffiliateId    = request.AffiliateId,
             Amount         = request.Amount,
             AmountReceived = Constants.EmptyValue,
@@ -115,7 +114,7 @@ public class CoinPayService:BaseService,ICoinPayService
         if (result.Content is null)
             return null;
 
-        var networkResult = result.Content.ToJsonObject<GetNetworkResponse>();
+        var networkResult = JsonSerializer.Deserialize<GetNetworkResponse>(result.Content);
 
         return networkResult;
     }
@@ -127,7 +126,7 @@ public class CoinPayService:BaseService,ICoinPayService
         if (result.Content is null)
             return null;
         
-        var address = result.Content.ToJsonObject<CreateAddressResponse>();
+        var address = JsonSerializer.Deserialize<CreateAddressResponse>(result.Content);
 
         if (address is null)
             return null;
@@ -139,6 +138,11 @@ public class CoinPayService:BaseService,ICoinPayService
     {
         var generatedSignature = GenerateSignature(idUser, idTransaction, dynamicKey);
         return await Task.FromResult(incomingSignature == generatedSignature);
+    }
+
+    public async Task ProcessTransactionAsync(TransactionNotificationRequest transaction)
+    {
+       
     }
 
     private string GenerateSignature(int idUser, int idTransaction, string dynamicKey)

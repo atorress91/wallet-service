@@ -23,7 +23,7 @@ public class ProcessModel3Consumer : BaseKafkaConsumer
 
     protected override Task<bool> OnMessage(ConsumeResult<Ignore, string> e)
     {
-        var message = e.Message.Value.ToJsonObject<Model3Message>();
+        var message = JsonSerializer.Deserialize<Model3Message>(e.Message.Value);
         try
         {
             Logger.LogInformation("[ProcessModelTwoConsumer] OnMessage | Init");

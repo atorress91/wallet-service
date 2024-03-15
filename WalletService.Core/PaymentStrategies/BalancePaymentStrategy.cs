@@ -1,10 +1,8 @@
 ﻿using System.Text.Json;
-using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Repositories.IRepositories;
-using WalletService.Models.Constants;
 using WalletService.Models.DTO.BalanceInformationDto;
 using WalletService.Models.Enums;
 using WalletService.Models.Requests.WalletRequest;
@@ -22,13 +20,11 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
     private readonly IMediatorPdfService      _mediatorPdfService;
     private readonly IBrevoEmailService       _brevoEmailService;
     private readonly IWalletRequestRepository _walletRequestRepository;
-    private readonly RedisCache               _redisCache;
 
     public BalancePaymentStrategy(IInventoryServiceAdapter inventoryServiceAdapter,
-        IAccountServiceAdapter                             accountServiceAdapter, IWalletRepository walletRepository,
-        IMediatorPdfService                                mediatorPdfService,
-        IBrevoEmailService                                 brevoEmailService, IWalletRequestRepository walletRequestRepository,
-        RedisCache                                         redisCache)
+        IAccountServiceAdapter accountServiceAdapter, IWalletRepository walletRepository,
+        IMediatorPdfService mediatorPdfService,
+        IBrevoEmailService brevoEmailService, IWalletRequestRepository walletRequestRepository)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter   = accountServiceAdapter;
@@ -36,7 +32,6 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         _brevoEmailService       = brevoEmailService;
         _mediatorPdfService      = mediatorPdfService;
         _walletRequestRepository = walletRequestRepository;
-        _redisCache              = redisCache;
     }
 
     private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId)
@@ -87,14 +82,14 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = responseList.Content.ToJsonObject<ProductsResponse>();
+        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
 
         if (result?.Data.Count == Constants.EmptyValue)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
             var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
 
-            var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
+            var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
 
             await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
 
@@ -181,9 +176,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         if (spResponse is null)
             return false;
-        
-        await RemoveCacheKey(request.AffiliateId);
-        
+
         var invoicePdf =
             await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
@@ -225,14 +218,14 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = responseList.Content.ToJsonObject<ProductsResponse>();
+        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
 
         if (result?.Data.Count == Constants.EmptyValue)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
             var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
 
-            var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
+            var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
 
             await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
 
@@ -316,8 +309,6 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         if (spResponse is null)
             return false;
-        
-        await RemoveCacheKey(request.AffiliateId);
 
         var invoicePdf =
             await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
@@ -359,7 +350,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = responseList.Content.ToJsonObject<ProductsResponse>();
+        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
 
         if (result?.Data == null)
             return false;
@@ -439,8 +430,6 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         if (spResponse is null)
             return false;
-        
-        await RemoveCacheKey(request.AffiliateId);
 
         var invoicePdf =
             await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
@@ -476,7 +465,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = responseList.Content.ToJsonObject<ProductsResponse>();
+        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
 
         if (result?.Data == null)
             return false;
@@ -557,8 +546,6 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
 
-        await RemoveCacheKey(request.AffiliateId);
-
         var invoicePdf =
             await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
@@ -590,7 +577,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         var firstProductId   = request.ProductsList.First().IdProduct;
         var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
 
-        var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
+        var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
 
         if (productResponse?.Data == null)
             return false;
@@ -668,8 +655,6 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         if (spResponse is null)
             return false;
-        
-        await RemoveCacheKey(request.AffiliateId);
 
         await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
 
@@ -688,8 +673,6 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         if (bonusPaymentResult is false)
             return false;
-        
-        await RemoveCacheKey(affiliateBonusWinner!.Id);
 
         await _brevoEmailService.SendBonusConfirmation(affiliateBonusWinner, request.AffiliateUserName);
 
@@ -704,14 +687,5 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         }
 
         return true;
-    }
-
-    private async Task RemoveCacheKey(int affiliateId)
-    {
-        var key       = string.Format(CacheKeys.BalanceInformationModel2, affiliateId);
-        var existsKey = await _redisCache.KeyExists(key);
-
-        if (existsKey)
-            await _redisCache.Delete(key);
     }
 }

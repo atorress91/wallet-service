@@ -1,14 +1,14 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using WalletService.Models.DTO.GradingDto;
 
 namespace WalletService.Models.Responses;
 
 public class GradingResponse
 {
-    [JsonProperty("success")] public bool Success { get; set; }
-    [JsonProperty("data")] public List<GradingDto> Data { get; set; }
+    [JsonPropertyName("success")] public bool Success { get; set; }
+    [JsonPropertyName("data")] public List<GradingDto> Data { get; set; }
 
-    [JsonProperty("message")] public string Message { get; set; } = string.Empty;
+    [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
 
-    [JsonProperty("code")] public int Code { get; set; }
+    [JsonPropertyName("code")] public int Code { get; set; }
 }

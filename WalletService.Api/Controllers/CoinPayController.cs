@@ -49,6 +49,21 @@ public class CoinPayController : BaseController
         return result?.Data is null ? Ok(Fail("The address could not be created.")) : Ok(result);
     }
     
+    [HttpPost("webhookNotification")]
+    public async Task<IActionResult> WebhookNotification([FromBody] TransactionNotificationRequest transaction)
+    {
+        var signature = Request.Headers["x-signature"].ToString();
+        var dynamicKey = Request.Headers["x-dynamic-key"].ToString();
+
+        if (!await _coinPayService.IsValidSignature(transaction.IdUser, transaction.IdTransaction, dynamicKey, signature))
+        {
+            return BadRequest("Invalid signature.");
+        }
+
+        await _coinPayService.ProcessTransactionAsync(transaction);
+
+        return Ok();
+    }
     
     #endregion
 }

@@ -20,8 +20,7 @@ public class WalletModel1BController : BaseController
     [HttpGet("GetBalanceInformationByAffiliateId/{affiliateId}")]
     public async Task<IActionResult> GetBalanceInformationByAffiliateId(int affiliateId)
     {
-        var response = await _walletModel1BService
-            .GetBalanceInformationByAffiliateId(affiliateId);
+        var response = await _walletModel1BService.GetBalanceInformationByAffiliateId(affiliateId);
 
         return Ok(Success(response));
     }
