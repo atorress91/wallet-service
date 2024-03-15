@@ -1,11 +1,11 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 using WalletService.Models.Requests.ConPaymentRequest;
 
 namespace WalletService.Models.Requests.CoinPayRequest;
 
 public class CreateTransactionRequest
 {
-    [JsonPropertyName("affiliateId")] public int AffiliateId { get; set; }
-    [JsonPropertyName("amount")] public int Amount { get; set; }
-    [JsonPropertyName("products")] public List<ProductRequest>? Products { get; set; }
+    [JsonProperty("affiliateId")] public int AffiliateId { get; set; }
+    [JsonProperty("amount")] public int Amount { get; set; }
+    [JsonProperty("products")] public List<ProductRequest>? Products { get; set; }
 }

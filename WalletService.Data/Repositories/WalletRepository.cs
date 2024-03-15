@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Data;
-using System.Text.Json;
+using Newtonsoft.Json;
 using WalletService.Data.Database;
 using WalletService.Data.Database.CustomModels;
 using WalletService.Data.Database.Models;
@@ -138,8 +138,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             await using var oReader = await cmd.ExecuteReaderAsync();
             var dd = oReader.ToDynamicList();
             var jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var response = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
-
+            var response = jsonString.ToJsonObject<InvoicesSpResponse>();
 
             await sql.CloseAsync();
 
@@ -167,9 +166,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
             await using var oReader = await cmd.ExecuteReaderAsync();
             var dd = oReader.ToDynamicList();
             var jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var response = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
-
-
+            var response = jsonString.ToJsonObject<InvoicesSpResponse>();
+            
             await sql.CloseAsync();
 
             return response;
@@ -191,12 +189,11 @@ public class WalletRepository : BaseRepository, IWalletRepository
             CreateDebitEcoPoolListParameters(request, cmd);
 
             await sql.OpenAsync();
-            await using var oReader = await cmd.ExecuteReaderAsync();
-            var dd = oReader.ToDynamicList();
-            var jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var response = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
-
-
+            await using var oReader    = await cmd.ExecuteReaderAsync();
+            var             dd         = oReader.ToDynamicList();
+            var             jsonString = dd.FirstOrDefault()!.ToJsonString();
+            var             response   = jsonString.ToJsonObject<InvoicesSpResponse>();
+            
             await sql.CloseAsync();
 
             return response;
@@ -223,7 +220,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             await using var oReader = await cmd.ExecuteReaderAsync();
             var dd = oReader.ToDynamicList();
             var jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var response = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+            var response = jsonString.ToJsonObject<InvoicesSpResponse>();
 
 
             await sql.CloseAsync();
@@ -905,7 +902,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
     public Task<List<InvoicesDetails>> GetDebitsModel2OutsideMonth(DateTime date)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
-            .Where(x => x.ProductPack && x.PaymentGroupId == 2 && x.Date < date && x.Invoice.Status == true && 
+            .Where(x => x.Date.Year >= 2024 && x.ProductPack && x.PaymentGroupId == 2 && x.Date < date && x.Invoice.Status == true && 
                         x.Invoice.CancellationDate == null).ToListAsync();
     public Task<List<InvoicesDetails>> GetDebitsModel1AOutsideMonth(DateTime date)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
@@ -990,10 +987,10 @@ public class WalletRepository : BaseRepository, IWalletRepository
             CreateDebitListParameters(request, invoicesDetails, cmd);
 
             await sql.OpenAsync();
-            await using var oReader = await cmd.ExecuteReaderAsync();
-            var dd = oReader.ToDynamicList();
-            var jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var response = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+            await using var oReader    = await cmd.ExecuteReaderAsync();
+            var             dd         = oReader.ToDynamicList();
+            var             jsonString = dd.FirstOrDefault()!.ToJsonString();
+            var             response   = jsonString.ToJsonObject<InvoicesSpResponse>();
 
 
             await sql.CloseAsync();
@@ -1022,7 +1019,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             await using var oReader = await cmd.ExecuteReaderAsync();
             var dd = oReader.ToDynamicList();
             var jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var response = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+            var response = jsonString.ToJsonObject<InvoicesSpResponse>();
 
 
             await sql.CloseAsync();
@@ -1110,6 +1107,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     public Task TransactionPoints(
         int affiliateId, decimal debitLeft, decimal debitRight, decimal creditLeft, decimal creditRight)
     {
+        // return Task.CompletedTask;
         var debit = new ModelFourStatistics()
         {
             AffiliateId = affiliateId,
@@ -1151,7 +1149,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             await using var oReader    = await cmd.ExecuteReaderAsync();
             var             dd         = oReader.ToDynamicList();
             var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
+            var             response   = jsonString.ToJsonObject<InvoicesSpResponse>();
 
 
             await sql.CloseAsync();
