@@ -11,6 +11,8 @@ using WalletService.Core.Caching;
 using WalletService.Core.Caching.Interface;
 using WalletService.Core.Kafka.Producer;
 using WalletService.Core.Kafka.Topics;
+using WalletService.Core.Lock;
+using WalletService.Core.Lock.Interface;
 using WalletService.Core.Mapper;
 using WalletService.Core.PaymentStrategies;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
@@ -51,6 +53,7 @@ public static class IocExtensionWorker
         services.AddSingleton<IConnectionMultiplexer>(multiplexer);
         services.AddSingleton<ICache, RedisCache>();
         services.AddSingleton<ICache, InMemoryCache>();
+        services.AddSingleton<ILockManager, LockManager>();
     }
 
     private static void InjectConfiguration(IServiceCollection services)

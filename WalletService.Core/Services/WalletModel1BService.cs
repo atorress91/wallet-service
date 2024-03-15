@@ -66,6 +66,9 @@ public class WalletModel1BService : BaseService, IWalletModel1BService
 
         var response = await _balancePaymentStrategyModel1B.ExecuteEcoPoolPayment(request);
 
+        if (response)
+            await RemoveCacheKey(request.AffiliateId);
+        
         return response;
     }
 
@@ -76,6 +79,18 @@ public class WalletModel1BService : BaseService, IWalletModel1BService
 
         var response = await _balancePaymentStrategyModel1B.ExecuteEcoPoolPaymentWithServiceBalance(request);
         
+        if (response)
+            await RemoveCacheKey(request.AffiliateId);
+        
         return response;
+    }
+    
+    private async Task RemoveCacheKey(int affiliateId)
+    {
+        var key       = string.Format(CacheKeys.BalanceInformationModel1B, affiliateId);
+        var existsKey = await _redisCache.KeyExists(key);
+
+        if (existsKey)
+            await _redisCache.Delete(key);
     }
 }

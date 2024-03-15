@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
@@ -284,6 +285,14 @@ public class WalletService : BaseService, IWalletService
         if (!success)
             return false;
 
+        var keys = new List<string>
+        {
+            string.Format(CacheKeys.BalanceInformationModel2, debitTransaction.AffiliateId),
+            string.Format(CacheKeys.BalanceInformationModel2, creditTransaction.AffiliateId),
+        };
+        
+        await RemoveKeysAsync(keys);
+        
         var confirmPurchase = await PurchaseMembershipForNewAffiliates(creditTransaction);
 
         if (!confirmPurchase)
@@ -371,6 +380,14 @@ public class WalletService : BaseService, IWalletService
         if (!success)
             return new ServicesResponse { Success = false, Message = "No se pudo crear la transferencia.", Code = 400 };
 
+        var keys = new List<string>
+        {
+            string.Format(CacheKeys.BalanceInformationModel2, debitTransaction.AffiliateId),
+            string.Format(CacheKeys.BalanceInformationModel2, creditTransaction.AffiliateId),
+        };
+        
+        await RemoveKeysAsync(keys);
+        
         return new ServicesResponse
             { Success = true, Message = "La transferencia se ha creado correctamente.", Code = 200 };
     }
@@ -405,6 +422,8 @@ public class WalletService : BaseService, IWalletService
                 walletRequest.Status = WalletRequestStatus.cancel.ToByte();
                 break;
         }
+        
+        await RemoveCacheKey(walletRequest.AffiliateId);
 
         return true;
     }
@@ -545,7 +564,27 @@ public class WalletService : BaseService, IWalletService
         if (!result)
             return false;
 
+        await RemoveCacheKey(user.Id);
         return true;
+    }
+    
+    private async Task RemoveKeysAsync(IEnumerable<string> keys)
+    {
+        foreach (var key in keys)
+        {
+            var exists = await _redisCache.KeyExists(key);
+            if (exists)
+                await _redisCache.Delete(key);
+        }
+    }
+    
+    private async Task RemoveCacheKey(int affiliateId)
+    {
+        var key       = string.Format(CacheKeys.BalanceInformationModel2, affiliateId);
+        var existsKey = await _redisCache.KeyExists(key);
+
+        if (existsKey)
+            await _redisCache.Delete(key);
     }
 
     #endregion

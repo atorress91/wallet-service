@@ -16,9 +16,10 @@ using Newtonsoft.Json.Serialization;
 using NLog.Extensions.Logging;
 using StackExchange.Redis;
 using WalletService.Core.Caching;
-using WalletService.Core.Caching.Interface;
 using WalletService.Core.Kafka.Producer;
 using WalletService.Core.Kafka.Topics;
+using WalletService.Core.Lock;
+using WalletService.Core.Lock.Interface;
 using WalletService.Core.Mapper;
 using WalletService.Core.PaymentStrategies;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
@@ -62,6 +63,7 @@ public static class IocExtensionApp
         services.AddSingleton<IConnectionMultiplexer>(multiplexer);
         services.AddSingleton<RedisCache>();
         services.AddSingleton<InMemoryCache>();
+        services.AddSingleton<ILockManager, LockManager>();
     }
 
     private static void InjectAuthentication(IServiceCollection services)
