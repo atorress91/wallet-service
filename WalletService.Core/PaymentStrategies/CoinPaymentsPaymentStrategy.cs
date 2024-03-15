@@ -71,14 +71,14 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = responseList.Content.ToJsonObject<ProductsResponse>();
+        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
 
         if (result?.Data.Count == Constants.EmptyValue)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
             var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
 
-            var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
+            var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
 
             await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
 
@@ -208,7 +208,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = responseList.Content.ToJsonObject<ProductsResponse>();
+        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
 
         if (result?.Data == null)
             return false;
@@ -322,7 +322,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         var firstProductId   = request.ProductsList.First().IdProduct;
         var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
 
-        var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
+        var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
 
         if (productResponse?.Data == null)
             return false;

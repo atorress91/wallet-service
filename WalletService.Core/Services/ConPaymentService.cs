@@ -19,6 +19,7 @@ using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
 using WalletService.Models.Responses.BaseResponses;
 using WalletService.Utility.Extensions;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 
 namespace WalletService.Core.Services;
@@ -81,8 +82,8 @@ public class ConPaymentService : BaseService, IConPaymentService
 
         if (restResponse.IsSuccessful)
         {
-            var result = restResponse.Content!.ToJsonObject<GetPayByNameProfileResponse>();
-            return result!;
+            var result = JsonConvert.DeserializeObject<GetPayByNameProfileResponse>(restResponse.Content!)!;
+            return result;
         }
         else
         {
@@ -101,7 +102,7 @@ public class ConPaymentService : BaseService, IConPaymentService
 
         if (restResponse.IsSuccessful)
         {
-            var result = restResponse.Content!.ToJsonObject<GetDepositAddressResponse>()!;
+            var result = JsonConvert.DeserializeObject<GetDepositAddressResponse?>(restResponse.Content!)!;
             return result;
         }
         else
@@ -112,18 +113,18 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     public async Task<GetCoinBalancesResponse> GetCoinBalances(bool includeZeroBalances = false)
     {
-        var parms = new SortedList<string, string>();
+        SortedList<string, string> parms = new SortedList<string, string>();
         if (includeZeroBalances)
         {
             parms.Add("all", "1");
         }
 
-        var restResponse = await _conPaymentsApi.CallApi("balances", parms);
+        IRestResponse restResponse = await _conPaymentsApi.CallApi("balances", parms);
 
         if (restResponse.IsSuccessful)
         {
-            var result = restResponse.Content!.ToJsonObject<GetCoinBalancesResponse>();
-            return result!;
+            var result = JsonConvert.DeserializeObject<GetCoinBalancesResponse>(restResponse.Content!)!;
+            return result;
         }
         else
         {
@@ -135,9 +136,9 @@ public class ConPaymentService : BaseService, IConPaymentService
     {
         _logger.LogInformation($"[ConPaymentService] | CreatePayment | Start | request: {request.ToJsonString()}");
         SetRequestDefaults(request);
-        var parms = ConfigureParms(request);
+        SortedList<string, string> parms = ConfigureParms(request);
 
-        var restResponse = await CallApiAsync("create_transaction", parms);
+        IRestResponse restResponse = await CallApiAsync("create_transaction", parms);
         _logger.LogInformation(
             $"[ConPaymentService] | CreatePayment | Response Api | response: {restResponse.ToJsonString()}");
 
@@ -193,11 +194,11 @@ public class ConPaymentService : BaseService, IConPaymentService
     private async Task<CreateConPaymentsTransactionResponse> HandleSuccessfulResponse(IRestResponse restResponse,
         ConPaymentRequest                                                                           request)
     {
-        var result = restResponse.Content!.ToJsonObject<CreateConPaymentsTransactionResponse>();
+        var result = JsonConvert.DeserializeObject<CreateConPaymentsTransactionResponse>(restResponse.Content!);
 
         var paymentTransaction = new PaymentTransaction
         {
-            IdTransaction  = result!.Result!.Txn_Id!,
+            IdTransaction  = result?.Result?.Txn_Id,
             AffiliateId    = Convert.ToInt32(request.ItemNumber),
             Amount         = request.Amount,
             AmountReceived = 0,
@@ -216,23 +217,27 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     public async Task<GetTransactionInfoResponse> GetTransactionInfo(string idTransaction, bool full = false)
     {
-        var parms = new SortedList<string, string>();
+        SortedList<string, string> parms = new SortedList<string, string>();
 
 
         parms.Add("txid", idTransaction);
 
         if (full)
+        {
             parms.Add("full", "1");
+        }
 
-        var restResponse = await _conPaymentsApi.CallApi("get_tx_info", parms);
+        IRestResponse restResponse = await _conPaymentsApi.CallApi("get_tx_info", parms);
 
         if (restResponse.IsSuccessful)
         {
-            var result = restResponse.Content!.ToJsonObject<GetTransactionInfoResponse>();
-            return result!;
+            var result = JsonConvert.DeserializeObject<GetTransactionInfoResponse>(restResponse.Content!)!;
+            return result;
         }
         else
+        {
             throw new Exception($"Error calling API: {restResponse.StatusDescription}");
+        }
     }
 
     public async Task<string> ProcessIpnAsync(IpnRequest ipnRequest, IHeaderDictionary headers)
@@ -292,7 +297,7 @@ public class ConPaymentService : BaseService, IConPaymentService
             $"[ConPaymentService] | HandlePaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
         var walletRequest = BuildWalletRequest(ipnRequest);
 
-        var products = transactionResult.Products.ToJsonObject<List<ProductRequest>>();
+        var products = JsonConvert.DeserializeObject<List<ProductRequest>>(transactionResult.Products!);
         if (products is null) return;
 
         _logger.LogInformation($"[ConPaymentService] | HandlePaymentTransaction | products: {products.ToJsonString()}");
@@ -329,7 +334,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         var productIds   = request.Select(p => p.ProductId).ToArray();
         var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds);
 
-        var result = responseList.Content!.ToJsonObject<ProductsResponse>();
+        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content!);
 
         int firstProductCategory;
 
@@ -340,7 +345,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         else
         {
             var membershipResult = await _inventoryServiceAdapter.GetProductById(productIds.First());
-            var productResult = membershipResult.Content!.ToJsonObject<ProductResponse>();
+            var productResult    = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
             firstProductCategory = productResult!.Data.PaymentGroup;
         }
 
@@ -413,7 +418,7 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     private async Task GrantWelcomeBonus(int userId, string productsInfo)
     {
-        var products = productsInfo.ToJsonObject<List<ProductRequest>>();
+        var products = JsonConvert.DeserializeObject<List<ProductRequest>>(productsInfo);
         if (products is null) return;
 
         var isMembership = products.Any(p => p.ProductId == 1);
@@ -470,8 +475,7 @@ public class ConPaymentService : BaseService, IConPaymentService
             InvoiceNumberValue = invoicesResult.Id
         };
 
-        var products = productsInfo.ToJsonObject<List<ProductRequest>>();
-        
+        var products = JsonConvert.DeserializeObject<List<ProductRequest>>(productsInfo);
         if (products is null) return false;
 
         bool isMembership = products.Any(p => p.ProductId == 1);
@@ -519,7 +523,7 @@ public class ConPaymentService : BaseService, IConPaymentService
             throw new Exception($"Error calling API: {restResponse.StatusDescription}");
         }
 
-        var withdrawalResults = restResponse.Content!.ToJsonObject<CoinPaymentWithdrawalResponse>();
+        var withdrawalResults = JsonConvert.DeserializeObject<CoinPaymentWithdrawalResponse>(restResponse.Content!);
 
         if (withdrawalResults?.Result != null)
         {
@@ -556,7 +560,7 @@ public class ConPaymentService : BaseService, IConPaymentService
             if (response.Content is null)
                 continue;
 
-            var userInfo = response.Content.ToJsonObject<AffiliateBtcResponse>();
+            var userInfo = JsonSerializer.Deserialize<AffiliateBtcResponse>(response.Content);
 
             if (userInfo?.Data is null)
                 continue;

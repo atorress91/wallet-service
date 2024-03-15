@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Data;
-using Newtonsoft.Json;
+using System.Text.Json;
 using WalletService.Data.Database;
 using WalletService.Data.Database.CustomModels;
 using WalletService.Data.Database.Models;
@@ -113,7 +113,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             await using var oReader    = await cmd.ExecuteReaderAsync();
             var             dd         = oReader.ToDynamicList();
             var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = jsonString.ToJsonObject<InvoicesSpResponse>();
+            var             response   = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
 
 
             await sql.CloseAsync();
@@ -142,7 +142,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             await using var oReader    = await cmd.ExecuteReaderAsync();
             var             dd         = oReader.ToDynamicList();
             var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = jsonString.ToJsonObject<InvoicesSpResponse>();
+            var             response   = JsonSerializer.Deserialize<InvoicesSpResponse>(jsonString);
 
 
             await sql.CloseAsync();

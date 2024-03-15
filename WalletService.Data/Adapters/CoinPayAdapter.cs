@@ -6,7 +6,6 @@ using WalletService.Data.Adapters.IAdapters;
 using WalletService.Models.Configuration;
 using WalletService.Models.Requests.CoinPayRequest;
 using WalletService.Models.Responses.BaseResponses;
-using WalletService.Utility.Extensions;
 
 
 namespace WalletService.Data.Adapters;
@@ -52,9 +51,8 @@ public class CoinPayAdapter : CoinPayBaseAdapter, ICoinPayAdapter
 
         if (response.IsSuccessStatusCode)
         {
-            var jsonString   = await response.Content.ReadAsStringAsync();
-            var responseData = jsonString.ToJsonObject<CoinPayResponse>();
-            
+            var responseData =
+                JsonConvert.DeserializeObject<CoinPayResponse>(await response.Content.ReadAsStringAsync());
             return responseData?.Data.Token;
         }
 

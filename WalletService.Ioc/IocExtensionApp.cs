@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -11,15 +13,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using NLog.Extensions.Logging;
-using StackExchange.Redis;
-using WalletService.Core.Caching;
 using WalletService.Core.Kafka.Producer;
 using WalletService.Core.Kafka.Topics;
-using WalletService.Core.Lock;
-using WalletService.Core.Lock.Interface;
 using WalletService.Core.Mapper;
 using WalletService.Core.PaymentStrategies;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
@@ -42,7 +38,6 @@ public static class IocExtensionApp
         InjectConfiguration(services);
         InjectAuthentication(services);
         InjectControllersAndDocumentation(services);
-        InjectCaching(services);
         InjectDataBases(services);
         InjectRepositories(services);
         InjectAdapters(services);
@@ -52,18 +47,6 @@ public static class IocExtensionApp
         InjectStrategies(services);
         InjectSingletonsAndFactories(services);
         RegisterServiceProvider(services);
-    }
-    
-    private static void InjectCaching(IServiceCollection services)
-    {
-        var serviceProvider = services.BuildServiceProvider();
-        var settings        = serviceProvider.GetRequiredService<IOptions<ApplicationConfiguration>>().Value;
-        var multiplexer = ConnectionMultiplexer.Connect(settings.ConnectionStrings!.RedisConnection!);
-        
-        services.AddSingleton<IConnectionMultiplexer>(multiplexer);
-        services.AddSingleton<RedisCache>();
-        services.AddSingleton<InMemoryCache>();
-        services.AddSingleton<ILockManager, LockManager>();
     }
 
     private static void InjectAuthentication(IServiceCollection services)
@@ -117,31 +100,22 @@ public static class IocExtensionApp
         Console.WriteLine($"IocLoggingRegister -> nlog.{lowerCaseEnvironment}.config");
     }
 
-    private static void InjectControllersAndDocumentation(IServiceCollection services, int majorVersion = 1,
-        int                                                                  minorVersion = 0)
+    private static void InjectControllersAndDocumentation(IServiceCollection services, int majorVersion = 1, int minorVersion = 0)
     {
         services.AddResponseCompression(options =>
         {
             options.Providers.Add<GzipCompressionProvider>();
             options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "text/plain" });
         });
-        services
-            .AddControllers()
-            .AddNewtonsoftJson(options =>
-            {
-                options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                options.SerializerSettings.DateFormatString      = "yyyy-MM-dd HH:mm:ss";
-                options.SerializerSettings.ContractResolver      = new DefaultContractResolver();
-            });
-        
+
+        services.AddControllers().AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+            options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
+        });
+
         services.AddFluentValidationAutoValidation();
         services.AddFluentValidationClientsideAdapters();
-        services.AddApiVersioning(config =>
-        {
-            config.DefaultApiVersion                   = new ApiVersion(majorVersion, minorVersion);
-            config.AssumeDefaultVersionWhenUnspecified = true;
-        });
-        
         services.AddApiVersioning(config =>
         {
             config.DefaultApiVersion                   = new ApiVersion(majorVersion, minorVersion);

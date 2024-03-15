@@ -1,109 +1,110 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 using WalletService.Models.DTO.AffiliateBtc;
 using WalletService.Models.DTO.AffiliateInformation;
 using WalletService.Models.DTO.ProductWalletDto;
+using WalletService.Models.Responses.BaseResponses;
 
 namespace WalletService.Models.Responses;
 
 public class ServicesResponse
 {
-    [JsonProperty("success")] public bool Success { get; set; }
+    [JsonPropertyName("success")] public bool Success { get; set; }
 
-    [JsonProperty("data")] public object? Data { get; set; }
+    [JsonPropertyName("data")] public object? Data { get; set; }
 
-    [JsonProperty("message")] public string Message { get; set; } = string.Empty;
+    [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
 
-    [JsonProperty("code")] public int Code { get; set; }
+    [JsonPropertyName("code")] public int Code { get; set; }
 }
 
 public class ServicesValidCodeAccountResponse
 {
-    [JsonProperty("success")] public bool Success { get; set; }
+    [JsonPropertyName("success")] public bool Success { get; set; }
 
-    [JsonProperty("data")] public bool Data { get; set; }
+    [JsonPropertyName("data")] public bool Data { get; set; }
 
-    [JsonProperty("message")] public string Message { get; set; } = string.Empty;
+    [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
 
-    [JsonProperty("code")] public int Code { get; set; }
+    [JsonPropertyName("code")] public int Code { get; set; }
 }
 
 public class ProductsResponse
 {
-    [JsonProperty("success")] public bool Success { get; set; }
-    [JsonProperty("data")] public List<ProductWalletDto> Data { get; set; }
+    [JsonPropertyName("success")] public bool Success { get; set; }
+    [JsonPropertyName("data")] public List<ProductWalletDto> Data { get; set; }
 
-    [JsonProperty("message")] public string Message { get; set; } = string.Empty;
+    [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
 
-    [JsonProperty("code")] public int Code { get; set; }
+    [JsonPropertyName("code")] public int Code { get; set; }
 }
 
 public class ProductResponse
 {
-    [JsonProperty("success")] public bool Success { get; set; }
-    [JsonProperty("data")] public ProductWalletDto Data { get; set; }
+    [JsonPropertyName("success")] public bool Success { get; set; }
+    [JsonPropertyName("data")] public ProductWalletDto Data { get; set; }
 
-    [JsonProperty("message")] public string Message { get; set; } = string.Empty;
+    [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
 
-    [JsonProperty("code")] public int Code { get; set; }
+    [JsonPropertyName("code")] public int Code { get; set; }
 }
 
 public class UserAffiliateResponse
 { 
-    [JsonProperty("success")] public bool Success { get; set; }
+    [JsonPropertyName("success")] public bool Success { get; set; }
 
-    [JsonProperty("data")] public UserInfoResponse? Data { get; set; }
+    [JsonPropertyName("data")] public UserInfoResponse? Data { get; set; }
 
-    [JsonProperty("message")] public string Message { get; set; } = string.Empty;
+    [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
 
-    [JsonProperty("code")] public int Code { get; set; }
+    [JsonPropertyName("code")] public int Code { get; set; }
     
 }
 
 public class UserAffiliatePointInformation
 { 
-    [JsonProperty("success")] public bool Success { get; set; }
+    [JsonPropertyName("success")] public bool Success { get; set; }
 
-    [JsonProperty("data")] public ICollection<UserBinaryInformation> Data { get; set; }
+    [JsonPropertyName("data")] public ICollection<UserBinaryInformation> Data { get; set; }
 
-    [JsonProperty("message")] public string Message { get; set; } = string.Empty;
+    [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
 
-    [JsonProperty("code")] public int Code { get; set; }
+    [JsonPropertyName("code")] public int Code { get; set; }
     
 }
 
 public class UserPersonalNetworkResponse
 { 
-    [JsonProperty("success")] public bool Success { get; set; }
+    [JsonPropertyName("success")] public bool Success { get; set; }
 
-    [JsonProperty("data")] public List<PersonalNetwork> Data { get; set; }
+    [JsonPropertyName("data")] public List<PersonalNetwork> Data { get; set; }
 
-    [JsonProperty("message")] public string Message { get; set; } = string.Empty;
+    [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
 
-    [JsonProperty("code")] public int Code { get; set; }
+    [JsonPropertyName("code")] public int Code { get; set; }
     
 }
 
 public class GetTotalActiveMembersResponse
 { 
-    [JsonProperty("success")] public bool Success { get; set; }
+    [JsonPropertyName("success")] public bool Success { get; set; }
 
-    [JsonProperty("data")] public int Data { get; set; }
+    [JsonPropertyName("data")] public int Data { get; set; }
 
-    [JsonProperty("message")] public string Message { get; set; } = string.Empty;
+    [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
 
-    [JsonProperty("code")] public int Code { get; set; }
+    [JsonPropertyName("code")] public int Code { get; set; }
     
 }
 
 public class AffiliateBtcResponse
 {
-    [JsonProperty("success")] public bool Success { get; set; }
+    [JsonPropertyName("success")] public bool Success { get; set; }
 
-    [JsonProperty("data")] public AffiliateBtcDto? Data { get; set; }
+    [JsonPropertyName("data")] public AffiliateBtcDto? Data { get; set; }
 
-    [JsonProperty("message")] public string Message { get; set; } = string.Empty;
+    [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
 
-    [JsonProperty("code")] public int Code { get; set; }
+    [JsonPropertyName("code")] public int Code { get; set; }
 }
 
 public class PersonalNetwork

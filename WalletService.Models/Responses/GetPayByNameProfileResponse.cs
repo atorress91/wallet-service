@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace WalletService.Models.Responses;
 
@@ -11,49 +11,49 @@ public class GetPayByNameProfileResponse
 
 public class ProfileResult
 {
-    [JsonProperty("pbntag")]
+    [JsonPropertyName("pbntag")]
     public string? Pbntag { get; set; }
 
-    [JsonProperty("merchant")]
+    [JsonPropertyName("merchant")]
     public string? Merchant { get; set; } 
 
-    [JsonProperty("profile_name")]
+    [JsonPropertyName("profile_name")]
     public string? ProfileName { get; set; } 
 
-    [JsonProperty("profile_url")]
+    [JsonPropertyName("profile_url")]
     public string? ProfileUrl { get; set; } 
 
-    [JsonProperty("profile_email")]
+    [JsonPropertyName("profile_email")]
     public string? ProfileEmail { get; set; }
 
-    [JsonProperty("profile_image")]
+    [JsonPropertyName("profile_image")]
     public string? ProfileImage { get; set; } 
 
-    [JsonProperty("member_since")]
+    [JsonPropertyName("member_since")]
     public long MemberSince { get; set; }
 
-    [JsonProperty("feedback")]
+    [JsonPropertyName("feedback")]
     public Feedback? Feedback { get; set; }
 
 }
 
 public class Feedback
 {
-    [JsonProperty("pos")]
+    [JsonPropertyName("pos")]
     public int Pos { get; set; }
 
-    [JsonProperty("neg")]
+    [JsonPropertyName("neg")]
     public int Neg { get; set; }
 
-    [JsonProperty("neut")]
+    [JsonPropertyName("neut")]
     public int Neut { get; set; }
 
-    [JsonProperty("total")]
+    [JsonPropertyName("total")]
     public int Total { get; set; }
 
-    [JsonProperty("percent")]
+    [JsonPropertyName("percent")]
     public string Percent { get; set; } = string.Empty;
 
-    [JsonProperty("percent_str")]
+    [JsonPropertyName("percent_str")]
     public string PercentStr { get; set; } = string.Empty;
 }

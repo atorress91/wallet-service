@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
 using System.Text;
-using Newtonsoft.Json;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.CustomModels;
@@ -14,6 +13,7 @@ using WalletService.Models.Requests.InvoiceRequest;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
 using WalletService.Utility.Extensions;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace WalletService.Core.Services;
 
@@ -158,7 +158,7 @@ public class InvoiceService : BaseService, IInvoiceService
                 if (userResponse.Content is null)
                     return null;
 
-                var user = userResponse.Content.ToJsonObject<UserAffiliateResponse>();
+                var user = JsonSerializer.Deserialize<UserAffiliateResponse>(userResponse.Content);
                 await _brevoEmailService.SendInvitationsForTradingAcademy(user!, link, code);
                 return user?.Data is null ? null : user;
             });

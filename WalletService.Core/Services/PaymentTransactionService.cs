@@ -12,7 +12,6 @@ using WalletService.Models.Requests.ConPaymentRequest;
 using WalletService.Models.Requests.PaymentTransaction;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
-using WalletService.Utility.Extensions;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace WalletService.Core.Services;
@@ -115,7 +114,7 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
         if (paymentTransaction is null)
             return false;
 
-        var products = paymentTransaction.Products.ToJsonObject<List<ProductRequest>>();
+        var products = JsonConvert.DeserializeObject<List<ProductRequest>>(paymentTransaction.Products);
         if (products is null) return false;
 
         var walletRequest = BuildWalletRequest(paymentTransaction, request);
@@ -143,7 +142,7 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
 
     private WalletRequest BuildWalletRequest(PaymentTransaction payment, ConfirmPaymentTransactionRequest request)
     {
-        var products = payment.Products.ToJsonObject<List<ProductRequest>>();
+        var products = JsonConvert.DeserializeObject<List<ProductRequest>>(payment.Products);
 
         return new WalletRequest
         {
@@ -167,7 +166,7 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
         var productIds   = request.Select(p => p.ProductId).ToArray();
         var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds);
 
-        var result = responseList.Content!.ToJsonObject<ProductsResponse>();
+        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content!);
 
         var firstProductCategory = result!.Data.First().PaymentGroup;
 

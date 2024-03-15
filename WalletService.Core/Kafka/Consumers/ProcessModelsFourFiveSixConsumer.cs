@@ -1,9 +1,9 @@
+using System.Text.Json;
 using Confluent.Kafka;
 using iText.Layout.Element;
 using iText.StyledXmlParser.Jsoup.Select;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using WalletService.Core.Kafka.Messages;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Repositories.IRepositories;
@@ -16,7 +16,6 @@ using WalletService.Models.Enums;
 using WalletService.Models.Requests.UserGradingRequest;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Utility.Extensions;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace WalletService.Core.Kafka.Consumers;
 
@@ -33,7 +32,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
     {
         try
         {
-            var message = e.Message.Value.ToJsonObject<ModelFourFiveSixMessage>();
+            var message = JsonSerializer.Deserialize<ModelFourFiveSixMessage>(e.Message.Value);
             Logger.LogInformation("[ProcessModelsFourFiveSixConsumer] OnMessage | Init");
             return message is not null ? Process(message) : Task.FromResult(false);
         }
@@ -61,8 +60,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             if (listUsersGraded is { Count: 0 })
                 return false;
 
-            listUsersGraded = listUsersGraded.OrderByDescending(x => x.Commissions).ToList();
-            var dictionary      = await DebitModelFourFiveProcess(model, listUsersGraded, walletRepository, accountServiceAdapter);
+            var dictionary = await DebitModelFourFiveProcess(model, listUsersGraded, walletRepository, accountServiceAdapter);
         
             
             var treeUsersInformation = await LeaderBoardModelFourProcess(accountServiceAdapter, dictionary);
@@ -165,7 +163,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         if (string.IsNullOrEmpty(response.Content))
             return result;
 
-        var userBinaryResponse = response.Content.ToJsonObject<UserBinaryResponse>();
+        var userBinaryResponse = JsonSerializer.Deserialize<UserBinaryResponse>(response.Content);
         return userBinaryResponse!.Data;
     }
     
