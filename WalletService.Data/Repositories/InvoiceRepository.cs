@@ -30,7 +30,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
         => Context.Invoices.Include(x => x.InvoiceDetail).AsNoTracking().ToListAsync();
 
     public Task<Invoices?> GetInvoiceById(int id)
-        => Context.Invoices.FirstOrDefaultAsync(x => x.Id == id);
+        => Context.Invoices.Include(e=>e.InvoiceDetail).FirstOrDefaultAsync(x => x.Id == id);
 
     public Task<Invoices?> GetInvoiceByReceiptNumber(string idTransaction)
         => Context.Invoices

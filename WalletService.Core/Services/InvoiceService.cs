@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
 using System.Text;
-using Newtonsoft.Json;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.CustomModels;
@@ -27,12 +26,13 @@ public class InvoiceService : BaseService, IInvoiceService
     private readonly IWalletModel1ARepository          _walletModel1ARepository;
     private readonly IWalletModel1BRepository          _walletModel1BRepository;
     private readonly IWalletRepository                 _walletRepository;
+    private readonly IMediatorPdfService              _mediatorPdfService;
 
     public InvoiceService(IMapper         mapper, IInvoiceRepository invoiceRepository,
         ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
         ILogger<InvoiceService>           logger,                  IAccountServiceAdapter   accountServiceAdapter,
         IBrevoEmailService                brevoEmailService,       IWalletModel1ARepository walletModel1ARepository,
-        IWalletModel1BRepository          walletModel1BRepository, IWalletRepository        walletRepository) : base(mapper)
+        IWalletModel1BRepository          walletModel1BRepository, IWalletRepository        walletRepository, IMediatorPdfService mediatorPdfService) : base(mapper)
     {
         _invoiceRepository                = invoiceRepository;
         _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
@@ -42,6 +42,7 @@ public class InvoiceService : BaseService, IInvoiceService
         _walletModel1ARepository          = walletModel1ARepository;
         _walletModel1BRepository          = walletModel1BRepository;
         _walletRepository                 = walletRepository;
+        _mediatorPdfService               = mediatorPdfService;
     }
 
     public async Task<IEnumerable<InvoiceDto>> GetAllInvoiceUserAsync(int id)
@@ -284,5 +285,21 @@ public class InvoiceService : BaseService, IInvoiceService
         {
             return false;
         }
+    }
+
+    public async Task<byte[]> CreateInvoice(int invoiceId)
+    {
+        var invoice = await _invoiceRepository.GetInvoiceById(invoiceId);
+        if (invoice is null)
+            return Array.Empty<byte>();
+
+        var user = await _accountServiceAdapter.GetUserInfo(invoice.AffiliateId);
+    
+        if (user is null)
+            return Array.Empty<byte>();
+    
+        var generatedInvoice = await _mediatorPdfService.RegenerateInvoice(user,invoice);
+
+        return generatedInvoice;
     }
 }

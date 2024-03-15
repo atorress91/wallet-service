@@ -16,4 +16,6 @@ public interface IInvoiceService
 
     Task<ModelBalancesAndInvoicesDto?> ProcessAndReturnBalancesForModels1A1B2(
         ModelBalancesAndInvoicesRequest request);
+
+    Task<byte[]> CreateInvoice(int invoiceId);
 }

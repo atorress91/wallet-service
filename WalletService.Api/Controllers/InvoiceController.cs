@@ -71,4 +71,20 @@ public class InvoiceController : BaseController
 
         return result is null ? Ok(Fail("Invoice returns could not be processed.")) : Ok(Success(result));
     }
+    
+    [HttpGet("CreateInvoice")]
+    public async Task<IActionResult> CreateInvoice([FromQuery] int invoiceId)
+    {
+        var result = await _invoiceService.CreateInvoice(invoiceId);
+        if (result.Length == 0)
+        {
+            return NotFound("La factura solicitada no se pudo generar o no existe.");
+        }
+        
+        Response.ContentType = "application/pdf";
+        Response.Headers.ContentDisposition = $"attachment; filename=invoice_{invoiceId}.pdf";
+
+        return File(result, "application/pdf");
+    }
+
 }
