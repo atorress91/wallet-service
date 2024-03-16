@@ -108,38 +108,38 @@ public class WalletService : BaseService, IWalletService
 
     public async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId)
     {
-        // var                   key       = string.Format(CacheKeys.BalanceInformationModel2, affiliateId);
-        // var                   existsKey =  await _redisCache.KeyExists(key);
+        var                   key       = string.Format(CacheKeys.BalanceInformationModel2, affiliateId);
+        var                   existsKey = await _redisCache.KeyExists(key);
         BalanceInformationDto response;
-        // if (! existsKey)
-        // {
-        var amountRequests       = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId);
-        var availableBalance     = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId);
-        var reverseBalance       = await _walletRepository.GetReverseBalanceByAffiliateId(affiliateId);
-        var totalAcquisitions    = await _walletRepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
-        var totalCommissionsPaid = await _walletRepository.GetTotalCommissionsPaid(affiliateId);
-        var totalServiceBalance  = await _walletRepository.GetTotalServiceBalance(affiliateId);
-
-        response = new BalanceInformationDto
+        if (!existsKey)
         {
-            AvailableBalance     = availableBalance,
-            ReverseBalance       = reverseBalance ?? 0,
-            TotalAcquisitions    = Math.Round(totalAcquisitions ?? 0, 2),
-            TotalCommissionsPaid = totalCommissionsPaid ?? 0,
-            ServiceBalance       = totalServiceBalance ?? 0
-        };
+            var amountRequests       = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId);
+            var availableBalance     = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId);
+            var reverseBalance       = await _walletRepository.GetReverseBalanceByAffiliateId(affiliateId);
+            var totalAcquisitions    = await _walletRepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
+            var totalCommissionsPaid = await _walletRepository.GetTotalCommissionsPaid(affiliateId);
+            var totalServiceBalance  = await _walletRepository.GetTotalServiceBalance(affiliateId);
 
-        if (amountRequests != 0m && response.ReverseBalance != 0m)
-        {
-            response.AvailableBalance -= amountRequests;
-            response.AvailableBalance -= response.ReverseBalance;
+            response = new BalanceInformationDto
+            {
+                AvailableBalance     = availableBalance,
+                ReverseBalance       = reverseBalance ?? 0,
+                TotalAcquisitions    = Math.Round(totalAcquisitions ?? 0, 2),
+                TotalCommissionsPaid = totalCommissionsPaid ?? 0,
+                ServiceBalance       = totalServiceBalance ?? 0
+            };
+
+            if (amountRequests != 0m && response.ReverseBalance != 0m)
+            {
+                response.AvailableBalance -= amountRequests;
+                response.AvailableBalance -= response.ReverseBalance;
+            }
+
+            await _redisCache.Set(key, response, TimeSpan.FromHours(1));
+            return response;
         }
 
-        // await _redisCache.Set(key, response, TimeSpan.FromHours(1));
-        // return response;
-        // }
-
-        // response = await _redisCache.Get<BalanceInformationDto>(key) ?? new BalanceInformationDto();
+        response = await _redisCache.Get<BalanceInformationDto>(key) ?? new BalanceInformationDto();
         return response;
     }
 
