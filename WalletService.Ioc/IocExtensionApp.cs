@@ -129,9 +129,9 @@ public static class IocExtensionApp
             .AddControllers()
             .AddNewtonsoftJson(options =>
             {
+                options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 options.SerializerSettings.DateFormatString      = "yyyy-MM-dd HH:mm:ss";
-                options.SerializerSettings.ContractResolver      = new DefaultContractResolver();
             });
         
         services.AddFluentValidationAutoValidation();
