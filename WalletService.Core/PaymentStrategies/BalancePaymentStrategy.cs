@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using WalletService.Core.Caching;
+﻿using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
