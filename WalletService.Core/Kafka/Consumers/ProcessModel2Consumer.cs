@@ -1,8 +1,6 @@
-﻿using System.Text.Json;
-using Confluent.Kafka;
+﻿using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using WalletService.Core.Kafka.Messages;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Configuration;

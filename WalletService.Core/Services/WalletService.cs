@@ -109,9 +109,9 @@ public class WalletService : BaseService, IWalletService
     public async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId)
     {
         var                   key       = string.Format(CacheKeys.BalanceInformationModel2, affiliateId);
-        var                   existsKey =  await _redisCache.KeyExists(key);
+        var                   existsKey = await _redisCache.KeyExists(key);
         BalanceInformationDto response;
-        if (! existsKey)
+        if (!existsKey)
         {
             var amountRequests       = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId);
             var availableBalance     = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId);
@@ -138,7 +138,7 @@ public class WalletService : BaseService, IWalletService
             await _redisCache.Set(key, response, TimeSpan.FromHours(1));
             return response;
         }
-        
+
         response = await _redisCache.Get<BalanceInformationDto>(key) ?? new BalanceInformationDto();
         return response;
     }
