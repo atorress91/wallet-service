@@ -26,6 +26,7 @@
         <PackageReference Include="QuestPDF" Version="2023.5.3"/>
         <PackageReference Include="sib_api_v3_sdk" Version="4.0.2"/>
         <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.4-preview.70"/>
+        <PackageReference Include="StackExchange.Redis" Version="2.7.27" />
         <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0-preview.5.23280.8"/>
     </ItemGroup>
 

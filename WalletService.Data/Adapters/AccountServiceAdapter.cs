@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Models.Configuration;
 using WalletService.Models.DTO.LeaderBoardDto;
@@ -119,7 +118,7 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
         if (string.IsNullOrEmpty(response.Content))
             throw new Exception("User information content is empty");
 
-        var userInfo = JsonSerializer.Deserialize<UserAffiliateResponse>(response.Content);
+        var userInfo = response.Content.ToJsonObject<UserAffiliateResponse>();
 
         if (userInfo?.Data is null)
             return null;

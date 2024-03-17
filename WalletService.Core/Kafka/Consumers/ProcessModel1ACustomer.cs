@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -21,7 +20,7 @@ public class ProcessModel1AConsumer : BaseKafkaConsumer
 
     protected override Task<bool> OnMessage(ConsumeResult<Ignore, string> e)
     {
-        var message = JsonSerializer.Deserialize<Model1AMessage>(e.Message.Value);
+        var message = e.Message.Value.ToJsonObject<Model1AMessage>();
         try
         {
             Logger.LogInformation("[ProcessModel1AConsumer] OnMessage | Init");

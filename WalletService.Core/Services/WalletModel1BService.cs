@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Repositories.IRepositories;
+using WalletService.Models.Constants;
 using WalletService.Models.DTO.WalletModel1BDto;
 using WalletService.Models.Requests.WalletRequest;
 
@@ -9,37 +11,51 @@ namespace WalletService.Core.Services;
 
 public class WalletModel1BService : BaseService, IWalletModel1BService
 {
-    private readonly IWalletModel1BRepository _walletModel1BRepository;
+    private readonly IWalletModel1BRepository       _walletModel1BRepository;
     private readonly IBalancePaymentStrategyModel1B _balancePaymentStrategyModel1B;
+    private readonly RedisCache                     _redisCache;
 
-    public WalletModel1BService(IMapper mapper, IWalletModel1BRepository walletModel1BRepository,
-        IBalancePaymentStrategyModel1B balancePaymentStrategyModel1B) : base(mapper)
+    public WalletModel1BService(
+        IMapper mapper, 
+        IWalletModel1BRepository walletModel1BRepository,
+        IBalancePaymentStrategyModel1B balancePaymentStrategyModel1B,
+        RedisCache redisCache) : base(mapper)
     {
-        _walletModel1BRepository = walletModel1BRepository;
+        _walletModel1BRepository       = walletModel1BRepository;
         _balancePaymentStrategyModel1B = balancePaymentStrategyModel1B;
+        _redisCache                    = redisCache;
     }
 
     public async Task<BalanceInformationModel1BDto> GetBalanceInformationByAffiliateId(int affiliateId)
     {
-        var availableBalance     = await _walletModel1BRepository.GetAvailableBalanceByAffiliateId(affiliateId);
-        var totalAcquisitions    = await _walletModel1BRepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
-        var reverseBalance       = await _walletModel1BRepository.GetReverseBalanceByAffiliateId(affiliateId);
-        var serviceBalance       = await _walletModel1BRepository.GetTotalServiceBalance(affiliateId);
-        var totalCommissionsPaid = await _walletModel1BRepository.GetTotalCommissionsPaidBalance(affiliateId);
-
-        var response = new BalanceInformationModel1BDto
+        var                          key       = string.Format(CacheKeys.BalanceInformationModel1B, affiliateId);
+        var                          existsKey =  await _redisCache.KeyExists(key);
+        BalanceInformationModel1BDto response;
+        if (!existsKey)
         {
-            AvailableBalance     = availableBalance,
-            ReverseBalance       = reverseBalance ?? 0,
-            TotalAcquisitions    = totalAcquisitions ?? 0,
-            TotalCommissionsPaid = totalCommissionsPaid ?? 0,
-            ServiceBalance       = serviceBalance ?? 0,
-        };
+            var availableBalance     = await _walletModel1BRepository.GetAvailableBalanceByAffiliateId(affiliateId);
+            var totalAcquisitions    = await _walletModel1BRepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
+            var reverseBalance       = await _walletModel1BRepository.GetReverseBalanceByAffiliateId(affiliateId);
+            var serviceBalance       = await _walletModel1BRepository.GetTotalServiceBalance(affiliateId);
+            var totalCommissionsPaid = await _walletModel1BRepository.GetTotalCommissionsPaidBalance(affiliateId);
 
-        if (response.ReverseBalance == 0m) return response;
+            response = new BalanceInformationModel1BDto
+            {
+                AvailableBalance     = availableBalance,
+                ReverseBalance       = reverseBalance ?? 0,
+                TotalAcquisitions    = totalAcquisitions ?? 0,
+                TotalCommissionsPaid = totalCommissionsPaid ?? 0,
+                ServiceBalance       = serviceBalance ?? 0,
+            };
 
-        response.AvailableBalance -= response.ReverseBalance;
-
+            if (response.ReverseBalance != 0m)
+                response.AvailableBalance -= response.ReverseBalance;
+            
+            await _redisCache.Set(key, response);
+            return response;        
+        }
+        
+        response = await _redisCache.Get<BalanceInformationModel1BDto>(key) ?? new BalanceInformationModel1BDto();
         return response;
     }
 
@@ -50,6 +66,9 @@ public class WalletModel1BService : BaseService, IWalletModel1BService
 
         var response = await _balancePaymentStrategyModel1B.ExecuteEcoPoolPayment(request);
 
+        if (response)
+            await RemoveCacheKey(request.AffiliateId);
+        
         return response;
     }
 
@@ -60,6 +79,18 @@ public class WalletModel1BService : BaseService, IWalletModel1BService
 
         var response = await _balancePaymentStrategyModel1B.ExecuteEcoPoolPaymentWithServiceBalance(request);
         
+        if (response)
+            await RemoveCacheKey(request.AffiliateId);
+        
         return response;
+    }
+    
+    private async Task RemoveCacheKey(int affiliateId)
+    {
+        var key       = string.Format(CacheKeys.BalanceInformationModel1B, affiliateId);
+        var existsKey = await _redisCache.KeyExists(key);
+
+        if (existsKey)
+            await _redisCache.Delete(key);
     }
 }
