@@ -20,11 +20,7 @@ public class RedisCache : ICache
         if (stringValue is not null && stringValue.IsValidJson())
             jsonStringData = stringValue;
         else if (value is not null)
-            jsonStringData = value.ToJsonString(new JsonSerializerSettings
-            {
-                TypeNameHandling = TypeNameHandling.All, 
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-            });
+            jsonStringData = value.ToJsonString();
 
         await _db.StringSetAsync(key, jsonStringData, timeOut);
     }
