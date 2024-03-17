@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using AutoMapper;
+﻿using AutoMapper;
+using Newtonsoft.Json;
 using WalletService.Core.Services;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -57,14 +57,14 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
+        var result = responseList.Content.ToJsonObject<ProductsResponse>();
 
         if (result?.Data.Count == Constants.EmptyValue)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
             var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
 
-            var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
+            var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
             await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
 

@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace WalletService.Models.Responses;
 
@@ -11,15 +11,15 @@ public class GetCoinBalancesResponse
 
 public class CoinInfo
 {
-    [JsonPropertyName("balance")]
+    [JsonProperty("balance")]
     public long Balance { get; set; }
 
-    [JsonPropertyName("balancef")]
+    [JsonProperty("balancef")]
     public string BalanceF { get; set; } = string.Empty;
 
-    [JsonPropertyName("status")]
+    [JsonProperty("status")]
     public string Status { get; set; } = string.Empty;
 
-    [JsonPropertyName("coin_status")]
+    [JsonProperty("coin_status")]
     public string CoinStatus { get; set; } = string.Empty;
 }
