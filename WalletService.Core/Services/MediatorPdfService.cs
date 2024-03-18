@@ -113,8 +113,8 @@ public class MediatorPdfService : IMediatorPdfService
                                     {
                                         if (!string.IsNullOrEmpty(invoice.ReceiptNumber)) 
                                         {
-                                            txt.Span("Referencia Pagadito:").SemiBold().FontSize(10);
-                                            txt.Span(invoice.ReceiptNumber).FontSize(10);
+                                            txt.Span("Aprobación Pagadito:").SemiBold().FontSize(10);
+                                            txt.Span(spResponse.Reason).FontSize(10);
                                         }
                                     });
                                 });
@@ -304,8 +304,8 @@ public class MediatorPdfService : IMediatorPdfService
                                     {
                                         if (!string.IsNullOrEmpty(invoice.ReceiptNumber)) 
                                         {
-                                            txt.Span("Referencia Pagadito:").SemiBold().FontSize(10);
-                                            txt.Span(invoice.ReceiptNumber).FontSize(10);
+                                            txt.Span("Aprobación Pagadito:").SemiBold().FontSize(10);
+                                            txt.Span(invoice.Reason).FontSize(10);
                                         }
                                     });
                                 });
