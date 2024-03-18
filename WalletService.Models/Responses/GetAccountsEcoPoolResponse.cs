@@ -1,80 +1,80 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace WalletService.Models.Responses;
 
 public class GetAccountsEcoPoolResponse
 {
-    [JsonProperty("success")]
+    [JsonPropertyName("success")]
     public bool Success { get; set; }
     
-    [JsonProperty("data")]
+    [JsonPropertyName("data")]
     public List<UserModelResponse> Data { get; set; }
     
-    [JsonProperty("message")]
+    [JsonPropertyName("message")]
     public string Message { get; set; }
     
-    [JsonProperty("code")]
+    [JsonPropertyName("code")]
     public int Code { get; set; }
 }
 
 public class UserModelResponse
 {
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public int Id { get; set; }
     
-    [JsonProperty("userName")]
+    [JsonPropertyName("userName")]
     public string UserName { get; set; }
     
-    [JsonProperty("email")]
+    [JsonPropertyName("email")]
     public string Email { get; set; }
     
-    [JsonProperty("name")]
+    [JsonPropertyName("name")]
     public string? Name { get; set; }
     
-    [JsonProperty("lastName")]
+    [JsonPropertyName("lastName")]
     public string? LastName { get; set; }
     
-    [JsonProperty("level")]
+    [JsonPropertyName("level")]
     public int Level { get; set; }
     
-    [JsonProperty("father")]
+    [JsonPropertyName("father")]
     public int Father { get; set; }
     
-    [JsonProperty("side")]
+    [JsonPropertyName("side")]
     public int Side { get; set; }
     
-    [JsonProperty("createdAt")]
+    [JsonPropertyName("createdAt")]
     public DateTime UserCreatedAt { get; set; }
     
-    [JsonProperty("familyTree")]
+    [JsonPropertyName("familyTree")]
     public List<UserLevel> FamilyTree { get; set; }
 }
 
 public class UserLevel
 {
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public int Id { get; set; }
     
-    [JsonProperty("userName")]
+    [JsonPropertyName("userName")]
     public string UserName { get; set; }
     
-    [JsonProperty("email")]
+    [JsonPropertyName("email")]
     public string Email { get; set; }
     
-    [JsonProperty("name")]
+    [JsonPropertyName("name")]
     public string? Name { get; set; }
     
-    [JsonProperty("lastName")]
+    [JsonPropertyName("lastName")]
     public string? LastName { get; set; }
     
-    [JsonProperty("level")]
+    [JsonPropertyName("level")]
     public int Level { get; set; }
     
-    [JsonProperty("father")]
+    [JsonPropertyName("father")]
     public int Father { get; set; }
     
-    [JsonProperty("side")]
+    [JsonPropertyName("side")]
     public int Side { get; set; }
-    [JsonProperty("createdAt")]
+    [JsonPropertyName("createdAt")]
     public DateTime UserCreatedAt { get; set; }
 }

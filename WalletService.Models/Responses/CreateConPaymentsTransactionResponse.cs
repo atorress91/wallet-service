@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-
+﻿
 namespace WalletService.Models.Responses;
 
 public class CreateConPaymentsTransactionResponse

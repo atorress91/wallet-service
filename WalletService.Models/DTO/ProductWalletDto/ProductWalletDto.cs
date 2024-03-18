@@ -1,26 +1,26 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace WalletService.Models.DTO.ProductWalletDto;
 
 public class ProductWalletDto
 {
-    [JsonProperty("id")] public int Id { get; set; }
-    [JsonProperty("categoryId")] public int CategoryId { get; set; }
-    [JsonProperty("salePrice")] public decimal SalePrice { get; set; }
-    [JsonProperty("commissionableValue")] public decimal CommissionableValue { get; set; }
-    [JsonProperty("binaryPoints")] public decimal BinaryPoints { get; set; }
-    [JsonProperty("valuePoints")] public int ValuePoints { get; set; }
-    [JsonProperty("tax")] public decimal Tax { get; set; }
-    [JsonProperty("modelTwoPercentage")] public decimal? ModelTwoPercentage { get; set; }
-    [JsonProperty("paymentGroup")] public int PaymentGroup { get; set; }
-    [JsonProperty("acumCompMin")] public bool AcumCompMin { get; set; }
-    [JsonProperty("productType")] public bool ProductType { get; set; }
-    [JsonProperty("productPacks")] public bool ProductPacks { get; set; }
-    [JsonProperty("baseAmount")] public decimal BaseAmount { get; set; }
-    [JsonProperty("dailyPercentage")] public decimal DailyPercentage { get; set; }
-    [JsonProperty("daysWait")] public int DaysWait { get; set; }
+    [JsonPropertyName("id")] public int Id { get; set; }
+    [JsonPropertyName("categoryId")] public int CategoryId { get; set; }
+    [JsonPropertyName("salePrice")] public decimal SalePrice { get; set; }
+    [JsonPropertyName("commissionableValue")] public decimal CommissionableValue { get; set; }
+    [JsonPropertyName("binaryPoints")] public decimal BinaryPoints { get; set; }
+    [JsonPropertyName("valuePoints")] public int ValuePoints { get; set; }
+    [JsonPropertyName("tax")] public decimal Tax { get; set; }
+    [JsonPropertyName("modelTwoPercentage")] public decimal? ModelTwoPercentage { get; set; }
+    [JsonPropertyName("paymentGroup")] public int PaymentGroup { get; set; }
+    [JsonPropertyName("acumCompMin")] public bool AcumCompMin { get; set; }
+    [JsonPropertyName("productType")] public bool ProductType { get; set; }
+    [JsonPropertyName("productPacks")] public bool ProductPacks { get; set; }
+    [JsonPropertyName("baseAmount")] public decimal BaseAmount { get; set; }
+    [JsonPropertyName("dailyPercentage")] public decimal DailyPercentage { get; set; }
+    [JsonPropertyName("daysWait")] public int DaysWait { get; set; }
 
-    [JsonProperty("name")] public string? Name { get; set; }
-    [JsonProperty("productDiscount")] public decimal ProductDiscount { get; set; }
+    [JsonPropertyName("name")] public string? Name { get; set; }
+    [JsonPropertyName("productDiscount")] public decimal ProductDiscount { get; set; }
 
 }

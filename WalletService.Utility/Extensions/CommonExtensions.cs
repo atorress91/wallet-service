@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 using System.Collections;
 using System.Data;
 using System.Data.Common;
@@ -8,9 +8,9 @@ using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Web;
-using Newtonsoft.Json.Linq;
 using WalletService.Models.Enums;
 
 namespace WalletService.Utility.Extensions;
@@ -52,7 +52,7 @@ public static class CommonExtensions
     {
         try
         {
-            JToken.Parse(value);
+            JsonDocument.Parse(value);
         }
         catch
         {
@@ -62,13 +62,13 @@ public static class CommonExtensions
     }
 
     public static T? ToJsonObject<T>(this string source)
-        => JsonConvert.DeserializeObject<T>(source);
+        => JsonSerializer.Deserialize<T>(source);
 
     public static string ToJsonString(this object source)
-        => JsonConvert.SerializeObject(source);
+        => JsonSerializer.Serialize(source);
 
-    public static string ToJsonString(this object source, JsonSerializerSettings jsonSerializerSettings)
-        => JsonConvert.SerializeObject(source, jsonSerializerSettings);
+    public static string ToJsonString(this object source, JsonSerializerOptions jsonSerializerSettings)
+        => JsonSerializer.Serialize(source, jsonSerializerSettings);
     
     public static IEnumerable<TResult> ZipThree<T1, T2, T3, TResult>(
         this IEnumerable<T1>      source,

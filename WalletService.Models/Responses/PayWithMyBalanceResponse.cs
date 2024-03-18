@@ -1,19 +1,19 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace WalletService.Models.Responses;
 
 public class PayWithMyBalanceResponse
 {
-    [JsonProperty("success")]
+    [JsonPropertyName("success")]
     public bool Success { get; set; }
 
-    [JsonProperty("data")]
+    [JsonPropertyName("data")]
     public List<object>? Data { get; set; }
 
-    [JsonProperty("message")]
+    [JsonPropertyName("message")]
     public string Message { get; set; } = string.Empty;
 
-    [JsonProperty("code")]
+    [JsonPropertyName("code")]
     public int Code { get; set; }
 }
 
