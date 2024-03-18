@@ -1,7 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Models.Configuration;
 using WalletService.Models.Requests.CoinPayRequest;
@@ -48,7 +47,7 @@ public class CoinPayAdapter : CoinPayBaseAdapter, ICoinPayAdapter
         };
 
         var response = await client.PostAsync("/api/auth/integration/createToken/v1",
-            new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json"));
+            new StringContent(requestBody.ToJsonString(), Encoding.UTF8, "application/json"));
 
         if (response.IsSuccessStatusCode)
         {

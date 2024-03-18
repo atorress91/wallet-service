@@ -1,10 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace WalletService.Models.Requests.CoinPayRequest;
 
 public class PaymentRequest
 {
-    [JsonProperty("idCurrency")] public int IdCurrency { get; set; }
-    [JsonProperty("amount")] public double Amount { get; set; }
-    [JsonProperty("details")] public string? Details { get; set; }
+    [JsonPropertyName("idCurrency")] public int IdCurrency { get; set; }
+    [JsonPropertyName("amount")] public double Amount { get; set; }
+    [JsonPropertyName("details")] public string? Details { get; set; }
 }
