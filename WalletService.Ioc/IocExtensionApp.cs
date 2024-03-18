@@ -140,8 +140,18 @@ public static class IocExtensionApp
             config.DefaultApiVersion                   = new ApiVersion(majorVersion, minorVersion);
             config.AssumeDefaultVersionWhenUnspecified = true;
         });
-    }
 
+        services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(
+                builder =>
+                {
+                    builder.AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+        });
+    }
     private static void InjectRepositories(IServiceCollection services)
     {
         services.AddScoped<IWalletHistoryRepository, WalletHistoryRepository>();
