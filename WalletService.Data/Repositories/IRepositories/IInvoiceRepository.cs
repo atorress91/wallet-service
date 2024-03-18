@@ -12,7 +12,7 @@ public interface IInvoiceRepository
     Task<Invoices?>                             GetInvoiceById(int                                      id);
     Task<Invoices>                              DeleteInvoiceAsync(Invoices                             invoice);
     Task<InvoicesSpResponse?>                   HandleDebitTransaction(DebitTransactionRequest          request);
-    Task<Invoices?>                             GetInvoiceByReceiptNumber(string                        idTransaction);
+    Task<Invoices?>                             GetInvoiceByReceiptNumber(string                        receiptNumber);
     Task<List<Invoices>>                        GetInvoicesByReceiptNumber(ICollection<string>          transactionIds);
     Task                                        RevertCoinPaymentTransactions(List<InvoiceNumber>       invoiceNumbers);
     Task<bool>                                  InvoiceExistsByReceiptNumber(string                     idTransaction);

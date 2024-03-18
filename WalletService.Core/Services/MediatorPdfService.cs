@@ -108,6 +108,15 @@ public class MediatorPdfService : IMediatorPdfService
                                         txt.Span("Domicilio: ").SemiBold().FontSize(10);
                                         txt.Span(userInfo.Address).FontSize(10);
                                     });
+                                    
+                                    col2.Item().AlignRight().Text(txt =>
+                                    {
+                                        if (!string.IsNullOrEmpty(invoice.ReceiptNumber)) 
+                                        {
+                                            txt.Span("Referencia Pagadito:").SemiBold().FontSize(10);
+                                            txt.Span(invoice.ReceiptNumber).FontSize(10);
+                                        }
+                                    });
                                 });
                             });
 
@@ -290,6 +299,15 @@ public class MediatorPdfService : IMediatorPdfService
                                         txt.Span("Domicilio: ").SemiBold().FontSize(10);
                                         txt.Span(userInfo.Address).FontSize(10);
                                     });
+                                    
+                                    col2.Item().AlignRight().Text(txt =>
+                                    {
+                                        if (!string.IsNullOrEmpty(invoice.ReceiptNumber)) 
+                                        {
+                                            txt.Span("Referencia Pagadito:").SemiBold().FontSize(10);
+                                            txt.Span(invoice.ReceiptNumber).FontSize(10);
+                                        }
+                                    });
                                 });
                             });
 
@@ -320,7 +338,7 @@ public class MediatorPdfService : IMediatorPdfService
                                 {
                                     var conceptName = item.ProductName;
                                     var quantity = item.ProductQuantity;
-                                    var price = item.ProductPrice;
+                                    var price = item.BaseAmount ?? 0;
                                     var tax = item.ProductIva;
                                     var discount = item.ProductDiscount * quantity;
                                     var total = quantity * price;
