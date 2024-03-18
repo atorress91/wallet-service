@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using WalletService.Core.PaymentStrategies.IPaymentStrategies;
+﻿using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Repositories.IRepositories;
@@ -73,7 +72,7 @@ public class BalancePaymentStrategy1B : IBalancePaymentStrategyModel1B
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
+        var result = responseList.Content.ToJsonObject<ProductsResponse>();
 
         if (result?.Data == null)
             return false;
@@ -198,7 +197,7 @@ public class BalancePaymentStrategy1B : IBalancePaymentStrategyModel1B
         if (string.IsNullOrEmpty(responseList.Content))
             return false;
 
-        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
+        var result = responseList.Content.ToJsonObject<ProductsResponse>();
 
         if (result?.Data == null)
             return false;

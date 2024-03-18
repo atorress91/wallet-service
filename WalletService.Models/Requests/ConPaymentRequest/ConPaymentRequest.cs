@@ -1,48 +1,48 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace WalletService.Models.Requests.ConPaymentRequest;
 
 public class ConPaymentRequest
 {
-    [JsonPropertyName("amount")]
+    [JsonProperty("amount")]
     public decimal Amount { get; set; }
 
-    [JsonPropertyName("currency1")]
+    [JsonProperty("currency1")]
     public string Currency1 { get; set; } = string.Empty;
 
-    [JsonPropertyName("currency2")]
+    [JsonProperty("currency2")]
     public string Currency2 { get; set; } = string.Empty;
 
-    [JsonPropertyName("buyer_email")]
+    [JsonProperty("buyer_email")]
     public string BuyerEmail { get; set; } = string.Empty;
 
-    [JsonPropertyName("address")]
+    [JsonProperty("address")]
     public string Address { get; set; } = string.Empty;
 
-    [JsonPropertyName("buyer_name")]
+    [JsonProperty("buyer_name")]
     public string? BuyerName { get; set; }
 
-    [JsonPropertyName("item_name")]
+    [JsonProperty("item_name")]
     public string? ItemName { get; set; }
 
-    [JsonPropertyName("item_number")]
+    [JsonProperty("item_number")]
     public string? ItemNumber { get; set; }
 
-    [JsonPropertyName("invoice")]
+    [JsonProperty("invoice")]
     public string? Invoice { get; set; }
 
-    [JsonPropertyName("custom")]
+    [JsonProperty("custom")]
     public string? Custom { get; set; }
 
-    [JsonPropertyName("ipn_url")]
+    [JsonProperty("ipn_url")]
     public string? IpnUrl { get; set; }
 
-    [JsonPropertyName("success_url")]
+    [JsonProperty("success_url")]
     public string? SuccessUrl { get; set; }
 
-    [JsonPropertyName("cancel_url")]
+    [JsonProperty("cancel_url")]
     public string? CancelUrl { get; set; }
 
-    [JsonPropertyName("products")]
+    [JsonProperty("products")]
     public List<ProductRequest> Products { get; set; }
 }

@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using AutoMapper;
+﻿using AutoMapper;
 using WalletService.Core.Kafka.Messages;
 using WalletService.Core.Kafka.Producer;
 using WalletService.Core.Kafka.Topics;
@@ -9,7 +8,6 @@ using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Constants;
 using WalletService.Models.DTO.InvoiceDetailDto;
-using WalletService.Models.DTO.InvoiceDto;
 using WalletService.Models.DTO.ProcessGradingDto;
 using WalletService.Models.DTO.ProductWalletDto;
 using WalletService.Models.Enums;
@@ -73,8 +71,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
             59, 59);
 
         var poolsModel2Within  = await _walletRepository.GetDebitsModel2WithinMonth(starDate, model2Configuration.DateEnd);
-        // var poolsModel2Outside = await _walletRepository.GetDebitsModel2OutsideMonth(starDate);
-        var poolsModel2Outside = new List<InvoicesDetails>();
+        var poolsModel2Outside = await _walletRepository.GetDebitsModel2OutsideMonth(starDate);
 
         var accountsModel2 = poolsModel2Within.Union(poolsModel2Outside)
             .Select(x  => x.Invoice.AffiliateId).Distinct().ToArray();
@@ -415,7 +412,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
                 if (accountResponse.Content is null)
                     continue;
 
-                var response = JsonSerializer.Deserialize<GetAccountsEcoPoolResponse>(accountResponse.Content);
+                var response = accountResponse.Content.ToJsonObject<GetAccountsEcoPoolResponse>();
                 listResultAccounts.AddRange(response!.Data);
             }
             catch (Exception e)
@@ -444,7 +441,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
             if (!productResponse.IsSuccessful)
                 continue;
 
-            var response = JsonSerializer.Deserialize<ProductsResponse>(productResponse.Content!);
+            var response = productResponse.Content!.ToJsonObject<ProductsResponse>();
             listResultProducts.AddRange(response!.Data);
         }
 

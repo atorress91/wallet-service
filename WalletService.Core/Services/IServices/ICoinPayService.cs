@@ -12,7 +12,6 @@ public interface ICoinPayService
     Task<GetNetworkResponse?> GetNetworksByIdCurrency(int idCurrency);
     Task<CreateAddressResponse?> CreateAddress(CreateAddresRequest request);
     Task<bool> IsValidSignature(int idUser, int idTransaction, string dynamicKey, string incomingSignature);
-    Task ProcessTransactionAsync(TransactionNotificationRequest transaction);
 
     #endregion
 }
