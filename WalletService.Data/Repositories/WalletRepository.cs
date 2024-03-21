@@ -602,6 +602,13 @@ public class WalletRepository : BaseRepository, IWalletRepository
             Value = dataTableDetails,
             TypeName = "dbo.InvoicesDetailsType"
         });
+        
+        cmd.Parameters.Add(new SqlParameter("@Reason", SqlDbType.VarChar)
+        {
+            Value = string.IsNullOrEmpty(request.Reason) ? null : request.Reason,
+            IsNullable = true,
+            Size = 250
+        });
     }
 
     private void CreateModel2Parameters(Model2TransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)

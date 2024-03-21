@@ -147,7 +147,7 @@ public class PagaditoService : BaseService, IPagaditoService
             AffiliateId = transactionResult.AffiliateId,
             AffiliateUserName = userInfo.UserName,
             PurchaseFor = Constants.EmptyValue,
-            Bank = Constants.Pagadito,
+            Bank = transactionResult.Reference,
             PaymentMethod = 4,
             ReceiptNumber = transactionResult.IdTransaction,
             ProductsList = productsList

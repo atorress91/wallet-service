@@ -111,7 +111,7 @@ public class MediatorPdfService : IMediatorPdfService
                                     
                                     col2.Item().AlignRight().Text(txt =>
                                     {
-                                        if (!string.IsNullOrEmpty(invoice.ReceiptNumber)) 
+                                        if (!string.IsNullOrEmpty(spResponse.Reason)) 
                                         {
                                             txt.Span("Aprobación Pagadito:").SemiBold().FontSize(10);
                                             txt.Span(spResponse.Reason).FontSize(10);
@@ -302,7 +302,7 @@ public class MediatorPdfService : IMediatorPdfService
                                     
                                     col2.Item().AlignRight().Text(txt =>
                                     {
-                                        if (!string.IsNullOrEmpty(invoice.ReceiptNumber)) 
+                                        if (!string.IsNullOrEmpty(invoice.Reason)) 
                                         {
                                             txt.Span("Aprobación Pagadito:").SemiBold().FontSize(10);
                                             txt.Span(invoice.Reason).FontSize(10);
@@ -356,7 +356,7 @@ public class MediatorPdfService : IMediatorPdfService
 
                                     subTotal += total;
                                     totalDiscount += discount;
-                                    totalTax = (decimal)tax;
+                                    totalTax = (decimal)tax!;
                                 }
                             });
 
