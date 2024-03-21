@@ -1,11 +1,21 @@
-﻿namespace WalletService.Models.Requests.TransferBalanceRequest;
+﻿using System.Text.Json.Serialization;
+
+namespace WalletService.Models.Requests.TransferBalanceRequest;
 
 public class TransferBalanceRequest
 {
+    [JsonPropertyName("fromAffiliateId")]
     public int FromAffiliateId { get; set; }
-    public string FromUserName { get; set; }
+    
+    [JsonPropertyName("fromUserName")]
+    public string FromUserName { get; set; } = string.Empty;
+    
+    [JsonPropertyName("toUserName")]
     public string ToUserName { get; set; } = string.Empty;
+    
+    [JsonPropertyName("amount")]
     public decimal? Amount { get; set; }
 
+    [JsonPropertyName("securityCode")]
     public string SecurityCode { get; set; } = string.Empty;
 }
