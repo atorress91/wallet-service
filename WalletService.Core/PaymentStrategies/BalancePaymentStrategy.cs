@@ -174,6 +174,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty         
         };
 
         var spResponse = await _walletRepository.DebitTransaction(debitTransactionRequest);
@@ -311,6 +312,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _walletRepository.AdminDebitTransaction(debitTransactionRequest);
@@ -434,6 +436,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _walletRepository.CoursesDebitTransaction(debitTransactionRequest);
@@ -551,6 +554,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _walletRepository.AdminDebitTransaction(debitTransactionRequest);
@@ -663,6 +667,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _walletRepository.MembershipDebitTransaction(debitTransactionRequest);
