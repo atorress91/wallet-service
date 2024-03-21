@@ -153,6 +153,7 @@ public class WireTransferStrategy : IWireTransferStrategy
             Type              = 0,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _invoiceRepository.HandleDebitTransaction(debitTransactionRequest);
@@ -277,6 +278,7 @@ public class WireTransferStrategy : IWireTransferStrategy
             Type              = 0,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var hasCourse  = await _invoiceRepository.GetInvoicesForTradingAcademyPurchases(request.AffiliateId);

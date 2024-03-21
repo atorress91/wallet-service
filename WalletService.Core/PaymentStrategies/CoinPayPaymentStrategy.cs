@@ -133,6 +133,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _invoiceRepository.HandleDebitTransaction(debitTransactionRequest);
@@ -249,6 +250,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _walletRepository.HandleMembershipTransaction(debitTransactionRequest);
