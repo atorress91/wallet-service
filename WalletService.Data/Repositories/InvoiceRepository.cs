@@ -253,6 +253,13 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             Value    = dataTableDetails,
             TypeName = "dbo.InvoicesDetailsType"
         });
+        
+        cmd.Parameters.Add(new SqlParameter("@Reason", SqlDbType.VarChar)
+        {
+            Value      = string.IsNullOrEmpty(request.Reason) ? null : request.Reason,
+            IsNullable = true,
+            Size       = 250
+        });
     }
 
     public async Task RevertCoinPaymentTransactions(List<InvoiceNumber> invoiceNumbers)
