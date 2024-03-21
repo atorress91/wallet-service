@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using StackExchange.Redis;
 using WalletService.Core.Caching.Interface;
 using WalletService.Utility.Extensions;
@@ -32,12 +31,8 @@ public class RedisCache : ICache
         if (! keyValue.HasValue)
             return default;
 
-        var jsonSerializerSettings = new JsonSerializerSettings
-        {
-            TypeNameHandling = TypeNameHandling.All,
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-        };
-        var deserializeObject = JsonConvert.DeserializeObject<T>(keyValue.ToString(), jsonSerializerSettings);
+        var keyString = keyValue.ToString();
+        var deserializeObject = keyString.ToJsonObject<T>();
         
         return deserializeObject;
     }
