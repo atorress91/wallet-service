@@ -116,4 +116,5 @@ public static class Constants
     public const string CompletedStatus                           = "COMPLETED";
     public const int    CompletedStatusCode                       = 100;
     public const int    TradingAcademyGroup                       = 6;
+    public const int    SuccessStatusCode                         = 1;
 }

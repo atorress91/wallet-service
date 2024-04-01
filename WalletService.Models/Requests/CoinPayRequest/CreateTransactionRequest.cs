@@ -7,6 +7,8 @@ namespace WalletService.Models.Requests.CoinPayRequest;
 public class CreateTransactionRequest
 {
     [JsonPropertyName("affiliateId")] public int AffiliateId { get; set; }
+    
+    [JsonPropertyName("userName")] public string UserName { get; set; } = string.Empty;
     [JsonPropertyName("amount")] public int Amount { get; set; }
     [JsonPropertyName("products")] public List<ProductRequest>? Products { get; set; }
 }

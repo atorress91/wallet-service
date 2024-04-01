@@ -32,6 +32,12 @@ public class CoinPaymentTransactionRepository : BaseRepository, ICoinPaymentTran
 
         return request;
     }
+    
+    public async Task<int> GetLastTransactionId()
+    {
+        var lastTransaction = await Context.PaymentTransaction.Where(x=>x.PaymentMethod=="CoinPay").OrderByDescending(t => t.Id).FirstOrDefaultAsync();
+        return lastTransaction != null ? int.Parse(lastTransaction.IdTransaction) : 0;
+    }
 
     public async Task<PaymentTransaction?> UpdateCoinPaymentTransactionAsync(PaymentTransaction request)
     {

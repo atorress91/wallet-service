@@ -30,7 +30,7 @@ public class CoinPayController : BaseController
     {
         var result = await _coinPayService.CreateChannel(request);
 
-        return result?.Data is null ? Ok(Fail("The channel could not be created.")) : Ok(result);
+        return result?.Data is null ? Ok(Fail("The channel could not be created.")) : Ok(Success(result));
     }
 
     [HttpGet("getNetworksByIdCurrency")]
@@ -47,6 +47,14 @@ public class CoinPayController : BaseController
         var result = await _coinPayService.CreateAddress(request);
 
         return result?.Data is null ? Ok(Fail("The address could not be created.")) : Ok(result);
+    }
+    
+    [HttpGet("getTransactionById")]
+    public async Task<IActionResult> GetTransactionById(int idTransaction)
+    {
+        var result = await _coinPayService.GetTransactionById(idTransaction);
+
+        return result?.Data is null ? Ok(Fail("Transaction not found.")) : Ok(Success(result));
     }
     
     
