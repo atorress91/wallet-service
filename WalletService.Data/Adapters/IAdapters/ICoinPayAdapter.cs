@@ -11,4 +11,5 @@ public interface ICoinPayAdapter
     Task<IRestResponse> SendFunds(SendFundRequest request);
     Task<IRestResponse> GetNetworksByIdCurrency(int idNetwork);
     Task<IRestResponse> CreateAddress(int idWallet, CreateAddresRequest request);
+    Task<bool> VerifyTransactionSignature(SignatureParamsRequest request);
 }

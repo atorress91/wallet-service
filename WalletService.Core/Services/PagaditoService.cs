@@ -198,9 +198,9 @@ public class PagaditoService : BaseService, IPagaditoService
         var executeTransaction = await _pagaditoAdapter.ExecuteTransaction(pagaditoTransaction);
 
         _logger.LogInformation(
-            $"[PagaditoService] | CreateTransaction | executeTransaction: {executeTransaction.ToJsonString()}");
+            $"[PagaditoService] | CreateTransaction | executeTransaction: {executeTransaction?.ToJsonString()}");
 
-        if (executeTransaction == null || string.IsNullOrEmpty(executeTransaction.Value))
+        if (string.IsNullOrEmpty(executeTransaction?.Value))
             return "This transaction is not valid";
 
         var productDetails = request.Details.Select(detail => new ProductRequest

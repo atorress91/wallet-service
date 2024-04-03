@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using WalletService.Core.Services.IServices;
@@ -20,19 +21,17 @@ public class CoinPayService : BaseService, ICoinPayService
 {
     private readonly ICoinPayAdapter _coinPayAdapter;
     private readonly ICoinPaymentTransactionRepository _coinPaymentTransactionRepository;
-    private readonly string _sharedKey;
-
     public CoinPayService(IMapper mapper, ICoinPayAdapter coinPayAdapter,
         ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
         IOptions<ApplicationConfiguration> appSettings) : base(mapper)
     {
         _coinPayAdapter = coinPayAdapter;
         _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
-        _sharedKey = appSettings.Value.CoinPay!.SecretKey!;
+       
     }
 
     #region coingPay
-
+    
     public async Task<CreateTransactionResponse?> CreateTransaction(CreateTransactionRequest request)
     {
         var today = DateTime.Now;
@@ -78,7 +77,7 @@ public class CoinPayService : BaseService, ICoinPayService
         var channelRequest = new CreateChannelRequest
         {
             IdCurrency = Constants.UsdtIdCurrency,
-            IdExternalIdentification = request.AffiliateId,
+            IdExternalIdentification = Guid.NewGuid().GetHashCode(),
             IdNetwork = Constants.UsdtIdNetwork,
             TagName = request.UserName,
         };
@@ -110,7 +109,7 @@ public class CoinPayService : BaseService, ICoinPayService
             PaymentMethod = "CoinPay",
             CreatedAt = today,
             UpdatedAt = today,
-            Reference = null
+            Reference = channelRequest.IdExternalIdentification.ToString()
         };
         
         if (existingTransaction != null && existingTransaction.Acredited == false)
@@ -157,20 +156,6 @@ public class CoinPayService : BaseService, ICoinPayService
 
         return address;
     }
-
-    public async Task<bool> IsValidSignature(int idUser, int idTransaction, string dynamicKey, string incomingSignature)
-    {
-        var generatedSignature = GenerateSignature(idUser, idTransaction, dynamicKey);
-        return await Task.FromResult(incomingSignature == generatedSignature);
-    }
-
-    private string GenerateSignature(int idUser, int idTransaction, string dynamicKey)
-    {
-        var tmpInfo = $"{idUser}{idTransaction}{dynamicKey}";
-        using var hmacsha512 = new HMACSHA512(Encoding.ASCII.GetBytes(_sharedKey));
-        var hashBytes = hmacsha512.ComputeHash(Encoding.ASCII.GetBytes(tmpInfo));
-        return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
-    }
     
     public async Task<GetTransactionByIdResponse?>GetTransactionById(int idTransaction)
     {
@@ -182,6 +167,39 @@ public class CoinPayService : BaseService, ICoinPayService
         var transaction = result.Content.ToJsonObject<GetTransactionByIdResponse>();
 
         return transaction;
+    }
+    
+    public async Task<bool> ReceiveCoinPayNotifications(WebhookNotificationRequest request,IHeaderDictionary headers)
+    {
+        var incomingSignature = headers["x-signature"];
+        var dynamicKey = headers["x-dynamic-key"];
+
+        if (string.IsNullOrEmpty(incomingSignature) || string.IsNullOrEmpty(dynamicKey))
+        {
+            return false;
+        }
+
+        var isValid = await _coinPayAdapter.VerifyTransactionSignature(new SignatureParamsRequest
+        {
+            IdTransaction = request.IdTransaction,
+            IdUser = request.IdUser,
+            IncomingSignature = incomingSignature,
+            DynamicKey = dynamicKey,
+        });
+        
+        var transaction = await _coinPaymentTransactionRepository.GetCoinPaymentTransactionByIdTransaction(request.IdTransaction.ToString());
+
+        if (transaction is null)
+            return false;
+
+        // transaction.AmountReceived = request.AmountReceived;
+        // transaction.Acredited = request.Acredited;
+        // transaction.Status = request.Status;
+        // transaction.UpdatedAt = DateTime.Now;
+
+        await _coinPaymentTransactionRepository.UpdateCoinPaymentTransactionAsync(transaction);
+
+        return true;
     }
 
     #endregion

@@ -1,4 +1,5 @@
-﻿using WalletService.Models.Requests.CoinPayRequest;
+﻿using Microsoft.AspNetCore.Http;
+using WalletService.Models.Requests.CoinPayRequest;
 using WalletService.Models.Responses;
 using WalletService.Models.Responses.BaseResponses;
 
@@ -11,8 +12,8 @@ public interface ICoinPayService
     Task<CreateChannelResponse?>CreateChannel(CreateTransactionRequest request);
     Task<GetNetworkResponse?> GetNetworksByIdCurrency(int idCurrency);
     Task<CreateAddressResponse?> CreateAddress(CreateAddresRequest request);
-    Task<bool> IsValidSignature(int idUser, int idTransaction, string dynamicKey, string incomingSignature);
     Task<GetTransactionByIdResponse?> GetTransactionById(int idTransaction);
+    Task<bool> ReceiveCoinPayNotifications(WebhookNotificationRequest request, IHeaderDictionary headers);
 
     #endregion
 }

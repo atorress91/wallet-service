@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using WalletService.Models.Configuration;
 using WalletService.Models.Constants;
+using WalletService.Models.Requests.CoinPayRequest;
 using WalletService.Models.Responses.BaseResponses;
 using WalletService.Utility.Extensions;
 
@@ -11,20 +12,34 @@ namespace WalletService.Data.Adapters;
 
 public abstract class CoinPayBaseAdapter
 {
-    private ApplicationConfiguration _appSettings;
+    private readonly ApplicationConfiguration _appSettings;
     private readonly HttpClient _client;
+    private readonly string _sharedKey;
 
     protected CoinPayBaseAdapter(IHttpClientFactory httpClientFactory, IOptions<ApplicationConfiguration> appSettings)
     {
         _client = httpClientFactory.CreateClient();
         var baseUrl = appSettings.Value.Endpoints!.CoinPayURL!;
         _appSettings = appSettings.Value;
+        _sharedKey = appSettings.Value.CoinPay!.SecretKey!;
 
         _client.BaseAddress = new Uri(baseUrl);
         _client.DefaultRequestHeaders.Accept.Clear();
         _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     }
+    protected async Task<bool> IsValidSignature(SignatureParamsRequest request)
+    {
+        var generatedSignature = GenerateSignature(request);
+        return await Task.FromResult(request.IncomingSignature == generatedSignature);
+    }
 
+    private string GenerateSignature(SignatureParamsRequest request)
+    {
+        var tmpInfo = $"{request.IdUser}{request.IdTransaction}{request.DynamicKey}";
+        using var hmacsha512 = new HMACSHA512(Encoding.ASCII.GetBytes(_sharedKey));
+        var hashBytes = hmacsha512.ComputeHash(Encoding.ASCII.GetBytes(tmpInfo));
+        return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+    }
     private async Task<string?> Authenticate()
     {
         var initialToken = _appSettings.CoinPay?.InitialToken ??
