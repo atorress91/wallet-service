@@ -129,7 +129,7 @@ public class WalletService : BaseService, IWalletService
                 ServiceBalance       = totalServiceBalance ?? 0
             };
 
-            if (amountRequests != 0m && response.ReverseBalance != 0m)
+            if (amountRequests != 0m || response.ReverseBalance != 0m)
             {
                 response.AvailableBalance -= amountRequests;
                 response.AvailableBalance -= response.ReverseBalance;
@@ -164,7 +164,7 @@ public class WalletService : BaseService, IWalletService
             TotalReverseBalance   = reverseBalance 
         };
 
-        if (amountRequests == 0m && reverseBalance == 0) return information;
+        if (amountRequests == 0m || reverseBalance == 0) return information;
 
         information.WalletProfit -= amountRequests;
         information.WalletProfit -= reverseBalance;
