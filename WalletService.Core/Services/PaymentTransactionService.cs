@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Newtonsoft.Json;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -13,7 +12,6 @@ using WalletService.Models.Requests.PaymentTransaction;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
 using WalletService.Utility.Extensions;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace WalletService.Core.Services;
 
