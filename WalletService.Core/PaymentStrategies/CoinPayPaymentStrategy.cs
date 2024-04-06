@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using WalletService.Core.PaymentStrategies.IPaymentStrategies;
+﻿using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Repositories.IRepositories;
@@ -133,6 +132,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _invoiceRepository.HandleDebitTransaction(debitTransactionRequest);
@@ -249,6 +249,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _walletRepository.HandleMembershipTransaction(debitTransactionRequest);

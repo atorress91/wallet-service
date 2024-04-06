@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Data;
-using Newtonsoft.Json;
 using WalletService.Data.Database;
 using WalletService.Data.Database.CustomModels;
 using WalletService.Data.Database.Models;
@@ -602,6 +601,13 @@ public class WalletRepository : BaseRepository, IWalletRepository
         {
             Value = dataTableDetails,
             TypeName = "dbo.InvoicesDetailsType"
+        });
+        
+        cmd.Parameters.Add(new SqlParameter("@Reason", SqlDbType.VarChar)
+        {
+            Value = string.IsNullOrEmpty(request.Reason) ? null : request.Reason,
+            IsNullable = true,
+            Size = 250
         });
     }
 

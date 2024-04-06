@@ -149,6 +149,7 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
             Type = Constants.EmptyValue,
             SecretKey = request.SecretKey,
             invoices = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _walletModel1ARepository.DebitTransaction(debitTransactionRequest);
@@ -274,6 +275,7 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
             Type = Constants.EmptyValue,
             SecretKey = request.SecretKey,
             invoices = invoiceDetails,
+            Reason   = string.Empty    
         };
 
         var spResponse = await _walletModel1ARepository.DebitServiceBalanceTransaction(debitTransactionRequest);

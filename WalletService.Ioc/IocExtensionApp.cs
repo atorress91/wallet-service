@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -11,8 +13,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using NLog.Extensions.Logging;
 using StackExchange.Redis;
 using WalletService.Core.Caching;
@@ -117,31 +117,22 @@ public static class IocExtensionApp
         Console.WriteLine($"IocLoggingRegister -> nlog.{lowerCaseEnvironment}.config");
     }
 
-    private static void InjectControllersAndDocumentation(IServiceCollection services, int majorVersion = 1,
-        int                                                                  minorVersion = 0)
+    private static void InjectControllersAndDocumentation(IServiceCollection services, int majorVersion = 1, int minorVersion = 0)
     {
         services.AddResponseCompression(options =>
         {
             options.Providers.Add<GzipCompressionProvider>();
             options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "text/plain" });
         });
-        services
-            .AddControllers()
-            .AddNewtonsoftJson(options =>
-            {
-                options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-                options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                options.SerializerSettings.DateFormatString      = "yyyy-MM-dd HH:mm:ss";
-            });
-        
+
+        services.AddControllers().AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+            options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
+        });
+
         services.AddFluentValidationAutoValidation();
         services.AddFluentValidationClientsideAdapters();
-        services.AddApiVersioning(config =>
-        {
-            config.DefaultApiVersion                   = new ApiVersion(majorVersion, minorVersion);
-            config.AssumeDefaultVersionWhenUnspecified = true;
-        });
-        
         services.AddApiVersioning(config =>
         {
             config.DefaultApiVersion                   = new ApiVersion(majorVersion, minorVersion);
@@ -159,8 +150,6 @@ public static class IocExtensionApp
                 });
         });
     }
-
-
     private static void InjectRepositories(IServiceCollection services)
     {
         services.AddScoped<IWalletHistoryRepository, WalletHistoryRepository>();

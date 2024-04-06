@@ -1,4 +1,5 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
+
 using WalletService.Models.DTO.WalletDto;
 
 namespace WalletService.Models.Responses;
@@ -7,11 +8,11 @@ public class GradingsResponse
 {
     public class ProductsResponse
     {
-        [JsonProperty("success")] public bool Success { get; set; }
-        [JsonProperty("data")] public ICollection<WalletDto> Data { get; set; } = new List<WalletDto>();
+        [JsonPropertyName("success")] public bool Success { get; set; }
+        [JsonPropertyName("data")] public ICollection<WalletDto> Data { get; set; } = new List<WalletDto>();
 
-        [JsonProperty("message")] public string Message { get; set; } = string.Empty;
+        [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
 
-        [JsonProperty("code")] public int Code { get; set; }
+        [JsonPropertyName("code")] public int Code { get; set; }
     }
 }

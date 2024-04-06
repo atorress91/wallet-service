@@ -11,16 +11,16 @@ namespace WalletService.Core.Services;
 
 public class MediatorPdfService : IMediatorPdfService
 {
-
-    public async Task<byte[]> GenerateInvoice(UserInfoResponse userInfo, DebitTransactionRequest invoice, InvoicesSpResponse spResponse)
+    public async Task<byte[]> GenerateInvoice(UserInfoResponse userInfo, DebitTransactionRequest invoice,
+        InvoicesSpResponse spResponse)
     {
-        var date             = DateTime.Now.ToString("MM/dd/yyyy");
-        var totalTax         = 0m;
-        var subTotal         = 0m;
-        var totalDiscount    = 0m;
+        var date = DateTime.Now.ToString("MM/dd/yyyy");
+        var totalTax = 0m;
+        var subTotal = 0m;
+        var totalDiscount = 0m;
         var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        var separator        = Path.DirectorySeparatorChar;
-        var pathFile         = $"{workingDirectory}{separator}Assets{separator}logo.png";
+        var separator = Path.DirectorySeparatorChar;
+        var pathFile = $"{workingDirectory}{separator}Assets{separator}logo.png";
 
         return await Task.Run(() =>
         {
@@ -38,13 +38,18 @@ public class MediatorPdfService : IMediatorPdfService
 
                             row.RelativeItem().Column(col =>
                             {
-                                col.Item().AlignRight().Background("#257272").Border(1).BorderColor("#257272").AlignCenter()
+                                col.Item().AlignRight().Background("#257272").Border(1).BorderColor("#257272")
+                                    .AlignCenter()
                                     .Text($"Factura de servicios #{spResponse.Id}")
                                     .FontColor("#fff");
 
-                                col.Item().AlignRight().Text("Razón Social: Ecosystem OCX Sharing Evolution S.A.").FontSize(10);
+                                col.Item().AlignRight().Text("Razón Social: Ecosystem OCX Sharing Evolution S.A.")
+                                    .FontSize(10);
                                 col.Item().AlignRight().Text("C.I.F: 3-101-844938").FontSize(10);
-                                col.Item().AlignRight().Text("Domicilio: San José-Santa Ana, Brasil, Centro Comercial Plaza del Rio, Local #3").FontSize(10);
+                                col.Item().AlignRight()
+                                    .Text(
+                                        "Domicilio: San José-Santa Ana, Brasil, Centro Comercial Plaza del Rio, Local #3")
+                                    .FontSize(10);
                                 col.Item().AlignRight().Text("Tel/Fax: 50663321239").FontSize(10);
                                 col.Item().AlignRight().Text("Correo: facturacion@ecosystemfx.com").FontSize(10);
                                 col.Item().AlignRight().Text(date).FontSize(10);
@@ -102,6 +107,15 @@ public class MediatorPdfService : IMediatorPdfService
                                     {
                                         txt.Span("Domicilio: ").SemiBold().FontSize(10);
                                         txt.Span(userInfo.Address).FontSize(10);
+                                    });
+                                    
+                                    col2.Item().AlignRight().Text(txt =>
+                                    {
+                                        if (!string.IsNullOrEmpty(spResponse.Reason)) 
+                                        {
+                                            txt.Span("Aprobación Pagadito:").SemiBold().FontSize(10);
+                                            txt.Span(spResponse.Reason).FontSize(10);
+                                        }
                                     });
                                 });
                             });
@@ -132,22 +146,26 @@ public class MediatorPdfService : IMediatorPdfService
                                 foreach (var item in invoice.invoices)
                                 {
                                     var conceptName = item.ProductName;
-                                    var quantity    = item.ProductQuantity;
-                                    var price       = item.ProductPrice; 
-                                    var tax         = item.ProductIva;
-                                    var discount    = item.ProductDiscount * quantity;
-                                    var total       = quantity * price; 
+                                    var quantity = item.ProductQuantity;
+                                    var price = item.ProductPrice;
+                                    var tax = item.ProductIva;
+                                    var discount = item.ProductDiscount * quantity;
+                                    var total = quantity * price;
 
-                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text(conceptName).FontSize(10);
-                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text(quantity.ToString()).FontSize(10);
-                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text($"$ {price.ToString("0.##")}").FontSize(10);
-                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text($"$ {discount.ToString("0.##")}").FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text(conceptName)
+                                        .FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2)
+                                        .Text(quantity.ToString()).FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2)
+                                        .Text($"$ {price.ToString("0.##")}").FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2)
+                                        .Text($"$ {discount.ToString("0.##")}").FontSize(10);
                                     tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2)
                                         .Text($"$ {total.ToString("0.##")}").FontSize(10);
 
-                                    subTotal      += total;
+                                    subTotal += total;
                                     totalDiscount += discount;
-                                    totalTax      =  tax;
+                                    totalTax = tax;
                                 }
                             });
 
@@ -156,7 +174,8 @@ public class MediatorPdfService : IMediatorPdfService
                                 row.RelativeItem().Column(col2 =>
                                 {
                                     col2.Item().AlignRight().Text("Monto pagado").Bold().FontSize(16);
-                                    col2.Item().AlignRight().Text($"Total: ${invoice.Debit.ToString("0.00")}").FontSize(18).FontColor("30A2FF");
+                                    col2.Item().AlignRight().Text($"Total: ${invoice.Debit.ToString("0.00")}")
+                                        .FontSize(18).FontColor("30A2FF");
                                     col2.Item().AlignRight().Text("Fecha de pago:").FontSize(12);
                                     col2.Item().AlignRight().Text(date).FontSize(12);
                                 });
@@ -184,15 +203,15 @@ public class MediatorPdfService : IMediatorPdfService
         });
     }
 
-        public async Task<byte[]> RegenerateInvoice(UserInfoResponse userInfo, Invoices invoice)
+    public async Task<byte[]> RegenerateInvoice(UserInfoResponse userInfo, Invoices invoice)
     {
-        var date             = DateTime.Now.ToString("MM/dd/yyyy");
-        var totalTax         = 0m;
-        var subTotal         = 0m;
-        var totalDiscount    = 0m;
+        var date = DateTime.Now.ToString("MM/dd/yyyy");
+        var totalTax = 0m;
+        var subTotal = 0m;
+        var totalDiscount = 0m;
         var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        var separator        = Path.DirectorySeparatorChar;
-        var pathFile         = $"{workingDirectory}{separator}Assets{separator}logo.png";
+        var separator = Path.DirectorySeparatorChar;
+        var pathFile = $"{workingDirectory}{separator}Assets{separator}logo.png";
 
         return await Task.Run(() =>
         {
@@ -210,13 +229,18 @@ public class MediatorPdfService : IMediatorPdfService
 
                             row.RelativeItem().Column(col =>
                             {
-                                col.Item().AlignRight().Background("#257272").Border(1).BorderColor("#257272").AlignCenter()
+                                col.Item().AlignRight().Background("#257272").Border(1).BorderColor("#257272")
+                                    .AlignCenter()
                                     .Text($"Factura de servicios #{invoice.Id}")
                                     .FontColor("#fff");
 
-                                col.Item().AlignRight().Text("Razón Social: Ecosystem OCX Sharing Evolution S.A.").FontSize(10);
+                                col.Item().AlignRight().Text("Razón Social: Ecosystem OCX Sharing Evolution S.A.")
+                                    .FontSize(10);
                                 col.Item().AlignRight().Text("C.I.F: 3-101-844938").FontSize(10);
-                                col.Item().AlignRight().Text("Domicilio: San José-Santa Ana, Brasil, Centro Comercial Plaza del Rio, Local #3").FontSize(10);
+                                col.Item().AlignRight()
+                                    .Text(
+                                        "Domicilio: San José-Santa Ana, Brasil, Centro Comercial Plaza del Rio, Local #3")
+                                    .FontSize(10);
                                 col.Item().AlignRight().Text("Tel/Fax: 50663321239").FontSize(10);
                                 col.Item().AlignRight().Text("Correo: facturacion@ecosystemfx.com").FontSize(10);
                                 col.Item().AlignRight().Text(date).FontSize(10);
@@ -275,6 +299,15 @@ public class MediatorPdfService : IMediatorPdfService
                                         txt.Span("Domicilio: ").SemiBold().FontSize(10);
                                         txt.Span(userInfo.Address).FontSize(10);
                                     });
+                                    
+                                    col2.Item().AlignRight().Text(txt =>
+                                    {
+                                        if (!string.IsNullOrEmpty(invoice.Reason)) 
+                                        {
+                                            txt.Span("Aprobación Pagadito:").SemiBold().FontSize(10);
+                                            txt.Span(invoice.Reason).FontSize(10);
+                                        }
+                                    });
                                 });
                             });
 
@@ -304,22 +337,26 @@ public class MediatorPdfService : IMediatorPdfService
                                 foreach (var item in invoice.InvoiceDetail)
                                 {
                                     var conceptName = item.ProductName;
-                                    var quantity    = item.ProductQuantity;
-                                    var price       = item.ProductPrice; 
-                                    var tax         = item.ProductIva;
-                                    var discount    = item.ProductDiscount * quantity;
-                                    var total       = quantity * price; 
+                                    var quantity = item.ProductQuantity;
+                                    var price = item.BaseAmount ?? 0;
+                                    var tax = item.ProductIva;
+                                    var discount = item.ProductDiscount * quantity;
+                                    var total = quantity * price;
 
-                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text(conceptName).FontSize(10);
-                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text(quantity.ToString()).FontSize(10);
-                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text($"$ {price.ToString("0.##")}").FontSize(10);
-                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text($"$ {discount.ToString("0.##")}").FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2).Text(conceptName)
+                                        .FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2)
+                                        .Text(quantity.ToString()).FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2)
+                                        .Text($"$ {price.ToString("0.##")}").FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2)
+                                        .Text($"$ {discount.ToString("0.##")}").FontSize(10);
                                     tabla.Cell().BorderBottom(0.5f).BorderColor("#D9D9D9").Padding(2)
                                         .Text($"$ {total.ToString("0.##")}").FontSize(10);
 
-                                    subTotal      += total;
+                                    subTotal += total;
                                     totalDiscount += discount;
-                                    totalTax      =  (decimal)tax;
+                                    totalTax = (decimal)tax!;
                                 }
                             });
 
@@ -328,7 +365,8 @@ public class MediatorPdfService : IMediatorPdfService
                                 row.RelativeItem().Column(col2 =>
                                 {
                                     col2.Item().AlignRight().Text("Monto pagado").Bold().FontSize(16);
-                                    col2.Item().AlignRight().Text($"Total: ${invoice.TotalInvoice.ToString()}").FontSize(18).FontColor("30A2FF");
+                                    col2.Item().AlignRight().Text($"Total: ${invoice.TotalInvoice.ToString()}")
+                                        .FontSize(18).FontColor("30A2FF");
                                     col2.Item().AlignRight().Text("Fecha de pago:").FontSize(12);
                                     col2.Item().AlignRight().Text(date).FontSize(12);
                                 });

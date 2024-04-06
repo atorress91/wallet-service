@@ -174,6 +174,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty         
         };
 
         var spResponse = await _walletRepository.DebitTransaction(debitTransactionRequest);
@@ -181,7 +182,9 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
         
-        await RemoveCacheKey(request.AffiliateId);
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1A);
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
         
         var invoicePdf =
             await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
@@ -309,6 +312,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _walletRepository.AdminDebitTransaction(debitTransactionRequest);
@@ -316,7 +320,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
         
-        await RemoveCacheKey(request.AffiliateId);
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
 
         var invoicePdf =
             await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
@@ -432,6 +436,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _walletRepository.CoursesDebitTransaction(debitTransactionRequest);
@@ -439,7 +444,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
         
-        await RemoveCacheKey(request.AffiliateId);
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
 
         var invoicePdf =
             await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
@@ -549,6 +554,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _walletRepository.AdminDebitTransaction(debitTransactionRequest);
@@ -556,7 +562,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
 
-        await RemoveCacheKey(request.AffiliateId);
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
 
         var invoicePdf =
             await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
@@ -661,6 +667,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = string.Empty    
         };
 
         var spResponse = await _walletRepository.MembershipDebitTransaction(debitTransactionRequest);
@@ -668,7 +675,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
         
-        await RemoveCacheKey(request.AffiliateId);
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
 
         await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
 
@@ -688,13 +695,11 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (bonusPaymentResult is false)
             return false;
         
-        await RemoveCacheKey(affiliateBonusWinner!.Id);
+        await RemoveCacheKey(affiliateBonusWinner.Id, CacheKeys.BalanceInformationModel2);
 
         await _brevoEmailService.SendBonusConfirmation(affiliateBonusWinner, request.AffiliateUserName);
-
         var pdfResult =
             await _mediatorPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
-
         await _brevoEmailService.SendEmailWelcome(userInfoResponse, spResponse);
 
         if (pdfResult.Length != Constants.EmptyValue)
@@ -704,12 +709,11 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         return true;
     }
-
-    private async Task RemoveCacheKey(int affiliateId)
+    private async Task RemoveCacheKey(int affiliateId, string stringKey)
     {
-        var key       = string.Format(CacheKeys.BalanceInformationModel2, affiliateId);
+        var key       = string.Format(stringKey, affiliateId);
         var existsKey = await _redisCache.KeyExists(key);
-
+        
         if (existsKey)
             await _redisCache.Delete(key);
     }

@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Data;
-using Newtonsoft.Json;
 using WalletService.Data.Database;
 using WalletService.Data.Database.CustomModels;
 using WalletService.Data.Database.Models;
@@ -32,10 +31,9 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
     public Task<Invoices?> GetInvoiceById(int id)
         => Context.Invoices.Include(e=>e.InvoiceDetail).FirstOrDefaultAsync(x => x.Id == id);
 
-    public Task<Invoices?> GetInvoiceByReceiptNumber(string idTransaction)
-        => Context.Invoices
-            .FirstOrDefaultAsync(e => e.ReceiptNumber == idTransaction);
-
+    public Task<Invoices?> GetInvoiceByReceiptNumber(string receiptNumber)
+        => Context.Invoices.Include(x=> x.InvoiceDetail).FirstOrDefaultAsync(e => e.ReceiptNumber == receiptNumber);
+    
     public Task<bool> InvoiceExistsByReceiptNumber(string idTransaction)
         => Context.Invoices
             .AnyAsync(e => e.ReceiptNumber == idTransaction);
@@ -254,6 +252,13 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
         {
             Value    = dataTableDetails,
             TypeName = "dbo.InvoicesDetailsType"
+        });
+        
+        cmd.Parameters.Add(new SqlParameter("@Reason", SqlDbType.VarChar)
+        {
+            Value      = string.IsNullOrEmpty(request.Reason) ? null : request.Reason,
+            IsNullable = true,
+            Size       = 250
         });
     }
 

@@ -1,7 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
-using Newtonsoft.Json;
 using WalletService.Models.Responses.BaseResponses;
+using WalletService.Utility.Extensions;
 
 namespace WalletService.Data.Adapters;
 
@@ -65,7 +65,7 @@ public abstract class CoinPayBaseAdapter
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", token);
 
-        var serializeObject = JsonConvert.SerializeObject(data);
+        var serializeObject = data.ToJsonString();
         var jsonContent     = new StringContent(serializeObject, Encoding.UTF8, "application/json");
 
         var response = await client.PostAsync(path, jsonContent);

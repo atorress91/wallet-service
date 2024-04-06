@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Globalization;
 using Microsoft.IdentityModel.Tokens;
+using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -36,8 +37,8 @@ public class ConPaymentService : BaseService, IConPaymentService
     private readonly IBrevoEmailService                _brevoEmailService;
     private readonly IWalletRequestRepository          _walletRequestRepository;
     private readonly IInventoryServiceAdapter          _inventoryServiceAdapter;
-    private readonly ICoinPaymentsPaymentStrategy              _coinPaymentsPaymentStrategy;
-
+    private readonly ICoinPaymentsPaymentStrategy      _coinPaymentsPaymentStrategy;
+    private readonly RedisCache                        _redisCache;
 
     public ConPaymentService(
         IMapper                           mapper, IOptions<ApplicationConfiguration> appSettings,
@@ -49,7 +50,8 @@ public class ConPaymentService : BaseService, IConPaymentService
         IBrevoEmailService                brevoEmailService,
         IWalletRequestRepository          walletRequestRepository,
         IInventoryServiceAdapter          inventoryServiceAdapter,
-        ICoinPaymentsPaymentStrategy              coinPaymentsPaymentStrategy
+        ICoinPaymentsPaymentStrategy      coinPaymentsPaymentStrategy,
+        RedisCache                        redisCache
     ) : base(mapper)
     {
         _invoiceRepository      = invoiceRepository;
@@ -64,7 +66,8 @@ public class ConPaymentService : BaseService, IConPaymentService
         _brevoEmailService                = brevoEmailService;
         _walletRequestRepository          = walletRequestRepository;
         _inventoryServiceAdapter          = inventoryServiceAdapter;
-        _coinPaymentsPaymentStrategy              = coinPaymentsPaymentStrategy;
+        _coinPaymentsPaymentStrategy      = coinPaymentsPaymentStrategy;
+        _redisCache                       = redisCache;
     }
 
     public async Task<GetPayByNameProfileResponse> GetPayByNameProfile(string nameTag)
@@ -300,10 +303,13 @@ public class ConPaymentService : BaseService, IConPaymentService
         var isExists    = await _invoiceRepository.InvoiceExistsByReceiptNumber(transactionResult.IdTransaction!);
         var productType = await GetProductType(products);
 
-        if (!isExists && (ipnRequest.status == 1 || ipnRequest.status == 100))
+        if (!isExists && ipnRequest.status is 1 or 100)
         {
             transactionResult.Acredited = true;
 
+            await RemoveCacheKey(walletRequest.AffiliateId, CacheKeys.BalanceInformationModel2);
+            await RemoveCacheKey(walletRequest.AffiliateId, CacheKeys.BalanceInformationModel1A);
+            await RemoveCacheKey(walletRequest.AffiliateId, CacheKeys.BalanceInformationModel1B);
             switch (productType)
             {
                 case ProductType.Membership:
@@ -441,6 +447,8 @@ public class ConPaymentService : BaseService, IConPaymentService
 
         if (bonusPaymentResult is false)
             return;
+        
+        await RemoveCacheKey(affiliateBonusWinner!.Id, CacheKeys.BalanceInformationModel2);
 
         await _brevoEmailService.SendBonusConfirmation(affiliateBonusWinner, userInfo.UserName ?? string.Empty);
     }
@@ -635,5 +643,14 @@ public class ConPaymentService : BaseService, IConPaymentService
         });
 
         await _walletRequestRepository.UpdateBulkWalletRequestsAsync(withdrawalList);
+    }
+    
+    private async Task RemoveCacheKey(int affiliateId, string stringKey)
+    {
+        var key       = string.Format(stringKey, affiliateId);
+        var existsKey = await _redisCache.KeyExists(key);
+        
+        if (existsKey)
+            await _redisCache.Delete(key);
     }
 }

@@ -18,6 +18,7 @@ public class DebitTransactionRequest
     public byte Type { get; set; }
     public string? SecretKey { get; set; }
     public string? ConceptType { get; set; }
+    public string? Reason { get; set; }
 
     public List<InvoiceDetailsTransactionRequest> invoices { get; set; }
 }

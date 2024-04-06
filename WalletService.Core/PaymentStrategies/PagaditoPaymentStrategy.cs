@@ -155,6 +155,7 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = request.Bank
         };
 
         var spResponse = await _invoiceRepository.HandleDebitTransaction(debitTransactionRequest);
@@ -279,6 +280,7 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
+            Reason            = request.Bank
         };
 
         var hasCourse  = await _invoiceRepository.GetInvoicesForTradingAcademyPurchases(request.AffiliateId);
@@ -361,6 +363,7 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.EmptyValue,
                 ProductStart          = Constants.EmptyValue,
+                
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -391,7 +394,8 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
-        };
+            Reason            = request.Bank
+         };
 
         var spResponse = await _walletRepository.HandleMembershipTransaction(debitTransactionRequest);
 
