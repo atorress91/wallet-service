@@ -1,7 +1,6 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using WalletService.Data.Adapters.IAdapters;
+
 using WalletService.Models.Constants;
 using WalletService.Models.Configuration;
 using WalletService.Models.Requests.CoinPayRequest;
