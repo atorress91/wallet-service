@@ -195,6 +195,14 @@ public class WalletController : BaseController
 
         return response is false ? Ok(Fail("The payment could not be processed")) : Ok(Success(response));
     }
+    
+    [HttpPost("RemoveKeys")]
+    public async Task<IActionResult> RemoveKeys([FromBody] DeleteKeysRequest request)
+    {
+        await _walletService.RemoveKeys(request);
+
+        return Ok(Success("Ok"));
+    }
 
     #endregion
 }

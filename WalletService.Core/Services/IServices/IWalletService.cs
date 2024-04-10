@@ -41,6 +41,7 @@ public interface IWalletService
     Task<bool> PayWithMyBalance(WalletRequest                   request);
     Task<bool> PayWithMyBalanceModel2(WalletRequest             request);
     Task<bool> PayMembershipWithMyBalance(WalletRequest         request);
+    Task RemoveKeys(DeleteKeysRequest         request);
 
     #endregion
 }
