@@ -162,7 +162,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             return result;
 
         var userBinaryResponse = response.Content.ToJsonObject<UserBinaryResponse>();
-        return userBinaryResponse!.Data;
+        return userBinaryResponse!.data;
     }
     
     private static async Task<Dictionary<int, decimal>> DebitModelFourFiveProcess(
@@ -248,13 +248,13 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             decimal payment;
             var     leftPoints            = 0m;
             var     rightPoints           = 0m;
-            var     userPointsInformation = resultPoints.Where(x => x.UserId == user.Key)!.FirstOrDefault();
+            var     userPointsInformation = resultPoints.Where(x => x.AffiliateId == user.Key)!.FirstOrDefault();
             var     userInformation       = listUsersGraded.First(x => x.AffiliateId == user.Key);
 
             if (userPointsInformation is not null)
             {
-                leftPoints  = oldLeftPoints + userPointsInformation.PointsLeft;
-                rightPoints = oldRightPoints + userPointsInformation.PointsRight;
+                leftPoints  = oldLeftPoints + userPointsInformation.LeftVolume;
+                rightPoints = oldRightPoints + userPointsInformation.RightVolume;
             }
 
             if (leftPoints == rightPoints && leftPoints > 0)
@@ -265,8 +265,8 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                 await CreditModel4(
                     walletRepository,
                     payment,
-                    userPointsInformation!.PointsLeft,
-                    userPointsInformation.PointsRight,
+                    userPointsInformation!.LeftVolume,
+                    userPointsInformation.RightVolume,
                     userInformation,
                     hasTwoChildren);
                 
@@ -310,8 +310,8 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                 await CreditModel4(
                     walletRepository,
                     payment,
-                    userPointsInformation!.PointsLeft,
-                    userPointsInformation.PointsRight,
+                    userPointsInformation!.LeftVolume,
+                    userPointsInformation.RightVolume,
                     userInformation,
                     hasTwoChildren);
                 
@@ -349,8 +349,8 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             else
                 await walletRepository.TransactionPoints(
                     user.Key, 0, 0,
-                    userPointsInformation!.PointsLeft,
-                    userPointsInformation.PointsRight);
+                    userPointsInformation!.LeftVolume,
+                    userPointsInformation.RightVolume);
             
         }
     }
@@ -459,7 +459,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         if (payment <= 0)
             return Task.CompletedTask;
         
-        // return Task.CompletedTask;
+        return Task.CompletedTask;
 
         var creditTransaction = new DebitTransactionRequest
         {
@@ -486,7 +486,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         if (globalPayment <= 0)
             return Task.CompletedTask;
         
-        // return Task.CompletedTask;
+        return Task.CompletedTask;
 
 
         var creditTransaction = new CreditTransactionRequest

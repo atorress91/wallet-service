@@ -5,25 +5,18 @@ namespace WalletService.Models.DTO.AffiliateInformation;
 
 public class UserBinaryInformation
 {
-    [JsonPropertyName("affiliateId")]
-    public int UserId { get; set; }
-
-    [JsonPropertyName("leftVolume")] public decimal PointsLeft { get; set; }
-
-    [JsonPropertyName("rightVolume")] public decimal PointsRight { get; set; } 
+    public int AffiliateId { get; set; }
+    public decimal LeftVolume { get; set; }
+    public decimal RightVolume { get; set; } 
 }
 
 public class UserBinaryResponse
 {
-    [JsonPropertyName("success")]
-    public bool Success { get; set; }
+    public bool success { get; set; }
     
-    [JsonPropertyName("data")]
-    public List<UserBinaryInformation> Data { get; set; }
+    public List<UserBinaryInformation> data { get; set; }
     
-    [JsonPropertyName("message")]
-    public string Message { get; set; }
+    public string message { get; set; }
     
-    [JsonPropertyName("code")]
-    public int Code { get; set; }
+    public int code { get; set; }
 }
