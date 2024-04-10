@@ -202,6 +202,28 @@ public class WalletService : BaseService, IWalletService
         return response;
     }
 
+    public async Task RemoveKeys(DeleteKeysRequest request)
+    {
+        foreach (var user in request.Users)
+        {
+            var keyModel2 = string.Format(CacheKeys.BalanceInformationModel2, user);
+            var keyModel1A = string.Format(CacheKeys.BalanceInformationModel1A, user);
+            var keyModel1B = string.Format(CacheKeys.BalanceInformationModel1B, user);
+            var existsModel2 = await _redisCache.KeyExists(keyModel2);
+            if (existsModel2)
+                await _redisCache.Delete(keyModel2);
+            
+            var existsModel1A = await _redisCache.KeyExists(keyModel1A);
+            if (existsModel1A)
+                await _redisCache.Delete(keyModel1A);
+            
+            var existsModel1B = await _redisCache.KeyExists(keyModel1B);
+            if (existsModel1B)
+                await _redisCache.Delete(keyModel1B);
+        }
+
+    }
+    
     public async Task<bool> CoursePaymentHandler(WalletRequest request)
     {
         return await _balancePaymentStrategy.ExecutePaymentCourses(request);

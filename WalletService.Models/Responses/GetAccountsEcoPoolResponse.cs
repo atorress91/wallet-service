@@ -4,77 +4,50 @@ namespace WalletService.Models.Responses;
 
 public class GetAccountsEcoPoolResponse
 {
-    [JsonPropertyName("success")]
-    public bool Success { get; set; }
-    
-    [JsonPropertyName("data")]
-    public List<UserModelResponse> Data { get; set; }
-    
-    [JsonPropertyName("message")]
-    public string Message { get; set; }
-    
-    [JsonPropertyName("code")]
-    public int Code { get; set; }
+    public bool success { get; set; }
+    public List<UserModelResponse> data { get; set; }
+    public string message { get; set; }
+    public int code { get; set; }
 }
 
 public class UserModelResponse
 {
-    [JsonPropertyName("id")]
     public int Id { get; set; }
     
-    [JsonPropertyName("userName")]
     public string UserName { get; set; }
     
-    [JsonPropertyName("email")]
     public string Email { get; set; }
     
-    [JsonPropertyName("name")]
     public string? Name { get; set; }
     
-    [JsonPropertyName("lastName")]
     public string? LastName { get; set; }
     
-    [JsonPropertyName("level")]
     public int Level { get; set; }
     
-    [JsonPropertyName("father")]
     public int Father { get; set; }
     
-    [JsonPropertyName("side")]
     public int Side { get; set; }
+    public DateTime CreatedAt { get; set; }
     
-    [JsonPropertyName("createdAt")]
-    public DateTime UserCreatedAt { get; set; }
-    
-    [JsonPropertyName("familyTree")]
     public List<UserLevel> FamilyTree { get; set; }
 }
 
 public class UserLevel
 {
-    [JsonPropertyName("id")]
     public int Id { get; set; }
     
-    [JsonPropertyName("userName")]
     public string UserName { get; set; }
     
-    [JsonPropertyName("email")]
     public string Email { get; set; }
     
-    [JsonPropertyName("name")]
     public string? Name { get; set; }
     
-    [JsonPropertyName("lastName")]
     public string? LastName { get; set; }
     
-    [JsonPropertyName("level")]
     public int Level { get; set; }
     
-    [JsonPropertyName("father")]
     public int Father { get; set; }
     
-    [JsonPropertyName("side")]
     public int Side { get; set; }
-    [JsonPropertyName("createdAt")]
-    public DateTime UserCreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

@@ -48,11 +48,11 @@ public static class IocExtensionWorker
     {
         var serviceProvider = services.BuildServiceProvider();
         var settings        = serviceProvider.GetRequiredService<IOptions<ApplicationConfiguration>>().Value;
-        var multiplexer     = ConnectionMultiplexer.Connect(settings.ConnectionStrings!.RedisConnection!);
+        var multiplexer = ConnectionMultiplexer.Connect(settings.ConnectionStrings!.RedisConnection!);
         
         services.AddSingleton<IConnectionMultiplexer>(multiplexer);
-        services.AddSingleton<ICache, RedisCache>();
-        services.AddSingleton<ICache, InMemoryCache>();
+        services.AddSingleton<RedisCache>();
+        services.AddSingleton<InMemoryCache>();
         services.AddSingleton<ILockManager, LockManager>();
     }
 

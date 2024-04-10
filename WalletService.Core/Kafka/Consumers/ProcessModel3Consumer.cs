@@ -82,7 +82,7 @@ public class ProcessModel3Consumer : BaseKafkaConsumer
                 AffiliateId   = s.Id,
                 AffiliateName = s.UserName,
                 Side          = s.Side,
-                UserCreatedAt = s.UserCreatedAt
+                UserCreatedAt = s.CreatedAt
             }).ToList();
 
             var productName = product?.Name ?? string.Empty;
@@ -97,7 +97,7 @@ public class ProcessModel3Consumer : BaseKafkaConsumer
                 PaymentDate       = DateTime.Now,
                 ProductExternalId = item.ProductId,
                 ProductName       = productName,
-                UserCreatedAt     = affiliate.UserCreatedAt
+                UserCreatedAt     = affiliate.CreatedAt
             });
         }
 
