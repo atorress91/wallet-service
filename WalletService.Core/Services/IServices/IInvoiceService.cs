@@ -19,4 +19,5 @@ public interface IInvoiceService
 
     Task<byte[]> CreateInvoice(int invoiceId);
     Task<byte[]> CreateInvoiceByReference(string reference);
+
 }

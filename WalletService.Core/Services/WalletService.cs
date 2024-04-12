@@ -164,7 +164,7 @@ public class WalletService : BaseService, IWalletService
             TotalReverseBalance   = reverseBalance 
         };
 
-        if (amountRequests == 0m && reverseBalance == 0) return information;
+        if (amountRequests == 0m || reverseBalance == 0) return information;
 
         information.WalletProfit -= amountRequests;
         information.WalletProfit -= reverseBalance;
