@@ -13,8 +13,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using NLog.Extensions.Logging;
 using StackExchange.Redis;
 using WalletService.Core.Caching;

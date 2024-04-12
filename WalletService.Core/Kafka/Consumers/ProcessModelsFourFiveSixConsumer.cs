@@ -1,9 +1,6 @@
 using Confluent.Kafka;
-using iText.Layout.Element;
-using iText.StyledXmlParser.Jsoup.Select;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using WalletService.Core.Kafka.Messages;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Repositories.IRepositories;
@@ -16,7 +13,6 @@ using WalletService.Models.Enums;
 using WalletService.Models.Requests.UserGradingRequest;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Utility.Extensions;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace WalletService.Core.Kafka.Consumers;
 

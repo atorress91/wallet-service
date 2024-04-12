@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
 using System.Text;
-using Newtonsoft.Json;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.CustomModels;
@@ -33,7 +32,7 @@ public class InvoiceService : BaseService, IInvoiceService
         ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
         ILogger<InvoiceService>           logger,                  IAccountServiceAdapter   accountServiceAdapter,
         IBrevoEmailService                brevoEmailService,       IWalletModel1ARepository walletModel1ARepository,
-        IWalletModel1BRepository          walletModel1BRepository, IWalletRepository        walletRepository,IMediatorPdfService mediatorPdfService) : base(mapper)
+        IWalletModel1BRepository          walletModel1BRepository, IWalletRepository        walletRepository, IMediatorPdfService mediatorPdfService) : base(mapper)
     {
         _invoiceRepository                = invoiceRepository;
         _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
