@@ -1,9 +1,11 @@
 ﻿using System.Reflection;
 using System.Text.Json;
+using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Repositories.IRepositories;
+using WalletService.Models.Constants;
 using WalletService.Models.Enums;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
@@ -19,9 +21,9 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
     private readonly IMediatorPdfService      _mediatorPdfService;
     private readonly IBrevoEmailService       _brevoEmailService;
     private readonly IWalletRepository        _walletRepository;
-
+    private readonly RedisCache               _redisCache;
     public PagaditoPaymentStrategy(IInvoiceRepository invoiceRepository,     IInventoryServiceAdapter inventoryServiceAdapter,
-        IAccountServiceAdapter                            accountServiceAdapter, IBrevoEmailService       brevoEmailService, IMediatorPdfService mediatorPdfService, IWalletRepository walletRepository)
+        IAccountServiceAdapter                            accountServiceAdapter, IBrevoEmailService       brevoEmailService, IMediatorPdfService mediatorPdfService, IWalletRepository walletRepository,RedisCache redisCache)
     {
         _invoiceRepository       = invoiceRepository;
         _inventoryServiceAdapter = inventoryServiceAdapter;
@@ -162,6 +164,10 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
 
         if (spResponse is null)
             return false;
+        
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1A);
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
 
         var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
@@ -288,6 +294,10 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
 
         if (spResponse is null)
             return false;
+        
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1A);
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>();
         var                        invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
@@ -401,6 +411,10 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
 
         if (spResponse is null)
             return false;
+        
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1A);
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
 
         await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
 
@@ -414,5 +428,14 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
         }
 
         return true;
+    }
+    
+    private async Task RemoveCacheKey(int affiliateId, string stringKey)
+    {
+        var key       = string.Format(stringKey, affiliateId);
+        var existsKey = await _redisCache.KeyExists(key);
+        
+        if (existsKey)
+            await _redisCache.Delete(key);
     }
 }
