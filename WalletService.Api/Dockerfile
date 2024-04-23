@@ -9,18 +9,20 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 
 # Copiar los archivos de proyecto de todas las capas
-COPY ["WalletService.Api/WalletService.Api.csproj", "WalletService.Api/"]
-COPY ["WalletService.Core/WalletService.Core.csproj", "WalletService.Core/"]
-COPY ["WalletService.Models/WalletService.Models.csproj", "WalletService.Models/"]
-COPY ["WalletService.Data/WalletService.Data.csproj", "WalletService.Data/"]
-COPY ["WalletService.Ioc/WalletService.Ioc.csproj", "WalletService.Ioc/"]
-COPY ["WalletService.Utility/WalletService.Utility.csproj", "WalletService.Utility/"]
+COPY ["WalletService.Api.csproj", "./"]
+COPY ["../WalletService.Core/WalletService.Core.csproj", "../WalletService.Core/"]
+COPY ["../WalletService.Models/WalletService.Models.csproj", "../WalletService.Models/"]
+COPY ["../WalletService.Data/WalletService.Data.csproj", "../WalletService.Data/"]
+COPY ["../WalletService.Ioc/WalletService.Ioc.csproj", "../WalletService.Ioc/"]
+COPY ["../WalletService.Utility/WalletService.Utility.csproj", "../WalletService.Utility/"]
 
-RUN dotnet restore "WalletService.Api/WalletService.Api.csproj"
+# Restaurar las dependencias
+RUN dotnet restore "WalletService.Api.csproj"
 
+# Copiar el resto de los archivos del proyecto
 COPY . .
 
-WORKDIR "/src/WalletService.Api"
+WORKDIR "/src"
 RUN dotnet build "WalletService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
