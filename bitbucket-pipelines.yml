@@ -17,6 +17,7 @@ pipelines:
             - export ECR_REPO_URI=948104088074.dkr.ecr.us-east-1.amazonaws.com/walletserviceapi
             - export IMAGE_TAG=qa-$BITBUCKET_COMMIT
             - eval $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+            - ls -la
             - cd walletservice
             - docker build -f WalletService/WalletService.Api/Dockerfile -t $ECR_REPO_URI:$IMAGE_TAG .
             - docker push $ECR_REPO_URI:$IMAGE_TAG
