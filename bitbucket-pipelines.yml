@@ -16,11 +16,11 @@ pipelines:
             - export AWS_DEFAULT_REGION='us-east-1'
             - export ECR_REPO_URI=948104088074.dkr.ecr.us-east-1.amazonaws.com/walletserviceapi
             - export IMAGE_TAG=qa-$BITBUCKET_COMMIT
-            - eval $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+            - eval $(aws ecr get-login-password --region $AWS_DEFAULT_REGION)
          
             - docker build -f WalletService.Api/Dockerfile -t $ECR_REPO_URI:$IMAGE_TAG .
             - docker push $ECR_REPO_URI:$IMAGE_TAG
-            
+
             - aws sts get-caller-identity
            
             - sed -i "s|948104088074.dkr.ecr.us-east-1.amazonaws.com/walletserviceapi:tag|$ECR_REPO_URI:$IMAGE_TAG|g" qa-task-definition.json
