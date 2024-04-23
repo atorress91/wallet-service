@@ -20,6 +20,9 @@ pipelines:
             - unzip awscliv2.zip
             - ./aws/install
 
+            - curl -fsSL https://get.docker.com -o get-docker.sh
+            - sh get-docker.sh
+            
             - eval $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
             
             - docker build -t $ECR_REPO_URI:$IMAGE_TAG .
