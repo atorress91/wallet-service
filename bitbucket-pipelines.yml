@@ -5,31 +5,34 @@ pipelines:
     development:
       - step:
           name: Build and Push to ECR - QA for WalletServiceApi
+          deployment: QA
           script:
-            - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-            - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
             - export AWS_DEFAULT_REGION='us-east-1'
             - export ECR_REPO_URI=948104088074.dkr.ecr.us-east-1.amazonaws.com/walletserviceapi
             - export IMAGE_TAG=qa-$BITBUCKET_COMMIT
             - export TASK_FAMILY_NAME=WalletServiceApiTaskFamily
             - export SERVICE_NAME=WalletServiceApi
             - export CLUSTER_NAME=HeroSystemQA
-            
-            - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+
+            - apt-get update
+            - apt-get install -y curl unzip
+            - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            - unzip awscliv2.zip
+            - sudo ./aws/install
+
+            - eval $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
             
             - docker build -t $ECR_REPO_URI:$IMAGE_TAG .
-            
-            - docker push $ECR_REPO_URI:$IMAGE_TAG
-            
-            - sed -i "s|<IMAGE_NAME>|$ECR_REPO_URI:$IMAGE_TAG|g" qa-task-definition.json
-            
-            - aws ecs register-task-definition --cli-input-json file://qa-task-definition.json
-            
-            - aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_FAMILY_NAME --force-new-deployment
 
+            - docker push $ECR_REPO_URI:$IMAGE_TAG
+            - sed -i "s|<IMAGE_NAME>|948104088074.dkr.ecr.us-east-1.amazonaws.com/walletserviceapi:qa-$BITBUCKET_COMMIT|g" qa-task-definition.json
+            - aws ecs register-task-definition --cli-input-json file://qa-task-definition.json
+
+            - aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_FAMILY_NAME --force-new-deployment
     master:
       - step:
           name: Build and Push to ECR - Prod for WalletServiceApi
+          deployment: Production
           script:
             - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
             - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
