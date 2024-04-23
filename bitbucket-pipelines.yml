@@ -16,6 +16,9 @@ pipelines:
             - export SERVICE_NAME=WalletServiceApi
             - export CLUSTER_NAME=HeroSystemQA
 
+            - curl -fsSL https://get.docker.com -o get-docker.sh
+            - sh get-docker.sh
+
             - eval $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
             - docker build -t $ECR_REPO_URI:$IMAGE_TAG .
             - docker push $ECR_REPO_URI:$IMAGE_TAG
@@ -37,6 +40,9 @@ pipelines:
             - export TASK_FAMILY_NAME=WalletServiceApiTaskFamily
             - export SERVICE_NAME=WalletServiceApiProd
             - export CLUSTER_NAME=HeroSystemProd
+            
+            - curl -fsSL https://get.docker.com -o get-docker.sh
+            - sh get-docker.sh
             
             - eval $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
             - docker build -t $ECR_REPO_URI:$IMAGE_TAG .
