@@ -20,9 +20,8 @@ pipelines:
             - export IMAGE_TAG=qa-$BITBUCKET_COMMIT
             - eval $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
             - cd WalletService.Api
-            - docker build -f WalletService.Api/Dockerfile -t $ECR_REPO_URI:$IMAGE_TAG WalletService.Api/
+            - docker build -t $ECR_REPO_URI:$IMAGE_TAG .
             - docker push $ECR_REPO_URI:$IMAGE_TAG
-            - cd ..
             - sed -i "s|948104088074.dkr.ecr.us-east-1.amazonaws.com/walletserviceapi:tag|$ECR_REPO_URI:$IMAGE_TAG|g" qa-task-definition.json
             - aws ecs register-task-definition --cli-input-json file://qa-task-definition.json
             - aws ecs update-service --cluster HeroSystemQA --service WalletServiceApi --task-definition WalletServiceApiTaskFamily --force-new-deployment
