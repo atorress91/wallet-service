@@ -1,28 +1,28 @@
 image: mcr.microsoft.com/dotnet/sdk:7.0
 
 pipelines:
-  development:
-    - step:
-        name: Build and Push to ECR - QA for WalletServiceApi
-        deployment: QA
-        script:
-          - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-          - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-          - export AWS_DEFAULT_REGION='us-east-1'
-          - export ECR_REPO_URI=948104088074.dkr.ecr.us-east-1.amazonaws.com/walletserviceapi
-          - export IMAGE_TAG=qa-$BITBUCKET_COMMIT
-          - export TASK_FAMILY_NAME=WalletServiceApiTaskFamily
-          - export SERVICE_NAME=WalletServiceApi
-          - export CLUSTER_NAME=HeroSystemQA
+  branches:
+    development:
+      - step:
+          name: Build and Push to ECR - QA for WalletServiceApi
+          deployment: QA
+          script:
+            - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+            - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+            - export AWS_DEFAULT_REGION='us-east-1'
+            - export ECR_REPO_URI=948104088074.dkr.ecr.us-east-1.amazonaws.com/walletserviceapi
+            - export IMAGE_TAG=qa-$BITBUCKET_COMMIT
+            - export TASK_FAMILY_NAME=WalletServiceApiTaskFamily
+            - export SERVICE_NAME=WalletServiceApi
+            - export CLUSTER_NAME=HeroSystemQA
 
-          - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
-          - docker build -t $ECR_REPO_URI:$IMAGE_TAG .
-          - docker push $ECR_REPO_URI:$IMAGE_TAG
+            - eval $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+            - docker build -t $ECR_REPO_URI:$IMAGE_TAG .
+            - docker push $ECR_REPO_URI:$IMAGE_TAG
 
-          - sed -i "s|948104088074.dkr.ecr.us-east-1.amazonaws.com/walletserviceapi:tag|$ECR_REPO_URI:$IMAGE_TAG|g" qa-task-definition.json
-          - aws ecs register-task-definition --cli-input-json file://qa-task-definition.json
-
-          - aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_FAMILY_NAME --force-new-deployment
+            - sed -i "s|948104088074.dkr.ecr.us-east-1.amazonaws.com/walletserviceapi:tag|$ECR_REPO_URI:$IMAGE_TAG|g" qa-task-definition.json
+            - aws ecs register-task-definition --cli-input-json file://qa-task-definition.json
+            - aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_FAMILY_NAME --force-new-deployment
 
     master:
       - step:
@@ -38,14 +38,10 @@ pipelines:
             - export SERVICE_NAME=WalletServiceApiProd
             - export CLUSTER_NAME=HeroSystemProd
             
-            - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
-            
+            - eval $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
             - docker build -t $ECR_REPO_URI:$IMAGE_TAG .
-            
             - docker push $ECR_REPO_URI:$IMAGE_TAG
             
             - sed -i "s|<IMAGE_NAME>|$ECR_REPO_URI:$IMAGE_TAG|g" prod-task-definition.json
-            
             - aws ecs register-task-definition --cli-input-json file://prod-task-definition.json
-            
             - aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_FAMILY_NAME --force-new-deployment
