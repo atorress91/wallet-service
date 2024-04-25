@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using WalletService.Core.Services.IServices;
+using WalletService.Models.Requests.ConPaymentRequest;
 using WalletService.Models.Requests.PagaditoRequest;
+using WalletService.Models.Requests.WalletRequest;
 
 namespace WalletService.Api.Controllers;
 
