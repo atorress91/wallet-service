@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using WalletService.Core.Caching;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.CustomModels;
@@ -27,12 +28,14 @@ public class InvoiceService : BaseService, IInvoiceService
     private readonly IWalletModel1BRepository          _walletModel1BRepository;
     private readonly IWalletRepository                 _walletRepository;
     private readonly IMediatorPdfService              _mediatorPdfService;
+    private readonly RedisCache                       _redisCache;
 
     public InvoiceService(IMapper         mapper, IInvoiceRepository invoiceRepository,
         ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
         ILogger<InvoiceService>           logger,                  IAccountServiceAdapter   accountServiceAdapter,
         IBrevoEmailService                brevoEmailService,       IWalletModel1ARepository walletModel1ARepository,
-        IWalletModel1BRepository          walletModel1BRepository, IWalletRepository        walletRepository, IMediatorPdfService mediatorPdfService) : base(mapper)
+        IWalletModel1BRepository          walletModel1BRepository, IWalletRepository        walletRepository, 
+        IMediatorPdfService mediatorPdfService,RedisCache redisCache) : base(mapper)
     {
         _invoiceRepository                = invoiceRepository;
         _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
@@ -43,6 +46,7 @@ public class InvoiceService : BaseService, IInvoiceService
         _walletModel1BRepository          = walletModel1BRepository;
         _walletRepository                 = walletRepository;
         _mediatorPdfService               = mediatorPdfService;
+        _redisCache                       = redisCache;
     }
 
     public async Task<IEnumerable<InvoiceDto>> GetAllInvoiceUserAsync(int id)
@@ -272,10 +276,13 @@ public class InvoiceService : BaseService, IInvoiceService
             switch (model)
             {
                 case "Model1A":
+                    await RemoveCacheKey(affiliateId, CacheKeys.BalanceInformationModel1A);
                     return await _walletModel1ARepository.CreditTransaction(creditTransactionRequest);
                 case "Model1B":
+                    await RemoveCacheKey(affiliateId, CacheKeys.BalanceInformationModel1B);
                     return await _walletModel1BRepository.CreditTransaction(creditTransactionRequest);
                 case "Model2":
+                    await RemoveCacheKey(affiliateId, CacheKeys.BalanceInformationModel2);
                     return await _walletRepository.CreditTransaction(creditTransactionRequest);
             }
 
@@ -317,5 +324,14 @@ public class InvoiceService : BaseService, IInvoiceService
         var generatedInvoice = await _mediatorPdfService.RegenerateInvoice(user,invoice);
 
         return generatedInvoice;
+    }
+    
+    private async Task RemoveCacheKey(int affiliateId, string stringKey)
+    {
+        var key       = string.Format(stringKey, affiliateId);
+        var existsKey = await _redisCache.KeyExists(key);
+        
+        if (existsKey)
+            await _redisCache.Delete(key);
     }
 }
