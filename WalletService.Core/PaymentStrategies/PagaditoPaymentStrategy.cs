@@ -31,6 +31,7 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
         _brevoEmailService       = brevoEmailService;
         _mediatorPdfService      = mediatorPdfService;
         _walletRepository        = walletRepository;
+        _redisCache              = redisCache;
     }
       private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
     {
@@ -329,12 +330,14 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
 
         var invoiceDetails       = new List<InvoiceDetailsTransactionRequest>();
         var userInfoResponse     = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
-        var affiliateBonusWinner = await _accountServiceAdapter.GetUserInfo(userInfoResponse!.Father);
 
         var firstProductId   = request.ProductsList.First().IdProduct;
         var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
 
         var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
+        
+        if(userInfoResponse is null)
+            return false;
 
         if (productResponse?.Data == null)
             return false;
@@ -412,11 +415,11 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
         if (spResponse is null)
             return false;
         
+        await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
+        
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1A);
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
-
-        await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
 
         var pdfResult = await _mediatorPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
 
