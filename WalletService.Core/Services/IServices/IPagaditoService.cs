@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
+using WalletService.Models.Requests.ConPaymentRequest;
 using WalletService.Models.Requests.PagaditoRequest;
+using WalletService.Models.Requests.WalletRequest;
 
 namespace WalletService.Core.Services.IServices;
 
