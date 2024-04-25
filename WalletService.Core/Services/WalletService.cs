@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
 using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
@@ -164,7 +163,7 @@ public class WalletService : BaseService, IWalletService
             TotalReverseBalance   = reverseBalance 
         };
 
-        if (amountRequests == 0m || reverseBalance == 0) return information;
+        if (amountRequests == 0m && reverseBalance == 0) return information;
 
         information.WalletProfit -= amountRequests;
         information.WalletProfit -= reverseBalance;
