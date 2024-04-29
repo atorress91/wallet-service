@@ -2,6 +2,7 @@
 using WalletService.Models.DTO.AffiliateBtc;
 using WalletService.Models.DTO.AffiliateInformation;
 using WalletService.Models.DTO.ProductWalletDto;
+using NewtonsoftJson = Newtonsoft.Json;
 
 namespace WalletService.Models.Responses;
 
@@ -49,13 +50,13 @@ public class ProductResponse
 
 public class UserAffiliateResponse
 { 
-    [JsonPropertyName("success")] public bool Success { get; set; }
+    [NewtonsoftJson.JsonProperty] public bool Success { get; set; }
 
-    [JsonPropertyName("data")] public UserInfoResponse? Data { get; set; }
+    [NewtonsoftJson.JsonProperty("data")] public UserInfoResponse? Data { get; set; }
 
-    [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
+    [NewtonsoftJson.JsonProperty("message")] public string Message { get; set; } = string.Empty;
 
-    [JsonPropertyName("code")] public int Code { get; set; }
+    [NewtonsoftJson.JsonProperty("code")] public int Code { get; set; }
     
 }
 
