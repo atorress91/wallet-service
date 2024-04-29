@@ -6,6 +6,7 @@ using WalletService.Models.Requests.RequestValidationCode;
 using WalletService.Models.Responses;
 using WalletService.Models.Responses.BaseResponses;
 using WalletService.Utility.Extensions;
+using NewtonsoftJson = Newtonsoft.Json;
 
 namespace WalletService.Data.Adapters;
 
@@ -118,7 +119,7 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
         if (string.IsNullOrEmpty(response.Content))
             throw new Exception("User information content is empty");
 
-        var userInfo = response.Content.ToJsonObject<UserAffiliateResponse>();
+        var userInfo = NewtonsoftJson.JsonConvert.DeserializeObject<UserAffiliateResponse>(response.Content);
 
         if (userInfo?.Data is null)
             return null;
