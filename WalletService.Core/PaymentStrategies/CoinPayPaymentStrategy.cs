@@ -31,7 +31,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         _mediatorPdfService      = mediatorPdfService;
         _walletRepository        = walletRepository;
     }
-    private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
+      private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
     {
         Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
 

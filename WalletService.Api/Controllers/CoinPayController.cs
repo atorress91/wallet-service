@@ -60,8 +60,7 @@ public class CoinPayController : BaseController
     [HttpPost("receiveCoinPayNotifications")]
     public async Task<IActionResult> ReceiveCoinPayNotifications([FromBody] WebhookNotificationRequest request)
     {
-        var headers = Request.Headers;
-        var result = await _coinPayService.ReceiveCoinPayNotifications(request, headers);
+        var result = await _coinPayService.ReceiveCoinPayNotifications(request);
         
         return result is false ? Ok(Fail("The notification could not be processed.")) : Ok();      
     }

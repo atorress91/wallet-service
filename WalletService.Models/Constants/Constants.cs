@@ -117,4 +117,7 @@ public static class Constants
     public const int    CompletedStatusCode                       = 100;
     public const int    TradingAcademyGroup                       = 6;
     public const int    SuccessStatusCode                         = 1;
+    public const int    CoinPayPendingStatusCode                  = 1;
+    public const int    CoinPaySuccessStatusCode                  = 2;
+    public const int    CoinPayExpiredStatusCode                  = 5;
 }

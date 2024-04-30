@@ -13,7 +13,7 @@ public interface ICoinPayService
     Task<GetNetworkResponse?> GetNetworksByIdCurrency(int idCurrency);
     Task<CreateAddressResponse?> CreateAddress(CreateAddresRequest request);
     Task<GetTransactionByIdResponse?> GetTransactionById(int idTransaction);
-    Task<bool> ReceiveCoinPayNotifications(WebhookNotificationRequest request, IHeaderDictionary headers);
+    Task<bool> ReceiveCoinPayNotifications(WebhookNotificationRequest? request);
 
     #endregion
 }

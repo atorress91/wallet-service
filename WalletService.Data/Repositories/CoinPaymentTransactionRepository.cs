@@ -62,4 +62,7 @@ public class CoinPaymentTransactionRepository : BaseRepository, ICoinPaymentTran
     public Task<PaymentTransaction?>GetPaymentTransactionById(int id)
     => Context.PaymentTransaction.FirstOrDefaultAsync(x=>x.Id == id);
     
+    public Task<PaymentTransaction?> GetTransactionByReference(string reference)
+        => Context.PaymentTransaction.FirstOrDefaultAsync(e => e.Reference == reference);
+    
 }
