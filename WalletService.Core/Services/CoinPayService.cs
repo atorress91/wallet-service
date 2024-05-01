@@ -220,7 +220,7 @@ public class CoinPayService : BaseService, ICoinPayService
         var channelRequest = new CreateChannelRequest
         {
             IdCurrency = Constants.UsdtIdCurrency,
-            IdExternalIdentification = Guid.NewGuid().GetHashCode(),
+            IdExternalIdentification = CommonExtensions.GenerateUniqueId(request.AffiliateId),
             IdNetwork = Constants.UsdtIdNetwork,
             TagName = request.UserName,
         };
@@ -316,7 +316,7 @@ public class CoinPayService : BaseService, ICoinPayService
 
     public async Task<bool> ReceiveCoinPayNotifications(WebhookNotificationRequest? request)
     {
-        _logger.LogInformation($"[CoinPayService] | UpdateTransactionStatus | Starting transaction status update");
+        _logger.LogInformation($"[CoinPayService] | UpdateTransactionStatus | Starting transaction status update | request: {request!.ToJsonString()}");
 
         if (request is null)
         {
