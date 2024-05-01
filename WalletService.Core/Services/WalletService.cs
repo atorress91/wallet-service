@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Newtonsoft.Json;
 using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
@@ -245,9 +246,10 @@ public class WalletService : BaseService, IWalletService
 
         if (string.IsNullOrEmpty(userInfo.Content))
             return false;
-
-        var result      = userInfo.Content!.ToJsonObject<UserAffiliateResponse>();
-        var userResult  = currentUser.Content!.ToJsonObject<UserAffiliateResponse>();
+        
+        var userResult = JsonConvert.DeserializeObject<UserAffiliateResponse>(currentUser.Content!);
+        var result     = JsonConvert.DeserializeObject<UserAffiliateResponse>(userInfo.Content!);
+        
         var userBalance = await GetBalanceInformationByAffiliateId(request.FromAffiliateId);
 
         if (userResult?.Data?.VerificationCode != request.SecurityCode)
@@ -340,9 +342,9 @@ public class WalletService : BaseService, IWalletService
 
         if (string.IsNullOrEmpty(userInfo.Content))
             return new ServicesResponse { Success = false, Message = "Error", Code = 400 };
-
-        var currentUserResult = currentUser.Content!.ToJsonObject<UserAffiliateResponse>();
-        var result            = userInfo.Content!.ToJsonObject<UserAffiliateResponse>();
+        
+        var currentUserResult = JsonConvert.DeserializeObject<UserAffiliateResponse>(currentUser.Content!);
+        var result            = JsonConvert.DeserializeObject<UserAffiliateResponse>(userInfo.Content!);
         var userBalance       = await GetBalanceInformationByAffiliateId(data.FromAffiliateId);
 
         if (currentUserResult?.Data?.VerificationCode != data.SecurityCode)
