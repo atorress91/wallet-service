@@ -45,4 +45,52 @@ public class ResultsEcoPoolRepository : BaseRepository, IResultsEcoPoolRepositor
             .Include(x => x.ResultsModel3Levels)
             .Where(x => x.CompletedAt == null).ToListAsync();
     }
+
+    public Task<decimal> SumResidualModel1AByUserId(int userId)
+    {
+        return Context.ResultsModel1ALevels.Where(x => x.AffiliateId == userId)
+            .SumAsync(s => s.PaymentAmount);
+    }
+
+    public Task<decimal> SumPassiveModel1AByUserId(int userId)
+    {
+        return Context.ResultsModel1A.Where(x => x.AffiliateId == userId)
+            .SumAsync(s => s.PaymentAmount);
+    }
+    
+    public Task<decimal> SumResidualModel1BByUserId(int userId)
+    {
+        return Context.ResultsModel1BLevels.Where(x => x.AffiliateId == userId)
+            .SumAsync(s => s.PaymentAmount);
+    }
+
+    public Task<decimal> SumPassiveModel1BByUserId(int userId)
+    {
+        return Context.ResultsModel1B.Where(x => x.AffiliateId == userId)
+            .SumAsync(s => s.PaymentAmount);
+    }
+
+    public Task<decimal> SumResidualModel2ByUserId(int userId)
+    {
+        return Context.ResultsModel2Levels.Where(x => x.AffiliateId == userId)
+            .SumAsync(s => s.PaymentAmount);
+    }
+
+    public Task<decimal> SumPassiveModel2ByUserId(int userId)
+    {
+        return Context.ResultsModel2.Where(x => x.AffiliateId == userId)
+            .SumAsync(s => s.PaymentAmount);
+    }
+
+    public Task<decimal> SumResidualModel3ByUserId(int userId)
+    {
+        return Context.ResultsModel3Levels.Where(x => x.AffiliateId == userId)
+            .SumAsync(s => s.PaymentAmount);
+    }
+
+    public Task<decimal> SumPercentageModel3ByUserId(int userId)
+    {
+        return Context.ResultsModel3.Where(x => x.AffiliateId == userId)
+            .SumAsync(s => s.PaymentAmount);    
+    }
 }

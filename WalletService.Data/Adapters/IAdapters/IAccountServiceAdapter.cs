@@ -17,6 +17,7 @@ public interface IAccountServiceAdapter
     Task<IRestResponse> GetAffiliateBtcByAffiliateId(int             affiliateId);
     Task<IRestResponse> UpdateGradingByUser(int                      userId, int gradingId);
     Task<IRestResponse> GetHave2Children(int[]                       users);
+    Task<NetworkDetailsResponse> NetworkDetails(int                           userId);
     Task<IRestResponse> GetTreeModel4(Dictionary<int, decimal>       dictionary);
     Task<IRestResponse> AddTreeModel5(IEnumerable<LeaderBoardModel5> leaderBoard);
     Task<IRestResponse> AddTreeModel6(IEnumerable<LeaderBoardModel6> leaderBoard);

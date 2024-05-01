@@ -22,6 +22,21 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
         base(context)
         => _appSettings = appSettings.Value;
 
+    public Task<int> CountDetailsByPaymentGroup(int paymentGroupId, int userId)
+        => Context.InvoicesDetails.Where(x 
+            => !x.Invoice.CancellationDate.HasValue && x.Invoice.Status &&
+               x.Invoice.AffiliateId == userId && 
+               x.PaymentGroupId == paymentGroupId).CountAsync();
+    
+    public Task<int> CountDetailsModel3ByPaymentGroup(int userId)
+        => Context.InvoicesDetails.Where(x 
+            => !x.Invoice.CancellationDate.HasValue && x.Invoice.Status &&
+               x.Invoice.AffiliateId == userId && 
+               new []{5,6}.Contains(x.PaymentGroupId)).CountAsync();
+
+    public Task<List<ModelFourStatistics>> Model4StatisticsByUser(int userId)
+        => Context.ModelFourStatistics.Where(x => x.AffiliateId == userId).ToListAsync();
+
     public Task<List<Invoices>> GetAllInvoicesUser(int id)
         => Context.Invoices.Include(x => x.InvoiceDetail).Where(x => x.AffiliateId == id).AsNoTracking().ToListAsync();
 
