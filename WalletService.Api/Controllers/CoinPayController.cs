@@ -57,8 +57,8 @@ public class CoinPayController : BaseController
         return result?.Data is null ? Ok(Fail("Transaction not found.")) : Ok(Success(result));
     }
     
-    [HttpPost("CoinPayWebhook")]
-    public async Task<IActionResult> CoinPayWebhook([FromBody] WebhookNotificationRequest request)
+    [HttpPost("Webhook")]
+    public async Task<IActionResult> Webhook([FromBody] WebhookNotificationRequest request)
     {
         var result = await _coinPayService.ReceiveCoinPayNotifications(request);
         
