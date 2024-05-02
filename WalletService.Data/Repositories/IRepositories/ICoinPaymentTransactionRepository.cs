@@ -11,4 +11,6 @@ public interface ICoinPaymentTransactionRepository
     Task<List<PaymentTransaction>> GetAllUnconfirmedOrUnpaidTransactions();
     Task<List<PaymentTransaction>> GetAllWireTransfer();
     Task<PaymentTransaction?> GetPaymentTransactionById(int id);
+    Task<int> GetLastTransactionId();
+    Task<PaymentTransaction?> GetTransactionByReference(string reference);
 }
