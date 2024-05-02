@@ -51,18 +51,20 @@ public class ProcessGradingService : BaseService, IProcessGradingService
         var model1BConfiguration = await _configurationRepository.GetConfigurationByType(ModelTypeConfiguration.Model_1B.ToString());
         var model2Configuration  = await _configurationRepository.GetConfiguration();
         var model3Configuration  = await _configurationRepository.GetConfigurationByType(ModelTypeConfiguration.Model_3.ToString());
-        
+        var listAccounts = new List<int>();
         if (model1AConfiguration is not null)
-            await ProcessModel1A(model1AConfiguration);
+            await ProcessModel1A(model1AConfiguration, listAccounts);
         if (model1BConfiguration is not null)
-            await ProcessModel1B(model1BConfiguration);
+            await ProcessModel1B(model1BConfiguration, listAccounts);
         if (model2Configuration is not null)
-            await ProcessModel2(model2Configuration);
+            await ProcessModel2(model2Configuration, listAccounts);
         if (model3Configuration is not null)
-            await ProcessModel3(model3Configuration);
+            await ProcessModel3(model3Configuration, listAccounts);
+
+        var usersJsonString = listAccounts.Select(x => x.ToString()).ToJsonString();
     }
 
-    private async Task ProcessModel2(ModelConfiguration model2Configuration)
+    private async Task ProcessModel2(ModelConfiguration model2Configuration, List<int> listAccounts)
     {
         var configuration2Mapped = Mapper.Map<ModelConfigurationDto>(model2Configuration);
         var starDate = new DateTime(model2Configuration.DateInit.Year, model2Configuration.DateInit.Month, model2Configuration.DateInit.Day,
@@ -83,6 +85,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
 
         var listResultModel2Products   = await GetListProducts(productsModel2);
         var listResultModel2Accounts   = await GetListAccount(accountsModel2, model2Configuration);
+        listAccounts.AddRange(accountsModel2.ToList());
         var pointConfigurationResponse = await _configurationAdapter.GetPointsConfiguration();
         var points                     = pointConfigurationResponse.Content?.ToDecimal();
 
@@ -94,7 +97,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
             KafkaTopics.ProcessModel2Topic);
         
     }
-    private async Task ProcessModel1A(ModelConfiguration model1AConfiguration)
+    private async Task ProcessModel1A(ModelConfiguration model1AConfiguration, List<int> listAccounts)
     {
         var configuration1AMapped = Mapper.Map<ModelConfigurationDto>(model1AConfiguration);
         var starDate = new DateTime(model1AConfiguration.DateInit.Year, model1AConfiguration.DateInit.Month, model1AConfiguration.DateInit.Day,
@@ -115,6 +118,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
 
         var listResultModel1AProducts   = await GetListProducts(productsModel1A);
         var listResultModel1AAccounts   = await GetListAccount(accountsModel1A, model1AConfiguration);
+        listAccounts.AddRange(accountsModel1A.ToList());
         var pointConfigurationResponse = await _configurationAdapter.GetPointsConfiguration();
         var points                     = pointConfigurationResponse.Content?.ToDecimal();
 
@@ -126,7 +130,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
             KafkaTopics.ProcessModel1ATopic);
         
     }
-    private async Task ProcessModel1B(ModelConfiguration model1BConfiguration)
+    private async Task ProcessModel1B(ModelConfiguration model1BConfiguration, List<int> listAccounts)
     {
         var configuration1BMapped = Mapper.Map<ModelConfigurationDto>(model1BConfiguration);
         var starDate = new DateTime(model1BConfiguration.DateInit.Year, model1BConfiguration.DateInit.Month, model1BConfiguration.DateInit.Day,
@@ -147,6 +151,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
 
         var listResultModel1BProducts   = await GetListProducts(productsModel1B);
         var listResultModel1BAccounts   = await GetListAccount(accountsModel1B, model1BConfiguration);
+        listAccounts.AddRange(accountsModel1B.ToList());
         var pointConfigurationResponse = await _configurationAdapter.GetPointsConfiguration();
         var points                     = pointConfigurationResponse.Content?.ToDecimal();
 
@@ -158,7 +163,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
             KafkaTopics.ProcessModel1BTopic);
     }
 
-    private async Task ProcessModel3(ModelConfiguration model3Configuration)
+    private async Task ProcessModel3(ModelConfiguration model3Configuration, List<int> listAccounts)
     {
         var configuration3Mapped = Mapper.Map<ModelConfigurationDto>(model3Configuration);
         
@@ -178,7 +183,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
 
         var listResultModel3Products = await GetListProducts(productsModel3);
         var listResultModel3Accounts = await GetListAccount(accountsModel3, model3Configuration);
-
+        listAccounts.AddRange(accountsModel3.ToList());
         var itemForModel3Mapped = Mapper.Map<ICollection<InvoiceDetailDto>>(itemForModel3);
 
         await SendModel3Process(itemForModel3Mapped, configuration3Mapped, listResultModel3Accounts, listResultModel3Products,
@@ -412,8 +417,9 @@ public class ProcessGradingService : BaseService, IProcessGradingService
                 if (accountResponse.Content is null)
                     continue;
 
-                var response = accountResponse.Content.ToJsonObject<GetAccountsEcoPoolResponse>();
-                listResultAccounts.AddRange(response!.Data);
+                var response = Newtonsoft.Json.JsonConvert.DeserializeObject<GetAccountsEcoPoolResponse>(accountResponse.Content);
+                
+                listResultAccounts.AddRange(response!.data);
             }
             catch (Exception e)
             {

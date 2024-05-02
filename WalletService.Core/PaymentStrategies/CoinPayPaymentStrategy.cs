@@ -72,7 +72,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
         var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
 
-        if (result?.Data.Count == 0)
+        if (result?.Data.Count == Constants.EmptyValue)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
             var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
@@ -93,7 +93,6 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         var productNames = result.Data.Select(item => item.Name).ToArray();
         
         foreach (var item in result.Data)
-            
         {
             var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
             var tax     = item.Tax;
@@ -125,7 +124,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = Constants.EmptyValue,
+                ProductStart          = Constants.EmptyValue
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -325,7 +324,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         var firstProductId   = request.ProductsList.First().IdProduct;
         var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
 
-        var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
+        var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
         if (productResponse?.Data == null)
             return false;
@@ -364,7 +363,6 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.EmptyValue,
                 ProductStart          = Constants.EmptyValue,
-                
             };
 
             invoiceDetails.Add(invoiceDetail);

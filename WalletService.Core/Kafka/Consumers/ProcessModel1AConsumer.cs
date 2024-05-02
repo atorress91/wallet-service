@@ -100,7 +100,7 @@ public class ProcessModel1AConsumer : BaseKafkaConsumer
                 PoolId        = pool.Id,
                 AffiliateName = s.UserName,
                 Side          = s.Side,
-                UserCreatedAt = s.UserCreatedAt
+                UserCreatedAt = s.CreatedAt
             }).ToList();
 
             var productName = product?.Name ?? string.Empty;
@@ -117,7 +117,7 @@ public class ProcessModel1AConsumer : BaseKafkaConsumer
                 PaymentDate       = firstDayInMonth,
                 ProductExternalId = pool.ProductId,
                 ProductName       = productName,
-                UserCreatedAt     = affiliate.UserCreatedAt
+                UserCreatedAt     = affiliate.CreatedAt
             });
         }
     }
@@ -156,7 +156,7 @@ public class ProcessModel1AConsumer : BaseKafkaConsumer
                 AffiliateId   = s.Id,
                 AffiliateName = s.UserName,
                 Side          = s.Side,
-                UserCreatedAt = s.UserCreatedAt
+                UserCreatedAt = s.CreatedAt
             }).ToList();
 
             var productName = product?.Name ?? string.Empty;
@@ -173,7 +173,7 @@ public class ProcessModel1AConsumer : BaseKafkaConsumer
                 PaymentDate       = firstDate,
                 ProductExternalId = pool.ProductId,
                 ProductName       = productName,
-                UserCreatedAt     = affiliate.UserCreatedAt
+                UserCreatedAt     = affiliate.CreatedAt
             });
         }
     }

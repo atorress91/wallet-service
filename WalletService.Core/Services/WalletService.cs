@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
+using Newtonsoft.Json;
 using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
@@ -129,7 +129,7 @@ public class WalletService : BaseService, IWalletService
                 ServiceBalance       = totalServiceBalance ?? 0
             };
 
-            if (amountRequests != 0m && response.ReverseBalance != 0m)
+            if (amountRequests != 0m || response.ReverseBalance != 0m)
             {
                 response.AvailableBalance -= amountRequests;
                 response.AvailableBalance -= response.ReverseBalance;
@@ -202,6 +202,28 @@ public class WalletService : BaseService, IWalletService
         return response;
     }
 
+    public async Task RemoveKeys(DeleteKeysRequest request)
+    {
+        foreach (var user in request.Users)
+        {
+            var keyModel2 = string.Format(CacheKeys.BalanceInformationModel2, user);
+            var keyModel1A = string.Format(CacheKeys.BalanceInformationModel1A, user);
+            var keyModel1B = string.Format(CacheKeys.BalanceInformationModel1B, user);
+            var existsModel2 = await _redisCache.KeyExists(keyModel2);
+            if (existsModel2)
+                await _redisCache.Delete(keyModel2);
+            
+            var existsModel1A = await _redisCache.KeyExists(keyModel1A);
+            if (existsModel1A)
+                await _redisCache.Delete(keyModel1A);
+            
+            var existsModel1B = await _redisCache.KeyExists(keyModel1B);
+            if (existsModel1B)
+                await _redisCache.Delete(keyModel1B);
+        }
+
+    }
+    
     public async Task<bool> CoursePaymentHandler(WalletRequest request)
     {
         return await _balancePaymentStrategy.ExecutePaymentCourses(request);
@@ -224,9 +246,10 @@ public class WalletService : BaseService, IWalletService
 
         if (string.IsNullOrEmpty(userInfo.Content))
             return false;
-
-        var result      = userInfo.Content!.ToJsonObject<UserAffiliateResponse>();
-        var userResult  = currentUser.Content!.ToJsonObject<UserAffiliateResponse>();
+        
+        var userResult = JsonConvert.DeserializeObject<UserAffiliateResponse>(currentUser.Content!);
+        var result     = JsonConvert.DeserializeObject<UserAffiliateResponse>(userInfo.Content!);
+        
         var userBalance = await GetBalanceInformationByAffiliateId(request.FromAffiliateId);
 
         if (userResult?.Data?.VerificationCode != request.SecurityCode)
@@ -319,9 +342,9 @@ public class WalletService : BaseService, IWalletService
 
         if (string.IsNullOrEmpty(userInfo.Content))
             return new ServicesResponse { Success = false, Message = "Error", Code = 400 };
-
-        var currentUserResult = currentUser.Content!.ToJsonObject<UserAffiliateResponse>();
-        var result            = userInfo.Content!.ToJsonObject<UserAffiliateResponse>();
+        
+        var currentUserResult = JsonConvert.DeserializeObject<UserAffiliateResponse>(currentUser.Content!);
+        var result            = JsonConvert.DeserializeObject<UserAffiliateResponse>(userInfo.Content!);
         var userBalance       = await GetBalanceInformationByAffiliateId(data.FromAffiliateId);
 
         if (currentUserResult?.Data?.VerificationCode != data.SecurityCode)

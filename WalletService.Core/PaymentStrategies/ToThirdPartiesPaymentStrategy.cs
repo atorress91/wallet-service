@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Newtonsoft.Json;
 using WalletService.Core.Services;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
