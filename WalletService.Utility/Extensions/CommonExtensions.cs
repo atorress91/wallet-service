@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using System.Collections;
+﻿using System.Collections;
 using System.Data;
 using System.Data.Common;
 using System.Dynamic;
@@ -312,6 +311,20 @@ public static class CommonExtensions
 
         return ~crc;
     }
+    
+    public static int GenerateUniqueId(int affiliateId)
+    {
+        if (affiliateId >= 100000)
+            throw new ArgumentOutOfRangeException(nameof(affiliateId), "Affiliate ID must be less than 100000");
+        
+        TimeSpan timestamp = DateTime.UtcNow - new DateTime(2020, 1, 1);
+        int seconds = (int)timestamp.TotalSeconds;
+        
+        int timestampMod = seconds % 10000000;  
+        
+        return timestampMod * 100000 + affiliateId;
+    }
+
 
     #region ..Assigned..
 
