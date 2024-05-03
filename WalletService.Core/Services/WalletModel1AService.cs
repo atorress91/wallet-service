@@ -2,6 +2,7 @@
 using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
+using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Constants;
 using WalletService.Models.DTO.WalletModel1ADto;
@@ -14,16 +15,22 @@ public class WalletModel1AService : BaseService, IWalletModel1AService
     private readonly IWalletModel1ARepository       _walletModel1ARepository;
     private readonly IBalancePaymentStrategyModel1A _balancePaymentStrategyModel1A;
     private readonly RedisCache                    _redisCache;
+    private readonly IAccountServiceAdapter        _accountServiceAdapter;
+    private readonly IWalletModel1ARepository      _walletRepositoryModel1A;
 
     public WalletModel1AService(
         IMapper                         mapper, 
         IWalletModel1ARepository        walletModel1ARepository,
         RedisCache                      redisCache,
-        IBalancePaymentStrategyModel1A  balancePaymentStrategyModel1A) : base(mapper)
+        IBalancePaymentStrategyModel1A  balancePaymentStrategyModel1A,
+        IAccountServiceAdapter accountServiceAdapter,
+        IWalletModel1ARepository walletRepositoryModel1A) : base(mapper)
     {
         _walletModel1ARepository       = walletModel1ARepository;
         _balancePaymentStrategyModel1A = balancePaymentStrategyModel1A;
         _redisCache                    = redisCache;
+        _accountServiceAdapter         = accountServiceAdapter;
+        _walletRepositoryModel1A       = walletRepositoryModel1A;
     }
 
     public async Task<BalanceInformationModel1ADto> GetBalanceInformationByAffiliateId(int affiliateId)
@@ -92,5 +99,34 @@ public class WalletModel1AService : BaseService, IWalletModel1AService
 
         if (existsKey)
             await _redisCache.Delete(key);
+    }
+    
+    public async Task<bool> CreateServiceBalanceAdmin(CreditTransactionAdminRequest request)
+    {
+        if (request.Amount == 0)
+            return false;
+
+        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+
+        if (user is null)
+            return false;
+
+        var credit = new CreditTransactionRequest
+        {
+            AdminUserName     = Constants.AdminEcosystemUserName,
+            AffiliateId       = user.Id,
+            Concept           = Constants.AdminCredit,
+            Credit            = request.Amount,
+            AffiliateUserName = user.UserName,
+            ConceptType       = Constants.AdminCredit,
+            UserId            = Constants.AdminUserId
+        };
+
+        var result = await _walletRepositoryModel1A.CreditServiceBalanceTransaction(credit);
+        if (!result)
+            return false;
+
+        await RemoveCacheKey(user.Id);
+        return true;
     }
 }
