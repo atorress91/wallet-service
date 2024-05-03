@@ -8,4 +8,5 @@ public interface IWalletModel1BService
     Task<BalanceInformationModel1BDto> GetBalanceInformationByAffiliateId(int affiliateId);
     Task<bool>                         PayWithMyBalance(WalletRequest         request);
     Task<bool> PayWithMyServiceBalance(WalletRequest request);
+    Task<bool> CreateServiceBalanceAdmin(CreditTransactionAdminRequest request);
 }
