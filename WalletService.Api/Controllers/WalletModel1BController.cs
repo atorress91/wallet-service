@@ -41,4 +41,12 @@ public class WalletModel1BController : BaseController
 
         return response is false ? Ok(Fail("The payment could not be processed")) : Ok(Success(response));
     }
+    
+    [HttpPost("CreateServiceBalanceAdmin")]
+    public async Task<IActionResult> CreateServiceBalanceAdmin([FromBody] CreditTransactionAdminRequest request)
+    {
+        var response = await _walletModel1BService.CreateServiceBalanceAdmin(request);
+
+        return response is false ? Ok(Fail("The payment could not be processed")) : Ok(Success(response));
+    }
 }

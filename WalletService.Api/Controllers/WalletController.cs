@@ -183,9 +183,9 @@ public class WalletController : BaseController
     [HttpPost("createCreditAdmin")]
     public async Task<IActionResult> CreateCreditAdmin(CreditTransactionAdminRequest request)
     {
-        var result = await _walletService.CreateBalanceAdmin(request);
+        var response = await _walletService.CreateBalanceAdmin(request);
 
-        return  Ok(result);
+        return  response is false ? Ok(Fail("The payment could not be processed")) : Ok(Success(response));
     }
     
     [HttpPost("payWithMyBalanceCourses")]
