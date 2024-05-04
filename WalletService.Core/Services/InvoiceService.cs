@@ -277,11 +277,17 @@ public class InvoiceService : BaseService, IInvoiceService
             {
                 case "Model1A":
                     await RemoveCacheKey(affiliateId, CacheKeys.BalanceInformationModel1A);
+                    await RemoveCacheKey(affiliateId, CacheKeys.BalanceInformationModel1B);
+                    await RemoveCacheKey(affiliateId, CacheKeys.BalanceInformationModel2);
                     return await _walletModel1ARepository.CreditTransaction(creditTransactionRequest);
                 case "Model1B":
+                    await RemoveCacheKey(affiliateId, CacheKeys.BalanceInformationModel1A);
                     await RemoveCacheKey(affiliateId, CacheKeys.BalanceInformationModel1B);
+                    await RemoveCacheKey(affiliateId, CacheKeys.BalanceInformationModel2);
                     return await _walletModel1BRepository.CreditTransaction(creditTransactionRequest);
                 case "Model2":
+                    await RemoveCacheKey(affiliateId, CacheKeys.BalanceInformationModel1A);
+                    await RemoveCacheKey(affiliateId, CacheKeys.BalanceInformationModel1B);
                     await RemoveCacheKey(affiliateId, CacheKeys.BalanceInformationModel2);
                     return await _walletRepository.CreditTransaction(creditTransactionRequest);
             }
