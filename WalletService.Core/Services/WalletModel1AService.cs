@@ -58,7 +58,7 @@ public class WalletModel1AService : BaseService, IWalletModel1AService
             if (response.ReverseBalance != 0m)
                 response.AvailableBalance -= response.ReverseBalance;
 
-            await _redisCache.Set(key, response);
+            await _redisCache.Set(key, response, TimeSpan.FromHours(1));
             return response;
         }
         

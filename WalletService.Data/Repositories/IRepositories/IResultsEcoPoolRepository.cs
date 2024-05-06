@@ -10,4 +10,12 @@ public interface IResultsEcoPoolRepository
     Task<List<ResultsModel1A>> GetResultsModel1AToPayment();
     Task<List<ResultsModel1B>> GetResultsModel1BToPayment();
     Task<List<ResultsModel3>> GetResultsMode3ToPayment();
+    Task<decimal> SumResidualModel1AByUserId(int userId);
+    Task<decimal> SumPassiveModel1AByUserId(int userId);
+    Task<decimal> SumResidualModel1BByUserId(int userId);
+    Task<decimal> SumPassiveModel1BByUserId(int userId);
+    Task<decimal> SumResidualModel2ByUserId(int userId);
+    Task<decimal> SumPassiveModel2ByUserId(int userId);
+    Task<decimal> SumResidualModel3ByUserId(int userId);
+    Task<decimal> SumPercentageModel3ByUserId(int userId);
 }

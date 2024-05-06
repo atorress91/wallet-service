@@ -32,9 +32,7 @@ public class ProductsResponse
 {
     [JsonPropertyName("success")] public bool Success { get; set; }
     [JsonPropertyName("data")] public List<ProductWalletDto> Data { get; set; }
-
     [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
-
     [JsonPropertyName("code")] public int Code { get; set; }
 }
 
@@ -42,9 +40,7 @@ public class ProductResponse
 {
     [JsonPropertyName("success")] public bool Success { get; set; }
     [JsonPropertyName("data")] public ProductWalletDto Data { get; set; }
-
     [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
-
     [JsonPropertyName("code")] public int Code { get; set; }
 }
 
@@ -119,5 +115,4 @@ public class PersonalNetwork
     public decimal latitude { get; set; }
     public decimal longitude { get; set; }
     public string countryName { get; set; }
-
 }
