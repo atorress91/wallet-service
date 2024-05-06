@@ -83,7 +83,7 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
         
         return Post($"/matrix/have_2_children/", data);
     }
-
+    
     public Task<IRestResponse> GetTreeModel4(Dictionary<int, decimal>       dictionary)
     {
         var json = dictionary.ToJsonString();
@@ -141,6 +141,21 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
 
         return userInfoResponse;
     }
+    
+    public async Task<NetworkDetailsResponse> NetworkDetails(int id)
+    {
+        var response = await Get($"/userAffiliateInfo/getNetworkDetails/{id}", new Dictionary<string, string>());
+        if (!response.IsSuccessful)
+            throw new Exception("Failed to retrieve user information");
+
+        if (string.IsNullOrEmpty(response.Content))
+            throw new Exception("Information content is empty");
+        
+        var networkDetails = response.Content.ToJsonObject<NetworkDetailsResponse>()!;
+
+        return networkDetails;
+    }
+
 
     public Task<IRestResponse> GetAffiliateByUserName(string userName)
         => Get($"/userAffiliateInfo/get_user_username/{userName}/", new Dictionary<string, string>());

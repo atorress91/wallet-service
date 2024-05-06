@@ -6,9 +6,11 @@ namespace WalletService.Data.Repositories.IRepositories;
 
 public interface IInvoiceRepository
 {
-    Task<List<Invoices>>                        GetAllInvoicesUser(int      id);
-    Task<Invoices>                              CreateInvoiceAsync(Invoices invoice);
     Task<List<Invoices>>                        GetAllInvoices();
+    Task<int>                                   CountDetailsByPaymentGroup(int                          paymentGroupId,int userId);
+    Task<List<ModelFourStatistics>>             Model4StatisticsByUser(int                              userId);
+    Task<List<Invoices>>                        GetAllInvoicesUser(int                                  id);
+    Task<Invoices>                              CreateInvoiceAsync(Invoices                             invoice);
     Task<Invoices?>                             GetInvoiceById(int                                      id);
     Task<Invoices>                              DeleteInvoiceAsync(Invoices                             invoice);
     Task<InvoicesSpResponse?>                   HandleDebitTransaction(DebitTransactionRequest          request);
@@ -18,7 +20,8 @@ public interface IInvoiceRepository
     Task<bool>                                  InvoiceExistsByReceiptNumber(string                     idTransaction);
     Task<InvoicesSpResponse?>                   HandleDebitTransactionForCourse(DebitTransactionRequest request);
     Task<bool>                                  GetInvoicesForTradingAcademyPurchases(int               affiliateId);
+    Task<List<Invoices>>                        DeleteMultipleInvoicesAndDetailsAsync(int[]             invoiceIds);
     Task<List<InvoicesTradingAcademyResponse>?> GetAllInvoicesForTradingAcademyPurchases();
     Task<List<InvoiceModelOneAndTwoResponse>?>  GetAllInvoicesModelOneAndTwo();
-    Task<List<Invoices>>                        DeleteMultipleInvoicesAndDetailsAsync(int[] invoiceIds);
+    Task<int> CountDetailsModel3ByPaymentGroup(int userId);
 }

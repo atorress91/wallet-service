@@ -57,8 +57,10 @@ public static class IocExtensionApp
     private static void InjectCaching(IServiceCollection services)
     {
         var serviceProvider = services.BuildServiceProvider();
-        var settings        = serviceProvider.GetRequiredService<IOptions<ApplicationConfiguration>>().Value;
-        var multiplexer = ConnectionMultiplexer.Connect(settings.ConnectionStrings!.RedisConnection!);
+        var settings        = serviceProvider
+            .GetRequiredService<IOptions<ApplicationConfiguration>>().Value;
+        var multiplexer = ConnectionMultiplexer
+            .Connect(settings.ConnectionStrings!.RedisConnection!);
         
         services.AddSingleton<IConnectionMultiplexer>(multiplexer);
         services.AddSingleton<RedisCache>();
@@ -216,6 +218,7 @@ public static class IocExtensionApp
         services.AddScoped<IWalletModel1AService, WalletModel1AService>();
         services.AddScoped<IWalletModel1BService, WalletModel1BService>();
         services.AddScoped<IPagaditoService, PagaditoService>();
+        services.AddScoped<IUserStatisticsService, UserStatisticsService>();
     }
 
     private static void InjectPackages(IServiceCollection services)

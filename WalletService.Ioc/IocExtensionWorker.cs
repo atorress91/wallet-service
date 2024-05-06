@@ -167,6 +167,7 @@ public static class IocExtensionWorker
         services.AddScoped<IPaymentTransactionService, PaymentTransactionService>();
         services.AddScoped<IWalletModel1AService, WalletModel1AService>();
         services.AddScoped<IWalletModel1BService, WalletModel1BService>();
+        services.AddScoped<IUserStatisticsService, UserStatisticsService>();
     }
 
     private static void InjectPackages(IServiceCollection services)
