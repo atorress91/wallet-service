@@ -206,7 +206,7 @@ public class PagaditoService : BaseService, IPagaditoService
         var productDetails = request.Details.Select(detail => new ProductRequest
         {
             ProductId = int.Parse(detail.UrlProduct!),
-            Quantity = int.Parse(detail.Quantity!),
+            Quantity = detail.Quantity,
         }).ToList();
 
         var productsJson = JsonSerializer.Serialize(productDetails);
