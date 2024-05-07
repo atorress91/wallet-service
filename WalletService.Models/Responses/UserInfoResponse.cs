@@ -9,7 +9,7 @@ public class UserInfoResponse
     [JsonProperty("id")] public int Id { get; set; }
     [JsonProperty("status")] public byte? Status { get; set; }
     
-    [JsonProperty("activation_date")]public DateTime ActivationDate { get; set; }
+    [JsonProperty("activation_date")]public DateTime? ActivationDate { get; set; }
     [JsonProperty("user_name")] public string? UserName { get; set; }
     [JsonProperty("last_name")] public string? LastName { get; set; }
     [JsonProperty("city")] public string? City { get; set; }
