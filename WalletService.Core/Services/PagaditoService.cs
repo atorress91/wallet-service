@@ -2,12 +2,13 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Text.Json;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -22,6 +23,7 @@ using WalletService.Models.Requests.PagaditoRequest;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
 using WalletService.Utility.Extensions;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace WalletService.Core.Services;
 
@@ -229,51 +231,60 @@ public class PagaditoService : BaseService, IPagaditoService
 
         return executeTransaction.Value;
     }
-
+    
     public async Task<bool> VerifySignature(IHeaderDictionary headers, string requestBody)
     {
-        _logger.LogInformation($"[PagaditoService] | VerifySignature | Starting signature verification");
+        _logger.LogInformation($"[PagaditoService] | VerifySignature | Starting signature verification: {requestBody.ToJsonString()}");
 
-        var notificationId = headers["PAGADITO-NOTIFICATION-ID"];
-        var notificationTimestamp = headers["PAGADITO-NOTIFICATION-TIMESTAMP"];
-        var certUrl = headers["PAGADITO-CERT-URL"];
-        var notificationSignature = Convert.FromBase64String(headers["PAGADITO-SIGNATURE"]!);
+        var notificationId = headers["pagadito-notification-id"];
+        var notificationTimestamp = headers["pagadito-notification-timestamp"];
+        var certUrl = headers["pagadito-cert-url"];
+        var notificationSignature = headers["pagadito-signature"];
         var wsk = _appSettings.Pagadito!.Wsk;
 
-        _logger.LogInformation($"[PagaditoService] | VerifySignature | Headers and settings retrieved");
+        _logger.LogInformation($"NotificationId: {notificationId}, Timestamp: {notificationTimestamp}, CertUrl: {certUrl}");
 
-        var eventId = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(requestBody)?.id;
+        var jsonObject = JObject.Parse(requestBody);
+        var eventId = jsonObject["id"]?.ToString();
+        
+        _logger.LogInformation($"EventId: {eventId}");
 
-        var dataSigned = string.Join("|", notificationId, notificationTimestamp, eventId,
-            CommonExtensions.Crc32(requestBody),
-            wsk);
+        var crc32 = CommonExtensions.Crc32(requestBody);
+        var dataSigned = string.Join("|", notificationId, notificationTimestamp, eventId, crc32, wsk);
 
-        _logger.LogInformation($"[PagaditoService] | VerifySignature | Data signed");
+        _logger.LogInformation($"DataSigned: {dataSigned}");
 
-        byte[] certContent;
-        using (var httpClient = new HttpClient())
+        try
         {
-            certContent = await httpClient.GetByteArrayAsync(certUrl);
+            byte[] certContent;
+            using (var httpClient = new HttpClient())
+            {
+                certContent = await httpClient.GetByteArrayAsync(certUrl);
+            }
+
+            using var cert = new X509Certificate2(certContent);
+            _logger.LogInformation($"Certificate Thumbprint: {cert.Thumbprint}");
+
+            using var pubkey = cert.GetRSAPublicKey();
+
+            var signatureBytes = Convert.FromBase64String(notificationSignature);
+            var signatureResult = pubkey!.VerifyData(
+                Encoding.UTF8.GetBytes(dataSigned),
+                signatureBytes,
+                HashAlgorithmName.SHA256,
+                RSASignaturePadding.Pkcs1);
+
+            _logger.LogInformation($"Signature verification result: {signatureResult}");
+            
+            var request = JsonConvert.DeserializeObject<WebHookRequest>(requestBody);
+            
+            return   await UpdateTransactionStatus(request);
         }
-
-        _logger.LogInformation($"[PagaditoService] | VerifySignature | Certificate content retrieved");
-
-        using var cert = new X509Certificate2(certContent);
-        using var pubkey = cert.GetRSAPublicKey();
-
-        var signatureResult = pubkey!.VerifyData(Encoding.UTF8.GetBytes(dataSigned), notificationSignature,
-            HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-
-        if (signatureResult)
+        catch (Exception ex)
         {
-            var request = JsonSerializer.Deserialize<WebHookRequest>(requestBody);
-            signatureResult = await UpdateTransactionStatus(request);
+            _logger.LogError($"Error during signature verification: {ex.Message}");
+            return false;
         }
-
-        _logger.LogInformation(
-            $"[PagaditoService] | VerifySignature | Signature verification result: {signatureResult}");
-
-        return signatureResult;
     }
 
     public async Task<bool> UpdateTransactionStatus(WebHookRequest? purchaseRequest)
@@ -286,7 +297,8 @@ public class PagaditoService : BaseService, IPagaditoService
             return false;
         }
 
-        var existingTransaction = await _transactionRepository.GetCoinPaymentTransactionByIdTransaction(purchaseRequest.Resource!.Ern!);
+        var existingTransaction =
+            await _transactionRepository.GetCoinPaymentTransactionByIdTransaction(purchaseRequest.Resource!.Ern!);
 
         if (existingTransaction is null)
         {
@@ -296,7 +308,8 @@ public class PagaditoService : BaseService, IPagaditoService
 
         if (existingTransaction.Acredited)
         {
-            _logger.LogInformation($"[PagaditoService] | UpdateTransactionStatus | Existing transaction is already accredited");
+            _logger.LogInformation(
+                $"[PagaditoService] | UpdateTransactionStatus | Existing transaction is already accredited");
             return false;
         }
 
@@ -313,7 +326,8 @@ public class PagaditoService : BaseService, IPagaditoService
         else if (purchaseRequest.Resource.Status == Constants.CompletedStatus && existingTransaction.Acredited == false)
         {
             existingTransaction.Status = Constants.CompletedStatusCode;
-            decimal.TryParse(purchaseRequest.Resource.Amount!.Total!, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal amountReceived);
+            decimal.TryParse(purchaseRequest.Resource.Amount!.Total!, NumberStyles.Any, CultureInfo.InvariantCulture,
+                out decimal amountReceived);
             existingTransaction.AmountReceived = amountReceived;
             existingTransaction.Acredited = true;
             existingTransaction.Reference = purchaseRequest.Resource.Reference;
