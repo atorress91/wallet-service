@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using WalletService.Models.DTO.CoinPayDto;
 using WalletService.Models.Requests.CoinPayRequest;
 using WalletService.Models.Responses;
 using WalletService.Models.Responses.BaseResponses;
@@ -14,6 +14,7 @@ public interface ICoinPayService
     Task<CreateAddressResponse?> CreateAddress(CreateAddresRequest request);
     Task<GetTransactionByIdResponse?> GetTransactionById(int idTransaction);
     Task<bool> ReceiveCoinPayNotifications(WebhookNotificationRequest? request);
+    Task<SendFundsDto?> SendFunds(WithDrawalRequest[] request);
 
     #endregion
 }
