@@ -17,7 +17,7 @@ public class CoinPayController : BaseController
     }
 
     #region Coinpay
-    
+
     [HttpPost("createTransaction")]
     public async Task<IActionResult> CreateTransaction([FromBody] CreateTransactionRequest request)
     {
@@ -40,7 +40,7 @@ public class CoinPayController : BaseController
 
         return result?.Data is null ? Ok(Fail("Network not found for the provided ID.")) : Ok(result);
     }
-    
+
     [HttpPost("createAddress")]
     public async Task<IActionResult> CreateAddress([FromBody] CreateAddresRequest request)
     {
@@ -48,7 +48,7 @@ public class CoinPayController : BaseController
 
         return result?.Data is null ? Ok(Fail("The address could not be created.")) : Ok(result);
     }
-    
+
     [HttpGet("getTransactionById")]
     public async Task<IActionResult> GetTransactionById(int idTransaction)
     {
@@ -56,15 +56,22 @@ public class CoinPayController : BaseController
 
         return result?.Data is null ? Ok(Fail("Transaction not found.")) : Ok(Success(result));
     }
-    
+
     [HttpPost("Webhook")]
     public async Task<IActionResult> Webhook([FromBody] WebhookNotificationRequest request)
     {
         var result = await _coinPayService.ReceiveCoinPayNotifications(request);
-        
-        return result is false ? Ok(Fail("The notification could not be processed.")) : Ok();      
+
+        return result is false ? Ok(Fail("The notification could not be processed.")) : Ok();
     }
-    
-    
+
+    [HttpPost("sendFunds")]
+    public async Task<IActionResult> SendFunds([FromBody] WithDrawalRequest[] request)
+    {
+        var result = await _coinPayService.SendFunds(request);
+
+        return result is null ? Ok(Fail("The sendFunds could not be processed.")) : Ok(Success(result));
+    }
+
     #endregion
 }
