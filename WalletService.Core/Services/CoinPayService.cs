@@ -1,20 +1,24 @@
-﻿using AutoMapper;
+﻿using System.Net;
+using AutoMapper;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Constants;
+using WalletService.Models.DTO.CoinPayDto;
 using WalletService.Models.Enums;
 using WalletService.Models.Requests.CoinPayRequest;
 using WalletService.Models.Requests.ConPaymentRequest;
 using WalletService.Models.Requests.WalletRequest;
+using WalletService.Models.Requests.WalletWithDrawalRequest;
 using WalletService.Models.Responses;
 using WalletService.Models.Responses.BaseResponses;
 using WalletService.Utility.Extensions;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace WalletService.Core.Services;
 
@@ -27,12 +31,18 @@ public class CoinPayService : BaseService, ICoinPayService
     private readonly IInvoiceRepository _invoiceRepository;
     private readonly ICoinPayPaymentStrategy _coinPayPaymentStrategy;
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
+    private readonly IWalletRequestRepository _walletRequestRepository;
+    private readonly IWalletWithdrawalService _walletWithDrawalService;
+
     public CoinPayService(IMapper mapper, ICoinPayAdapter coinPayAdapter,
         ICoinPaymentTransactionRepository transactionRepository, ILogger<CoinPayService> logger,
         IAccountServiceAdapter accountServiceAdapter,
         IInvoiceRepository invoiceRepository,
         ICoinPayPaymentStrategy coinPayPaymentStrategy,
-        IInventoryServiceAdapter inventoryServiceAdapter) : base(mapper)
+        IInventoryServiceAdapter inventoryServiceAdapter,
+        IWalletRequestRepository walletRequestRepository,
+        IWalletWithdrawalService walletWithDrawalService
+    ) : base(mapper)
     {
         _coinPayAdapter = coinPayAdapter;
         _transactionRepository = transactionRepository;
@@ -41,11 +51,13 @@ public class CoinPayService : BaseService, ICoinPayService
         _invoiceRepository = invoiceRepository;
         _coinPayPaymentStrategy = coinPayPaymentStrategy;
         _inventoryServiceAdapter = inventoryServiceAdapter;
+        _walletRequestRepository = walletRequestRepository;
+        _walletWithDrawalService = walletWithDrawalService;
     }
 
     #region coingPay
 
-     private async Task ExecuteMembershipPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
+    private async Task ExecuteMembershipPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
     {
         walletRequest.ProductsList = products.Select(product => new ProductsRequests
         {
@@ -316,7 +328,8 @@ public class CoinPayService : BaseService, ICoinPayService
 
     public async Task<bool> ReceiveCoinPayNotifications(WebhookNotificationRequest? request)
     {
-        _logger.LogInformation($"[CoinPayService] | UpdateTransactionStatus | Starting transaction status update | request: {request!.ToJsonString()}");
+        _logger.LogInformation(
+            $"[CoinPayService] | UpdateTransactionStatus | Starting transaction status update | request: {request!.ToJsonString()}");
 
         if (request is null)
         {
@@ -364,6 +377,166 @@ public class CoinPayService : BaseService, ICoinPayService
         _logger.LogInformation($"[CoinPayService] | UpdateTransactionStatus | Transaction status updated");
 
         return true;
+    }
+    
+    public async Task<SendFundsDto?> SendFunds(WithDrawalRequest[] requests)
+    {
+        _logger.LogInformation($"[CoinPayService] | SendFunds | Start processing {requests.Length} withdrawal requests.");
+
+        if (requests.Length == 0)
+        {
+            _logger.LogInformation($"[CoinPayService] | SendFunds | No withdrawal requests to process.");
+            return new SendFundsDto();
+        }
+
+        var response = new SendFundsDto();
+        var successfulIds = new List<int>();
+
+        foreach (var request in requests)
+        {
+            _logger.LogInformation($"[CoinPayService] | SendFunds | Starting transaction for request : {request.ToJsonString()}");
+
+            try
+            {
+                var withdrawalResponse = await ProcessWithdrawal(request);
+
+                if (withdrawalResponse.StatusCode == 1)
+                {
+                    _logger.LogInformation($"[CoinPayService] | SendFunds | Successful Process Withdrawal for request ID: {request.Id}");
+                    response.SuccessfulResponses.Add(withdrawalResponse);
+                    successfulIds.Add(request.Id);
+                }
+                else
+                {
+                    _logger.LogInformation($"[CoinPayService] | SendFunds | Failed Process Withdrawal for request ID: {request.Id}");
+                    response.FailedResponses.Add(withdrawalResponse);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"[CoinPayService] | SendFunds | Error processing withdrawal for request ID: {request.Id} with error: {ex}");
+            }
+        }
+
+        if (successfulIds.Count != Constants.EmptyValue)
+        {
+            await UpdateSuccessfulWithdrawals(successfulIds);
+            _logger.LogInformation($"[CoinPayService] | SendFunds | Successfully updated withdrawal records for IDs: {string.Join(", ", successfulIds)}");
+        }
+
+        _logger.LogInformation($"[CoinPayService] | SendFunds | Completed processing withdrawal requests.");
+
+        return response;
+    }
+
+    private async Task<SendFundsResponse> ProcessWithdrawal(WithDrawalRequest request)
+    {
+        _logger.LogInformation($"[CoinPayService] | ProcessWithdrawal | Starting withdrawal for Affiliate ID: {request.AffiliateId}");
+
+        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var trcResponse = await _accountServiceAdapter.GetAffiliateBtcByAffiliateId(request.AffiliateId);
+
+        TrcAddressResponse? userTrcAddress = null;
+
+        _logger.LogInformation($"[CoinPayService] | ProcessWithdrawal | TRC response received for Affiliate ID: {request.AffiliateId}");
+
+        var deserializeResponse = JsonConvert.DeserializeObject<ServicesResponse>(trcResponse.Content!);
+        if (deserializeResponse!.Data != null)
+        {
+            userTrcAddress = JsonConvert.DeserializeObject<TrcAddressResponse>(deserializeResponse.Data.ToString()!);
+            _logger.LogInformation($"[CoinPayService] | ProcessWithdrawal | TRC address deserialized successfully for Affiliate ID: {request.AffiliateId}");
+        }
+
+        if (user == null)
+        {
+            _logger.LogWarning($"[CoinPayService] | ProcessWithdrawal | User not found for Affiliate ID: {request.AffiliateId}");
+            return new SendFundsResponse
+            {
+                StatusCode = (int)HttpStatusCode.NotFound,
+                Message = "User not found"
+            };
+        }
+
+        if (userTrcAddress == null)
+        {
+            _logger.LogWarning($"[CoinPayService] | ProcessWithdrawal | No valid TRC address found for Affiliate ID: {request.AffiliateId}");
+            return new SendFundsResponse
+            {
+                StatusCode = (int)HttpStatusCode.BadRequest,
+                Message = "No valid TRC address found"
+            };
+        }
+        
+        var sendFundsRequest = new SendFundRequest
+        {
+            IdCurrency = Constants.UsdtIdCurrency,
+            IdNetwork = Constants.UsdtIdNetwork,
+            Address = userTrcAddress.Address,
+            Amount = request.Amount,
+            Details = Constants.SendFundsConcept,
+            AmountPlusFee = false
+        };
+
+        _logger.LogInformation($"[CoinPayService] | ProcessWithdrawal | Sending funds for Affiliate ID: {request.AffiliateId}");
+
+        var response = await _coinPayAdapter.SendFunds(sendFundsRequest);
+        if (response is { IsSuccessful: true, Content: not null })
+        {
+            var servicesResponse = JsonConvert.DeserializeObject<SendFundsResponse>(response.Content);
+            var today = DateTime.Now;
+            var walletWithdrawal = new WalletWithDrawalRequest
+            {
+                AffiliateId = user.Id,
+                AffiliateUserName = user.UserName!,
+                Amount = sendFundsRequest.Amount,
+                IsProcessed = true,
+                Observation = $"{Constants.SendFundsConcept} {request.Id}",
+                AdminObservation = $"{servicesResponse?.Data?.IdTransaction} - {servicesResponse?.Data?.Address ?? "No Address"}",
+                Date = today,
+                ResponseDate = today,
+                RetentionPercentage = Constants.EmptyValue,
+                Status = true
+            };
+
+            if (servicesResponse != null)
+            {
+                _logger.LogInformation($"[CoinPayService] | ProcessWithdrawal | Funds sent successfully for Affiliate ID: {request.AffiliateId}");
+                await _walletWithDrawalService.CreateWalletWithdrawalAsync(walletWithdrawal);
+                return servicesResponse;
+            }
+            else
+            {
+                _logger.LogWarning($"[CoinPayService] | ProcessWithdrawal | Successful operation but invalid response format for Affiliate ID: {request.AffiliateId} {response.ToJsonString()}");
+                return new SendFundsResponse
+                {
+                    StatusCode = (int)response.StatusCode,
+                    Message = "The operation was successful, but the response format is invalid."
+                };
+            }
+        }
+
+        _logger.LogWarning($"[CoinPayService] | ProcessWithdrawal | Failed to send funds for Affiliate ID: {request.AffiliateId} {response.ToJsonString()}");
+        return new SendFundsResponse
+        {
+            StatusCode = (int)response.StatusCode,
+            Message = "Failed to send funds"
+        };
+    }
+    
+    private async Task UpdateSuccessfulWithdrawals(List<int> successfulWithdrawalIds)
+    {
+        _logger.LogInformation($"[WalletService] | UpdateSuccessfulWithdrawals | Starting update for {successfulWithdrawalIds.ToJsonString()} successful withdrawals.");
+        var withdrawals = await _walletRequestRepository.GetWalletRequestsByIds(successfulWithdrawalIds);
+
+        foreach (var withdrawal in withdrawals)
+        {
+            _logger.LogDebug($"[WalletService] | UpdateSuccessfulWithdrawals | Updating status for withdrawal ID: {withdrawal.Id}");
+            withdrawal.Status = (int)WithdrawalStatus.Completed;
+            withdrawal.UpdatedAt = DateTime.Now;
+        }
+
+        await _walletRequestRepository.UpdateBulkWalletRequestsAsync(withdrawals);
+        _logger.LogInformation($"[WalletService] | UpdateSuccessfulWithdrawals | Successfully updated withdrawals.");
     }
 
     #endregion

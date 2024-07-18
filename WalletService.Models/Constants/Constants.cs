@@ -71,6 +71,7 @@ public static class Constants
     public const string ConceptCommissionModelFivePayment     = "Comisión Modelo 5 - ${0} - Calificacion {1}";
     public const string ConceptCommissionModelSixPayment      = "Comisión Modelo 6 - ${0} - Calificacion {1}";
     public const string DefaultWithdrawalZone                 = "Central America Standard Time";
+    public const string SendFundsConcept                      = "Retiro de dinero";
     public const int    UsdtIdCurrency                        = 19;
     public const int    UsdtIdNetwork                         = 99;
     public const int    CoinPayIdWallet                       = 46616;
