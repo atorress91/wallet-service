@@ -498,7 +498,7 @@ public class CoinPayService : BaseService, ICoinPayService
                 Status = true
             };
 
-            if (servicesResponse != null)
+            if (servicesResponse is { StatusCode: 1 })
             {
                 _logger.LogInformation($"[CoinPayService] | ProcessWithdrawal | Funds sent successfully for Affiliate ID: {request.AffiliateId}");
                 await _walletWithDrawalService.CreateWalletWithdrawalAsync(walletWithdrawal);
