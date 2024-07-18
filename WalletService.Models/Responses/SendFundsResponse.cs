@@ -11,8 +11,8 @@ public class SendFundsResponse
     {
         public int IdTransaction { get; set; }
         public int IdWallet { get; set; }
-        public int Amount { get; set; }
-        public int Fee { get; set; }
+        public decimal Amount { get; set; }
+        public decimal Fee { get; set; }
         public CurrencyDetails? Currency { get; set; }
         public string? Address { get; set; }
     }

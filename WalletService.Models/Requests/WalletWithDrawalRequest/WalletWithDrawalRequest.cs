@@ -3,7 +3,7 @@
 public class WalletWithDrawalRequest
 {
     public int AffiliateId { get; set; }
-    public string AffiliateUserName { get; set; }
+    public string? AffiliateUserName { get; set; }
     public decimal Amount { get; set; }
     public string? Observation { get; set; }
     public string? AdminObservation { get; set; }
