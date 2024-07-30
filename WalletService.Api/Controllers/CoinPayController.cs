@@ -10,10 +10,12 @@ namespace WalletService.Api.Controllers;
 public class CoinPayController : BaseController
 {
     private readonly ICoinPayService _coinPayService;
+    private readonly ILogger<CoinPayController> _logger;
 
-    public CoinPayController(ICoinPayService coinPayService)
+    public CoinPayController(ICoinPayService coinPayService, ILogger<CoinPayController> logger)
     {
         _coinPayService = coinPayService;
+        _logger = logger;
     }
 
     #region Coinpay
@@ -58,11 +60,32 @@ public class CoinPayController : BaseController
     }
 
     [HttpPost("Webhook")]
-    public async Task<IActionResult> Webhook([FromBody] WebhookNotificationRequest request)
+    public async Task<IActionResult> Webhook()
     {
-        var result = await _coinPayService.ReceiveCoinPayNotifications(request);
+        Request.EnableBuffering();
+        string requestBody;
 
-        return result is false ? Ok(Fail("The notification could not be processed.")) : Ok();
+        using (var reader = new StreamReader(Request.Body, leaveOpen: true))
+        {
+            requestBody = await reader.ReadToEndAsync();
+        }
+
+        Request.Body.Position = 0;
+
+        try
+        {
+            var result = await _coinPayService.ReceiveCoinPayNotifications(requestBody);
+
+            _logger.LogInformation("Processing result: {Result}", result);
+
+            return result is false ? Ok(Fail("The notification could not be processed.")) : Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing the Webhook notification.");
+
+            return StatusCode(500, "Internal Server Error: " + ex.Message);
+        }
     }
 
     [HttpPost("sendFunds")]
