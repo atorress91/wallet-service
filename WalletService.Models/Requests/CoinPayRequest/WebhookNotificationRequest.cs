@@ -8,9 +8,9 @@ public class WebhookNotificationRequest
     public string IdExternalReference { get; set; } = string.Empty;
     public string? Address { get; set; }
     public string? TxtId { get; set; }
-    public double Amount { get; set; }
-    public int Fee { get; set; }
-    public int ExchangeRate { get; set; }
+    public decimal Amount { get; set; }
+    public decimal Fee { get; set; }
+    public decimal ExchangeRate { get; set; }
     public PaymentMethod? PaymentMethod { get; set; }
     public Currency? Currency { get; set; }
     public UserChannel? UserChannel { get; set; }

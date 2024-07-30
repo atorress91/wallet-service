@@ -21,7 +21,8 @@ public class TokenValidationMiddleware
     {
         if (context.Request.Path.Value!.Equals("/health", StringComparison.OrdinalIgnoreCase) ||
             context.Request.Path.Value.Equals("/api/v1/ConPayments/coinPaymentsIPN", StringComparison.OrdinalIgnoreCase) ||
-            context.Request.Path.Value.Equals("/api/v1/Pagadito/webhook", StringComparison.OrdinalIgnoreCase))
+            context.Request.Path.Value.Equals("/api/v1/Pagadito/webhook", StringComparison.OrdinalIgnoreCase) ||
+            context.Request.Path.Value.Equals("/api/v1/CoinPay/Webhook", StringComparison.OrdinalIgnoreCase))
         {
             await _next(context);
             return;
