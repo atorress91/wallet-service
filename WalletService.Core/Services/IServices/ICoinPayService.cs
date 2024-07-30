@@ -13,7 +13,7 @@ public interface ICoinPayService
     Task<GetNetworkResponse?> GetNetworksByIdCurrency(int idCurrency);
     Task<CreateAddressResponse?> CreateAddress(CreateAddresRequest request);
     Task<GetTransactionByIdResponse?> GetTransactionById(int idTransaction);
-    Task<bool> ReceiveCoinPayNotifications(WebhookNotificationRequest? request);
+    Task<bool> ReceiveCoinPayNotifications(string requestBody);
     Task<SendFundsDto?> SendFunds(WithDrawalRequest[] request);
 
     #endregion

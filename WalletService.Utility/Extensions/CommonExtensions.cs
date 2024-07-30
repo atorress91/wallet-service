@@ -314,18 +314,20 @@ public static class CommonExtensions
     
     public static int GenerateUniqueId(int affiliateId)
     {
-        if (affiliateId >= 100000)
-            throw new ArgumentOutOfRangeException(nameof(affiliateId), "Affiliate ID must be less than 100000");
+        if (affiliateId < 1000)
+            throw new ArgumentOutOfRangeException(nameof(affiliateId), "Affiliate ID must be at least 1000");
         
-        TimeSpan timestamp = DateTime.UtcNow - new DateTime(2020, 1, 1);
-        int seconds = (int)timestamp.TotalSeconds;
+        string seed = $"{DateTime.UtcNow:yyyyMMddHHmmss}{affiliateId}";
         
-        int timestampMod = seconds % 10000000;  
-        
-        return timestampMod * 100000 + affiliateId;
+        using (var sha1 = System.Security.Cryptography.SHA1.Create())
+        {
+            byte[] hash = sha1.ComputeHash(System.Text.Encoding.UTF8.GetBytes(seed));
+            int uniqueId = BitConverter.ToInt32(hash, 0);
+            
+            return Math.Abs(uniqueId);
+        }
     }
-
-
+    
     #region ..Assigned..
 
     private static bool Assigned(this string? source)
