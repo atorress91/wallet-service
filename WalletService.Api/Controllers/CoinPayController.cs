@@ -96,7 +96,7 @@ public class CoinPayController : BaseController
         return result is null ? Ok(Fail("The sendFunds could not be processed.")) : Ok(Success(result));
     }
 
-    [HttpPost("getTransactionByReference")]
+    [HttpGet("getTransactionByReference")]
     public async Task<IActionResult> GetTransactionByReference([FromQuery] string reference)
     {
         var result = await _coinPayService.GetTransactionByReference(reference);
