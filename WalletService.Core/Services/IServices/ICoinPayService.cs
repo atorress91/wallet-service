@@ -15,6 +15,7 @@ public interface ICoinPayService
     Task<GetTransactionByIdResponse?> GetTransactionById(int idTransaction);
     Task<bool> ReceiveCoinPayNotifications(string requestBody);
     Task<SendFundsDto?> SendFunds(WithDrawalRequest[] request);
+    Task<bool> GetTransactionByReference(string request);
 
     #endregion
 }

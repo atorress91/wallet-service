@@ -253,7 +253,9 @@ public class CoinPayService : BaseService, ICoinPayService
         var channel = channelResponse.Content.ToJsonObject<CreateChannelResponse>();
         if (channel is null || channel.StatusCode != 1)
         {
-            _logger.LogWarning("Channel creation failed or did not return status code 1 for Affiliate ID: {AffiliateId}. Status code received: {StatusCode}", request.AffiliateId, channel?.StatusCode);
+            _logger.LogWarning(
+                "Channel creation failed or did not return status code 1 for Affiliate ID: {AffiliateId}. Status code received: {StatusCode}",
+                request.AffiliateId, channel?.StatusCode);
             return null;
         }
 
@@ -278,7 +280,8 @@ public class CoinPayService : BaseService, ICoinPayService
 
         if (existingTransaction != null && !existingTransaction.Acredited)
         {
-            _logger.LogInformation("Updating an unaccredited existing transaction for Transaction ID: {TransactionId}", existingTransaction.IdTransaction);
+            _logger.LogInformation("Updating an unaccredited existing transaction for Transaction ID: {TransactionId}",
+                existingTransaction.IdTransaction);
             existingTransaction.Amount = request.Amount;
             existingTransaction.Products = JsonSerializer.Serialize(request.Products);
             existingTransaction.UpdatedAt = today;
@@ -286,7 +289,8 @@ public class CoinPayService : BaseService, ICoinPayService
         }
         else
         {
-            _logger.LogInformation("Creating a new transaction for newly created channel with ID: {TransactionId}", paymentTransaction.IdTransaction);
+            _logger.LogInformation("Creating a new transaction for newly created channel with ID: {TransactionId}",
+                paymentTransaction.IdTransaction);
             transactionResponse = await _transactionRepository.CreateCoinPaymentTransaction(paymentTransaction);
         }
 
@@ -302,7 +306,7 @@ public class CoinPayService : BaseService, ICoinPayService
             request.AffiliateId);
         return channel;
     }
-    
+
     public async Task<GetNetworkResponse?> GetNetworksByIdCurrency(int idCurrency)
     {
         var result = await _coinPayAdapter.GetNetworksByIdCurrency(idCurrency);
@@ -344,7 +348,8 @@ public class CoinPayService : BaseService, ICoinPayService
 
     public async Task<bool> ReceiveCoinPayNotifications(string requestBody)
     {
-        _logger.LogInformation($"[CoinPayService] | ReceiveCoinPayNotifications | Starting transaction status update | Request ID: {requestBody.ToJsonString()}");
+        _logger.LogInformation(
+            $"[CoinPayService] | ReceiveCoinPayNotifications | Starting transaction status update | Request ID: {requestBody.ToJsonString()}");
 
         if (string.IsNullOrEmpty(requestBody))
         {
@@ -353,30 +358,36 @@ public class CoinPayService : BaseService, ICoinPayService
         }
 
         var request = JsonConvert.DeserializeObject<WebhookNotificationRequest>(requestBody);
-        _logger.LogDebug($"[CoinPayService] | ReceiveCoinPayNotifications | Processing request: { request!.ToJsonString()}");
+        _logger.LogDebug(
+            $"[CoinPayService] | ReceiveCoinPayNotifications | Processing request: {request!.ToJsonString()}");
 
         if (request is null)
             return false;
-        
-        
+
+
         if (request.UserChannel?.IdExternalIdentification is null)
         {
-            _logger.LogWarning("[CoinPayService] | ReceiveCoinPayNotifications | Request UserChannel or IdExternalIdentification is null");
+            _logger.LogWarning(
+                "[CoinPayService] | ReceiveCoinPayNotifications | Request UserChannel or IdExternalIdentification is null");
             return false;
         }
 
-        var existingTransaction = await _transactionRepository.GetTransactionByReference(request.UserChannel.IdExternalIdentification);
+        var existingTransaction =
+            await _transactionRepository.GetTransactionByReference(request.UserChannel.IdExternalIdentification);
         if (existingTransaction is null)
         {
-            _logger.LogWarning($"[CoinPayService] | ReceiveCoinPayNotifications | No existing transaction found for IdExternalIdentification: {request.UserChannel.IdExternalIdentification}");
+            _logger.LogWarning(
+                $"[CoinPayService] | ReceiveCoinPayNotifications | No existing transaction found for IdExternalIdentification: {request.UserChannel.IdExternalIdentification}");
             return false;
         }
 
-        _logger.LogInformation($"[CoinPayService] | ReceiveCoinPayNotifications | Found existing transaction | Status: {existingTransaction.Status}, Acredited: {existingTransaction.Acredited}");
+        _logger.LogInformation(
+            $"[CoinPayService] | ReceiveCoinPayNotifications | Found existing transaction | Status: {existingTransaction.Status}, Acredited: {existingTransaction.Acredited}");
 
         if (existingTransaction.Acredited || existingTransaction.Status == Constants.CompletedStatusCode)
         {
-            _logger.LogInformation($"[CoinPayService] | ReceiveCoinPayNotifications | Transaction already completed or accredited | Status: {existingTransaction.Status}, Reference: {existingTransaction.Reference}");
+            _logger.LogInformation(
+                $"[CoinPayService] | ReceiveCoinPayNotifications | Transaction already completed or accredited | Status: {existingTransaction.Status}, Reference: {existingTransaction.Reference}");
             return false;
         }
 
@@ -385,32 +396,40 @@ public class CoinPayService : BaseService, ICoinPayService
             case Constants.CoinPayPendingStatusCode:
                 existingTransaction.Status = Constants.RegisteredStatusCode;
                 existingTransaction.Acredited = false;
-                _logger.LogInformation($"[CoinPayService] | ReceiveCoinPayNotifications | Transaction set to registered status | Reference: {existingTransaction.Reference}");
+                existingTransaction.IdTransaction = request.IdTransaction.ToString();
+                _logger.LogInformation(
+                    $"[CoinPayService] | ReceiveCoinPayNotifications | Transaction set to registered status | Reference: {existingTransaction.Reference}");
                 break;
 
             case Constants.CoinPayExpiredStatusCode:
                 existingTransaction.Status = Constants.ExpiredStatusCode;
                 existingTransaction.Acredited = false;
-                _logger.LogInformation($"[CoinPayService] | ReceiveCoinPayNotifications | Transaction marked as expired | Reference: {existingTransaction.Reference}");
+                _logger.LogInformation(
+                    $"[CoinPayService] | ReceiveCoinPayNotifications | Transaction marked as expired | Reference: {existingTransaction.Reference}");
                 break;
 
             case Constants.CoinPaySuccessStatusCode:
                 existingTransaction.Status = Constants.CompletedStatusCode;
                 existingTransaction.AmountReceived = request.Amount;
                 existingTransaction.Acredited = true;
-             
-                _logger.LogInformation($"[CoinPayService] | ReceiveCoinPayNotifications | Transaction marked as successful | Amount: {request.Amount} | Reference: {existingTransaction.Reference}");
+                existingTransaction.IdTransaction = request.IdTransaction.ToString();
+
+                _logger.LogInformation(
+                    $"[CoinPayService] | ReceiveCoinPayNotifications | Transaction marked as successful | Amount: {request.Amount} | Reference: {existingTransaction.Reference}");
                 await ProcessPaymentTransaction(existingTransaction);
-                _logger.LogInformation($"[CoinPayService] | ReceiveCoinPayNotifications | Payment processing completed | Reference: {existingTransaction.Reference}");
+                _logger.LogInformation(
+                    $"[CoinPayService] | ReceiveCoinPayNotifications | Payment processing completed | Reference: {existingTransaction.Reference}");
                 break;
 
             default:
-                _logger.LogWarning($"[CoinPayService] | ReceiveCoinPayNotifications | Unknown transaction status ID: {request.TransactionStatus.Id}");
+                _logger.LogWarning(
+                    $"[CoinPayService] | ReceiveCoinPayNotifications | Unknown transaction status ID: {request.TransactionStatus.Id}");
                 break;
         }
 
         await _transactionRepository.UpdateCoinPaymentTransactionAsync(existingTransaction);
-        _logger.LogInformation($"[CoinPayService] | ReceiveCoinPayNotifications | Transaction status updated in the database | Reference: {existingTransaction.Reference}");
+        _logger.LogInformation(
+            $"[CoinPayService] | ReceiveCoinPayNotifications | Transaction status updated in the database | Reference: {existingTransaction.Reference}");
 
         return true;
     }
@@ -591,6 +610,24 @@ public class CoinPayService : BaseService, ICoinPayService
 
         await _walletRequestRepository.UpdateBulkWalletRequestsAsync(withdrawals);
         _logger.LogInformation($"[WalletService] | UpdateSuccessfulWithdrawals | Successfully updated withdrawals.");
+    }
+
+    public async Task<bool> GetTransactionByReference(string request)
+    {
+        if (string.IsNullOrEmpty(request))
+            return false;
+        
+        var reference = await _transactionRepository.GetTransactionByReference(request);
+
+        if (reference is null)
+            return false;
+
+        if (reference is { Acredited: true, Status: Constants.CompletedStatusCode })
+        {
+            return true;
+        }
+
+        return false;
     }
 
     #endregion
