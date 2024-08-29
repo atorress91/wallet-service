@@ -30,7 +30,7 @@ public class WalletService : BaseService, IWalletService
     private readonly IBalancePaymentStrategy       _balancePaymentStrategy;
     private readonly RedisCache                    _redisCache;
     private readonly IBalancePaymentStrategyModel2 _balancePaymentStrategyModel2;
-
+    private readonly IBrandService                 _brandService;
     public WalletService(
         IMapper                       mapper,
         IWalletRepository             walletRepository,
@@ -40,7 +40,8 @@ public class WalletService : BaseService, IWalletService
         IInvoiceDetailRepository      invoiceDetailRepository,
         INetworkPurchaseRepository    networkPurchaseRepository, IBalancePaymentStrategy balancePaymentStrategy,
         IBalancePaymentStrategyModel2 balancePaymentStrategyModel2,
-        RedisCache                    redisCache) :
+        RedisCache                    redisCache,
+        IBrandService brandService) :
         base(mapper)
     {
         _walletRepository             = walletRepository;
@@ -52,6 +53,7 @@ public class WalletService : BaseService, IWalletService
         _balancePaymentStrategy       = balancePaymentStrategy;
         _balancePaymentStrategyModel2 = balancePaymentStrategyModel2;
         _redisCache                   = redisCache;
+        _brandService                 = brandService;
     }
 
 
@@ -59,28 +61,28 @@ public class WalletService : BaseService, IWalletService
 
     public async Task<IEnumerable<WalletDto>> GetAllWallets()
     {
-        var response = await _walletRepository.GetAllWallets();
+        var response = await _walletRepository.GetAllWallets(_brandService.BrandId);
 
         return Mapper.Map<IEnumerable<WalletDto>>(response);
     }
 
     public async Task<IEnumerable<WalletDto>> GetWalletsRequest(int userId)
     {
-        var response = await _walletRepository.GetWalletsRequest(userId);
+        var response = await _walletRepository.GetWalletsRequest(userId,_brandService.BrandId);
 
         return Mapper.Map<IEnumerable<WalletDto>>(response);
     }
 
     public async Task<WalletDto?> GetWalletById(int id)
     {
-        var response = await _walletRepository.GetWalletById(id);
+        var response = await _walletRepository.GetWalletById(id,_brandService.BrandId);
 
         return Mapper.Map<WalletDto>(response);
     }
 
     public async Task<IEnumerable<WalletDto?>> GetWalletByAffiliateId(int affiliateId)
     {
-        var response   = await _walletRepository.GetWalletByAffiliateId(affiliateId);
+        var response   = await _walletRepository.GetWalletByAffiliateId(affiliateId,_brandService.BrandId);
         var mappedList = Mapper.Map<IEnumerable<WalletDto?>>(response).ToList();
         mappedList.Reverse();
 
@@ -89,14 +91,14 @@ public class WalletService : BaseService, IWalletService
 
     public async Task<IEnumerable<WalletDto?>> GetWalletByUserId(int userId)
     {
-        var response = await _walletRepository.GetWalletByUserId(userId);
+        var response = await _walletRepository.GetWalletByUserId(userId,_brandService.BrandId);
 
         return Mapper.Map<IEnumerable<WalletDto?>>(response);
     }
 
     public async Task<WalletDto?> DeleteWalletAsync(int id)
     {
-        var wallet = await _walletRepository.GetWalletById(id);
+        var wallet = await _walletRepository.GetWalletById(id,_brandService.BrandId);
 
         if (wallet is null)
             return null;
@@ -113,12 +115,12 @@ public class WalletService : BaseService, IWalletService
         BalanceInformationDto response;
         if (!existsKey)
         {
-            var amountRequests       = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId);
-            var availableBalance     = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId);
-            var reverseBalance       = await _walletRepository.GetReverseBalanceByAffiliateId(affiliateId);
-            var totalAcquisitions    = await _walletRepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
-            var totalCommissionsPaid = await _walletRepository.GetTotalCommissionsPaid(affiliateId);
-            var totalServiceBalance  = await _walletRepository.GetTotalServiceBalance(affiliateId);
+            var amountRequests       = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId,_brandService.BrandId);
+            var availableBalance     = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId, _brandService.BrandId);
+            var reverseBalance       = await _walletRepository.GetReverseBalanceByAffiliateId(affiliateId, _brandService.BrandId);
+            var totalAcquisitions    = await _walletRepository.GetTotalAcquisitionsByAffiliateId(affiliateId, _brandService.BrandId);
+            var totalCommissionsPaid = await _walletRepository.GetTotalCommissionsPaid(affiliateId, _brandService.BrandId);
+            var totalServiceBalance  = await _walletRepository.GetTotalServiceBalance(affiliateId, _brandService.BrandId);
 
             response = new BalanceInformationDto
             {
@@ -145,13 +147,13 @@ public class WalletService : BaseService, IWalletService
 
     public async Task<BalanceInformationAdminDto> GetBalanceInformationAdmin()
     {
-        var responseAffiliates = await _accountServiceAdapter.GetTotalActiveMembers();
+        var responseAffiliates = await _accountServiceAdapter.GetTotalActiveMembers(_brandService.BrandId);
         var response           = responseAffiliates.Content!.ToJsonObject<GetTotalActiveMembersResponse>();
 
         var enabledAffiliates     = response!.Data;
-        var walletProfit          = await _walletRepository.GetAvailableBalanceAdmin();
-        var amountRequests        = await _walletRequestRepository.GetTotalWalletRequestAmount();
-        var reverseBalance       = await _walletRepository.GetTotalReverseBalance();
+        var walletProfit          = await _walletRepository.GetAvailableBalanceAdmin(_brandService.BrandId);
+        var amountRequests        = await _walletRequestRepository.GetTotalWalletRequestAmount(_brandService.BrandId);
+        var reverseBalance       = await _walletRepository.GetTotalReverseBalance(_brandService.BrandId);
         var paidCommissions       = 0m;
         var calculatedCommissions = 0m;
 
@@ -238,8 +240,8 @@ public class WalletService : BaseService, IWalletService
     {
         var today       = DateTime.Now;
         var amount      = 10;
-        var userInfo    = await _accountServiceAdapter.GetAffiliateByUserName(request.ToUserName);
-        var currentUser = await _accountServiceAdapter.GetAffiliateByUserName(request.FromUserName);
+        var userInfo    = await _accountServiceAdapter.GetAffiliateByUserName(request.ToUserName, _brandService.BrandId);
+        var currentUser = await _accountServiceAdapter.GetAffiliateByUserName(request.FromUserName,_brandService.BrandId);
 
         if (!userInfo.IsSuccessful)
             return false;
@@ -330,9 +332,9 @@ public class WalletService : BaseService, IWalletService
 
         var today        = DateTime.Now;
         var amount       = data.Amount;
-        var currentUser  = await _accountServiceAdapter.GetAffiliateByUserName(data.FromUserName);
-        var userInfo     = await _accountServiceAdapter.GetAffiliateByUserName(data.ToUserName);
-        var isActivePool = await _walletRepository.IsActivePoolGreaterThanOrEqualTo25(data.FromAffiliateId);
+        var currentUser  = await _accountServiceAdapter.GetAffiliateByUserName(data.FromUserName,_brandService.BrandId);
+        var userInfo     = await _accountServiceAdapter.GetAffiliateByUserName(data.ToUserName,_brandService.BrandId);
+        var isActivePool = await _walletRepository.IsActivePoolGreaterThanOrEqualTo25(data.FromAffiliateId,_brandService.BrandId);
 
         if (!isActivePool)
             return new ServicesResponse { Success = false, Message = "No tiene un Pool activo", Code = 400 };
@@ -469,7 +471,7 @@ public class WalletService : BaseService, IWalletService
     {
         try
         {
-            var invoiceResponse       = await _invoiceRepository.GetInvoiceById(invoiceNumber);
+            var invoiceResponse       = await _invoiceRepository.GetInvoiceById(invoiceNumber,_brandService.BrandId);
             var invoiceDetailResponse = await _invoiceDetailRepository.GetInvoiceDetailByInvoiceIdAsync(invoiceNumber);
 
             if (invoiceResponse is null || invoiceDetailResponse.Any() == false)
@@ -496,7 +498,7 @@ public class WalletService : BaseService, IWalletService
             )?>
         GetPurchasesMadeInMyNetwork(int affiliateId)
     {
-        var networkResult = await _accountServiceAdapter.GetPersonalNetwork(affiliateId);
+        var networkResult = await _accountServiceAdapter.GetPersonalNetwork(affiliateId, _brandService.BrandId);
 
         if (networkResult.Content == null || !networkResult.Content.Any())
             return null;
@@ -557,7 +559,7 @@ public class WalletService : BaseService, IWalletService
 
     public async Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance()
     {
-        var result = await _walletRepository.GetAllAffiliatesWithPositiveBalance();
+        var result = await _walletRepository.GetAllAffiliatesWithPositiveBalance(_brandService.BrandId);
 
         return result;
     }
@@ -567,7 +569,7 @@ public class WalletService : BaseService, IWalletService
         if (request.Amount == 0)
             return false;
 
-        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
 
         if (user is null)
             return false;

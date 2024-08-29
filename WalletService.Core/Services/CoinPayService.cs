@@ -33,6 +33,7 @@ public class CoinPayService : BaseService, ICoinPayService
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
     private readonly IWalletRequestRepository _walletRequestRepository;
     private readonly IWalletWithdrawalService _walletWithDrawalService;
+    private readonly IBrandService _brandService;
 
     public CoinPayService(IMapper mapper, ICoinPayAdapter coinPayAdapter,
         ICoinPaymentTransactionRepository transactionRepository, ILogger<CoinPayService> logger,
@@ -41,7 +42,8 @@ public class CoinPayService : BaseService, ICoinPayService
         ICoinPayPaymentStrategy coinPayPaymentStrategy,
         IInventoryServiceAdapter inventoryServiceAdapter,
         IWalletRequestRepository walletRequestRepository,
-        IWalletWithdrawalService walletWithDrawalService
+        IWalletWithdrawalService walletWithDrawalService,
+        IBrandService brandService
     ) : base(mapper)
     {
         _coinPayAdapter = coinPayAdapter;
@@ -53,6 +55,7 @@ public class CoinPayService : BaseService, ICoinPayService
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _walletRequestRepository = walletRequestRepository;
         _walletWithDrawalService = walletWithDrawalService;
+        _brandService = brandService;
     }
 
     #region coingPay
@@ -78,6 +81,17 @@ public class CoinPayService : BaseService, ICoinPayService
 
         await _coinPayPaymentStrategy.ExecuteEcoPoolPayment(walletRequest);
     }
+    
+    private async Task ExecuteRecyCoinPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
+    {
+        walletRequest.ProductsList = products.Select(product => new ProductsRequests
+        {
+            IdProduct = product.ProductId,
+            Count = product.Quantity
+        }).ToList();
+
+        await _coinPayPaymentStrategy.ExecuteRecyCoinPayment(walletRequest);
+    }
 
     private async Task ExecuteCoursePayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
     {
@@ -90,7 +104,7 @@ public class CoinPayService : BaseService, ICoinPayService
         await _coinPayPaymentStrategy.ExecuteCoursePayment(walletRequest);
     }
 
-    private async Task<ProductType> GetProductType(List<ProductRequest> request)
+    private async Task<ProductType> GetProductType(List<ProductRequest> request,int brandId)
     {
         if (request == null || !request.Any())
         {
@@ -98,7 +112,7 @@ public class CoinPayService : BaseService, ICoinPayService
         }
 
         var productIds = request.Select(p => p.ProductId).ToArray();
-        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds, brandId);
 
         var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content!);
 
@@ -110,7 +124,8 @@ public class CoinPayService : BaseService, ICoinPayService
         }
         else
         {
-            var membershipResult = await _inventoryServiceAdapter.GetProductById(productIds.First());
+            var membershipResult =
+                await _inventoryServiceAdapter.GetProductById(productIds.First(), brandId);
             var productResult = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
             firstProductCategory = productResult!.Data.PaymentGroup;
         }
@@ -119,6 +134,7 @@ public class CoinPayService : BaseService, ICoinPayService
         {
             case 1: return ProductType.Membership;
             case 2: return ProductType.EcoPool;
+            case 11: return ProductType.RecyCoin;
             default:
                 return ProductType.Course;
         }
@@ -129,7 +145,7 @@ public class CoinPayService : BaseService, ICoinPayService
         _logger.LogInformation(
             $"[CoinPayService] | ProcessPaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
 
-        var userInfo = await _accountServiceAdapter.GetUserInfo(transactionResult.AffiliateId);
+        var userInfo = await _accountServiceAdapter.GetUserInfo(transactionResult.AffiliateId, transactionResult.BrandId);
 
         if (userInfo == null || userInfo.UserName == null)
             return;
@@ -155,7 +171,8 @@ public class CoinPayService : BaseService, ICoinPayService
             Bank = transactionResult.Reference,
             PaymentMethod = 4,
             ReceiptNumber = transactionResult.IdTransaction,
-            ProductsList = productsList
+            ProductsList = productsList,
+            BrandId = transactionResult.BrandId
         };
 
         var products = JsonSerializer.Deserialize<List<ProductRequest>>(transactionResult.Products);
@@ -164,11 +181,13 @@ public class CoinPayService : BaseService, ICoinPayService
 
         _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | products: {products.ToJsonString()}");
 
-        var isExists = await _invoiceRepository.InvoiceExistsByReceiptNumber(transactionResult.IdTransaction);
+        var isExists =
+            await _invoiceRepository.InvoiceExistsByReceiptNumber(transactionResult.IdTransaction,
+                transactionResult.BrandId);
         if (isExists)
             return;
 
-        var productType = await GetProductType(products);
+        var productType = await GetProductType(products,transactionResult.BrandId);
 
         switch (productType)
         {
@@ -179,6 +198,10 @@ public class CoinPayService : BaseService, ICoinPayService
             case ProductType.EcoPool:
                 await ExecuteEcoPoolPayment(walletRequest, products);
                 _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | EcoPool Payment executed");
+                break;
+            case ProductType.RecyCoin:
+                await ExecuteRecyCoinPayment(walletRequest, products);
+                _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | RecyCoin Payment executed");
                 break;
             case ProductType.Course:
                 await ExecuteCoursePayment(walletRequest, products);
@@ -216,7 +239,8 @@ public class CoinPayService : BaseService, ICoinPayService
             Status = result.StatusCode,
             PaymentMethod = "CoinPay",
             CreatedAt = today,
-            UpdatedAt = today
+            UpdatedAt = today,
+            BrandId   = _brandService.BrandId 
         };
 
         await _transactionRepository.CreateCoinPaymentTransaction(paymentTransaction);
@@ -260,7 +284,8 @@ public class CoinPayService : BaseService, ICoinPayService
         }
 
         var existingTransaction =
-            await _transactionRepository.GetCoinPaymentTransactionByIdTransaction(channel.Data!.Id.ToString());
+            await _transactionRepository.GetCoinPaymentTransactionByIdTransaction(channel.Data!.Id.ToString(),
+                _brandService.BrandId);
         _logger.LogInformation("Checking for existing transaction with ID: {TransactionId}", channel.Data!.Id);
 
         var paymentTransaction = new PaymentTransaction
@@ -275,7 +300,8 @@ public class CoinPayService : BaseService, ICoinPayService
             PaymentMethod = Constants.CoinPay,
             CreatedAt = today,
             UpdatedAt = today,
-            Reference = channelRequest.IdExternalIdentification.ToString()
+            Reference = channelRequest.IdExternalIdentification.ToString(),
+            BrandId   = _brandService.BrandId 
         };
 
         if (existingTransaction != null && !existingTransaction.Acredited)
@@ -348,8 +374,7 @@ public class CoinPayService : BaseService, ICoinPayService
 
     public async Task<bool> ReceiveCoinPayNotifications(string requestBody)
     {
-        _logger.LogInformation(
-            $"[CoinPayService] | ReceiveCoinPayNotifications | Starting transaction status update | Request ID: {requestBody.ToJsonString()}");
+        _logger.LogInformation($"[CoinPayService] | ReceiveCoinPayNotifications | Starting transaction status update | Request ID: {requestBody.ToJsonString()}");
 
         if (string.IsNullOrEmpty(requestBody))
         {
@@ -374,10 +399,18 @@ public class CoinPayService : BaseService, ICoinPayService
 
         var existingTransaction =
             await _transactionRepository.GetTransactionByReference(request.UserChannel.IdExternalIdentification);
+
         if (existingTransaction is null)
         {
             _logger.LogWarning(
                 $"[CoinPayService] | ReceiveCoinPayNotifications | No existing transaction found for IdExternalIdentification: {request.UserChannel.IdExternalIdentification}");
+            return false;
+        }
+
+        if (request.Amount < existingTransaction.Amount)
+        {
+            _logger.LogWarning(
+                $"[CoinPayService] | ReceiveCoinPayNotifications | Amount received is less than Amount Received: {request.Amount}, Existing Transaction Amount: {existingTransaction.Amount}");
             return false;
         }
 
@@ -495,8 +528,9 @@ public class CoinPayService : BaseService, ICoinPayService
         _logger.LogInformation(
             $"[CoinPayService] | ProcessWithdrawal | Starting withdrawal for Affiliate ID: {request.AffiliateId}");
 
-        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
-        var trcResponse = await _accountServiceAdapter.GetAffiliateBtcByAffiliateId(request.AffiliateId);
+        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId, _brandService.BrandId);
+        var trcResponse =
+            await _accountServiceAdapter.GetAffiliateBtcByAffiliateId(request.AffiliateId, _brandService.BrandId);
 
         TrcAddressResponse? userTrcAddress = null;
 
@@ -616,7 +650,7 @@ public class CoinPayService : BaseService, ICoinPayService
     {
         if (string.IsNullOrEmpty(request))
             return false;
-        
+
         var reference = await _transactionRepository.GetTransactionByReference(request);
 
         if (reference is null)

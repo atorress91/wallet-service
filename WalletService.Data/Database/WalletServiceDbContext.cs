@@ -32,11 +32,11 @@ public class WalletServiceDbContext : DbContext
     public virtual DbSet<ResultsModel2> ResultsModel2 { get; set; }
 
     public virtual DbSet<ResultsModel2Levels> ResultsModel2Levels { get; set; }
-    
+
     public virtual DbSet<ResultsModel1A> ResultsModel1A { get; set; }
 
     public virtual DbSet<ResultsModel1ALevels> ResultsModel1ALevels { get; set; }
-    
+
     public virtual DbSet<ResultsModel1B> ResultsModel1B { get; set; }
 
     public virtual DbSet<ResultsModel1BLevels> ResultsModel1BLevels { get; set; }
@@ -49,6 +49,7 @@ public class WalletServiceDbContext : DbContext
     public virtual DbSet<WalletsServiceModel1A> WalletsServiceModel1A { get; set; }
     public virtual DbSet<WalletsServiceModel1B> WalletsServiceModel1B { get; set; }
     public virtual DbSet<WalletsServiceModel2> WalletsServiceModel2 { get; set; }
+    public virtual DbSet<Brand> Brand { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -84,8 +85,6 @@ public class WalletServiceDbContext : DbContext
 
             entity.Property(e => e.Status).HasColumnType("bit");
             
-
-
             entity.Property(e => e.Concept)
                 .HasColumnType("varchar(255)")
                 .HasMaxLength(255)
@@ -98,13 +97,11 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.AffiliateUserName)
                 .HasColumnType("varchar(50)")
                 .HasMaxLength(50);
-
-
+            
             entity.Property(e => e.AdminUserName)
                 .HasColumnType("varchar(50)")
                 .HasMaxLength(50);
-
-
+            
             entity.Property(e => e.Support)
                 .HasColumnType("int");
 
@@ -113,15 +110,15 @@ public class WalletServiceDbContext : DbContext
                 .IsRequired();
 
             entity.Property(e => e.Compression).HasColumnType("bit");
-
-
+            
             entity.Property(e => e.Detail)
                 .HasColumnType("text");
 
             entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
             entity.Property(e => e.DeletedAt).HasColumnType("datetime");
-
+            entity.Property(e => e.BrandId).IsRequired();
+            
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -181,8 +178,6 @@ public class WalletServiceDbContext : DbContext
                 .IsRequired();
 
             entity.Property(e => e.Compression).HasColumnType("bit");
-            ;
-
 
             entity.Property(e => e.Detail)
                 .HasColumnType("text");
@@ -220,9 +215,7 @@ public class WalletServiceDbContext : DbContext
                 .HasColumnType("decimal");
 
             entity.Property(e => e.Status).HasColumnType("bit");
-            ;
-
-
+            
             entity.Property(e => e.Concept)
                 .HasColumnType("varchar(255)")
                 .HasMaxLength(255)
@@ -250,9 +243,6 @@ public class WalletServiceDbContext : DbContext
                 .IsRequired();
 
             entity.Property(e => e.Compression).HasColumnType("bit");
-            ;
-
-
             entity.Property(e => e.Detail)
                 .HasColumnType("text");
 
@@ -545,6 +535,7 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.ShippingAddress).HasMaxLength(250);
             entity.Property(e => e.SecretKey).HasMaxLength(40);
             entity.Property(e => e.BtcAddress).HasMaxLength(100);
+            entity.Property(e => e.BrandId).IsRequired();
 
             entity.Property(e => e.DepositDate).HasColumnType("datetime");
             entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
@@ -579,7 +570,7 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.WaitingDays);
             entity.Property(e => e.DaysToPayQuantity);
             entity.Property(e => e.ProductPack).HasColumnType("bit");
-
+            entity.Property(e => e.BrandId).IsRequired();
             entity.Property(e => e.ProductStart).HasColumnType("bit");
 
             entity.Property(e => e.Date).HasColumnType("datetime").IsRequired();
@@ -644,7 +635,7 @@ public class WalletServiceDbContext : DbContext
                 .WithMany(p => p.ModelConfigurationLevels)
                 .HasForeignKey(d => d.EcoPoolConfigurationId);
         });
-        
+
         modelBuilder.Entity<ResultsModel1A>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -660,10 +651,9 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.PeriodPool).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.CompletedAt).HasColumnType("datetime");
             entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
-            
         });
-        
-        
+
+
         modelBuilder.Entity<ResultsModel1ALevels>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -682,8 +672,8 @@ public class WalletServiceDbContext : DbContext
                 .WithMany(p => p.ResultsModel1ALevels)
                 .HasForeignKey(d => d.ResultsModel1AId);
         });
-        
-                modelBuilder.Entity<ResultsModel1B>(entity =>
+
+        modelBuilder.Entity<ResultsModel1B>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ProductExternalId).IsRequired();
@@ -698,10 +688,9 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.PeriodPool).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.CompletedAt).HasColumnType("datetime");
             entity.Property(e => e.UserCreatedAt).HasColumnType("datetime");
-            
         });
-        
-        
+
+
         modelBuilder.Entity<ResultsModel1BLevels>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -816,8 +805,8 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.UpdatedAt).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.DeletedAt).HasColumnType("datetime");
-
-
+            entity.Property(e => e.BrandId).IsRequired();
+            
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -914,7 +903,7 @@ public class WalletServiceDbContext : DbContext
 
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
-        
+
         modelBuilder.Entity<WalletsServiceModel1B>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -949,7 +938,7 @@ public class WalletServiceDbContext : DbContext
 
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
-        
+
         modelBuilder.Entity<WalletsServiceModel2>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -980,6 +969,19 @@ public class WalletServiceDbContext : DbContext
                 .IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+            entity.Property(e => e.DeletedAt).HasColumnType("datetime");
+
+            entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
+        });
+
+        modelBuilder.Entity<Brand>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasColumnType("nvarchar(100)");
+            entity.Property(e => e.SecretKey).HasColumnType("nvarchar(64)");
+            entity.Property(e => e.IsActive).HasColumnType("bit");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.DeletedAt).HasColumnType("datetime");
 
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);

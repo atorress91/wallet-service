@@ -14,29 +14,33 @@ namespace WalletService.Core.PaymentStrategies;
 
 public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 {
-    private readonly IInvoiceRepository       _invoiceRepository;
+    private readonly IInvoiceRepository _invoiceRepository;
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
-    private readonly IAccountServiceAdapter   _accountServiceAdapter;
-    private readonly IMediatorPdfService      _mediatorPdfService;
-    private readonly IBrevoEmailService       _brevoEmailService;
-    private readonly IWalletRepository        _walletRepository;
-
-    public CoinPayPaymentStrategy(IInvoiceRepository invoiceRepository,     IInventoryServiceAdapter inventoryServiceAdapter,
-        IAccountServiceAdapter                       accountServiceAdapter, IBrevoEmailService       brevoEmailService, IMediatorPdfService mediatorPdfService, IWalletRepository walletRepository)
+    private readonly IAccountServiceAdapter _accountServiceAdapter;
+    private readonly IEcosystemPdfService _ecosystemPdfService;
+    private readonly IBrevoEmailService _brevoEmailService;
+    private readonly IWalletRepository _walletRepository;
+    private readonly IRecyCoinPdfService _recyCoinPdfService;
+    public CoinPayPaymentStrategy(IInvoiceRepository invoiceRepository,
+        IInventoryServiceAdapter inventoryServiceAdapter,
+        IAccountServiceAdapter accountServiceAdapter, IBrevoEmailService brevoEmailService,
+        IEcosystemPdfService ecosystemPdfService, IWalletRepository walletRepository,IRecyCoinPdfService recyCoinPdfService)
     {
-        _invoiceRepository       = invoiceRepository;
+        _invoiceRepository = invoiceRepository;
         _inventoryServiceAdapter = inventoryServiceAdapter;
-        _accountServiceAdapter   = accountServiceAdapter;
-        _brevoEmailService       = brevoEmailService;
-        _mediatorPdfService      = mediatorPdfService;
-        _walletRepository        = walletRepository;
+        _accountServiceAdapter = accountServiceAdapter;
+        _brevoEmailService = brevoEmailService;
+        _ecosystemPdfService = ecosystemPdfService;
+        _walletRepository = walletRepository;
+        _recyCoinPdfService = recyCoinPdfService;
     }
-      private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
+
+    private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
     {
         Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
 
         var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        var separator        = Path.DirectorySeparatorChar;
+        var separator = Path.DirectorySeparatorChar;
 
         var pdfDirectory = $"{workingDirectory}{separator}Assets{separator}TradingAcademy";
 
@@ -44,7 +48,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
         foreach (var pdfFile in pdfFiles)
         {
-            var fileName   = Path.GetFileName(pdfFile);
+            var fileName = Path.GetFileName(pdfFile);
             var pdfContent = await File.ReadAllBytesAsync(pdfFile);
             pdfContents[fileName] = pdfContent;
         }
@@ -54,15 +58,15 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
     public async Task<bool> ExecuteEcoPoolPayment(WalletRequest request)
     {
-        var  debit          = 0;
-        var  points         = 0m;
-        var  commissionable = 0m;
-        byte origin         = 0;
+        var debit = 0;
+        var points = 0m;
+        var commissionable = 0m;
+        byte origin = 0;
 
-        var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
-        var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var invoiceDetails = new List<InvoiceDetailsTransactionRequest>();
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId, request.BrandId);
+        var productIds = request.ProductsList.Select(p => p.IdProduct).ToArray();
+        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds, request.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -74,12 +78,12 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
         if (result?.Data.Count == Constants.EmptyValue)
         {
-            var firstProductId   = request.ProductsList.First().IdProduct;
-            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
+            var firstProductId = request.ProductsList.First().IdProduct;
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId, request.BrandId);
 
             var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
 
-            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
+            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId, request.BrandId);
 
             result.Data.Add(productResponse!.Data);
         }
@@ -89,15 +93,15 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
         if (result.Data.Count != request.ProductsList.Count)
             return false;
-        
+
         var productNames = result.Data.Select(item => item.Name).ToArray();
-        
+
         foreach (var item in result.Data)
         {
             var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
-            var tax     = item.Tax;
-            debit          += (int)((item.SalePrice * product!.Count) * (1 + (tax / 100)));
-            points         += item.BinaryPoints * product.Count;
+            var tax = item.Tax;
+            debit += (int)((item.SalePrice * product!.Count) * (1 + (tax / 100)));
+            points += item.BinaryPoints * product.Count;
             commissionable += item.CommissionableValue * product.Count;
             if (item.CategoryId == 2)
             {
@@ -106,25 +110,26 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
             var invoiceDetail = new InvoiceDetailsTransactionRequest
             {
-                ProductId             = item.Id,
-                PaymentGroupId        = item.PaymentGroup,
-                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
-                ProductName           = item.Name!,
-                ProductPrice          = item.SalePrice,
-                ProductPriceBtc       = Constants.EmptyValue,
-                ProductIva            = item.Tax,
-                ProductQuantity       = product.Count,
+                ProductId = item.Id,
+                PaymentGroupId = item.PaymentGroup,
+                AccumMinPurchase = Convert.ToByte(item.AcumCompMin),
+                ProductName = item.Name!,
+                ProductPrice = item.SalePrice,
+                ProductPriceBtc = Constants.EmptyValue,
+                ProductIva = item.Tax,
+                ProductQuantity = product.Count,
                 ProductCommissionable = item.CommissionableValue,
-                BinaryPoints          = item.BinaryPoints,
-                ProductPoints         = item.ValuePoints,
-                ProductDiscount       = item.ProductDiscount,
-                CombinationId         = Constants.EmptyValue,
-                ProductPack           = Convert.ToByte(item.ProductPacks),
-                BaseAmount            = (item.BaseAmount * product.Count),
-                DailyPercentage       = item.DailyPercentage,
-                WaitingDays           = item.DaysWait,
-                DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = Constants.EmptyValue
+                BinaryPoints = item.BinaryPoints,
+                ProductPoints = item.ValuePoints,
+                ProductDiscount = item.ProductDiscount,
+                CombinationId = Constants.EmptyValue,
+                ProductPack = Convert.ToByte(item.ProductPacks),
+                BaseAmount = (item.BaseAmount * product.Count),
+                DailyPercentage = item.DailyPercentage,
+                WaitingDays = item.DaysWait,
+                DaysToPayQuantity = Constants.DaysToPayQuantity,
+                ProductStart = Constants.EmptyValue,
+                BrandId = request.BrandId,
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -138,24 +143,25 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
         var debitTransactionRequest = new DebitTransactionRequest
         {
-            Debit             = debit,
-            AffiliateId       = request.AffiliateId,
-            UserId            = Constants.AdminUserId,
-            ConceptType       = WalletConceptType.purchasing_pool.ToString(),
-            Points            = points,
-            Concept           = Constants.EcoPoolProductCategory,
-            Commissionable    = commissionable,
-            Bank              = Constants.CoinPay,
-            PaymentMethod     = Constants.CoinPay,
-            Origin            = origin,
-            Level             = Constants.EmptyValue,
+            Debit = debit,
+            AffiliateId = request.AffiliateId,
+            UserId = Constants.AdminUserId,
+            ConceptType = WalletConceptType.purchasing_pool.ToString(),
+            Points = points,
+            Concept = Constants.EcoPoolProductCategory,
+            Commissionable = commissionable,
+            Bank = Constants.CoinPay,
+            PaymentMethod = Constants.CoinPay,
+            Origin = origin,
+            Level = Constants.EmptyValue,
             AffiliateUserName = request.AffiliateUserName,
-            AdminUserName     = Constants.AdminEcosystemUserName,
-            ReceiptNumber     = request.ReceiptNumber,
-            Type              = Constants.EmptyValue,
-            SecretKey         = request.SecretKey,
-            invoices          = invoiceDetails,
-            Reason            = request.Bank
+            AdminUserName = Constants.AdminEcosystemUserName,
+            ReceiptNumber = request.ReceiptNumber,
+            Type = Constants.EmptyValue,
+            SecretKey = request.SecretKey,
+            invoices = invoiceDetails,
+            Reason = request.Bank,
+            BrandId = request.BrandId,
         };
 
         var spResponse = await _invoiceRepository.HandleDebitTransaction(debitTransactionRequest);
@@ -163,7 +169,8 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         if (spResponse is null)
             return false;
 
-        var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        var invoicePdf =
+            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
@@ -176,14 +183,15 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         {
             allPdfData[pdfDataEntry.Key] = pdfDataEntry.Value;
         }
+
         if (result.Data.Find(dto => dto.ProductType) != null)
         {
-            await _brevoEmailService.SendEmailWelcome(userInfoResponse!, spResponse);
+            await _brevoEmailService.SendEmailWelcome(userInfoResponse!, spResponse,request.BrandId);
         }
 
         if (invoicePdf.Length != Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
@@ -191,15 +199,15 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
     public async Task<bool> ExecuteCoursePayment(WalletRequest request)
     {
-        var  debit          = 0m;
-        var  points         = 0m;
-        var  commissionable = 0m;
-        byte origin         = 0;
+        var debit = 0m;
+        var points = 0m;
+        var commissionable = 0m;
+        byte origin = 0;
 
-        var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
-        var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var invoiceDetails = new List<InvoiceDetailsTransactionRequest>();
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId, request.BrandId);
+        var productIds = request.ProductsList.Select(p => p.IdProduct).ToArray();
+        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds, request.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -219,11 +227,11 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         foreach (var item in result.Data)
         {
             var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
-            var tax     = item.Tax;
-            debit          += (item.SalePrice * product!.Count) * (1 + (tax / 100));
-            points         += item.BinaryPoints * product.Count;
+            var tax = item.Tax;
+            debit += (item.SalePrice * product!.Count) * (1 + (tax / 100));
+            points += item.BinaryPoints * product.Count;
             commissionable += item.CommissionableValue * product.Count;
-            isAcademy     =  item.PaymentGroup == Constants.TradingAcademyGroup || isAcademy;
+            isAcademy = item.PaymentGroup == Constants.TradingAcademyGroup || isAcademy;
             if (item.CategoryId == 2)
             {
                 origin = 1;
@@ -231,25 +239,26 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
             var invoiceDetail = new InvoiceDetailsTransactionRequest
             {
-                ProductId             = item.Id,
-                PaymentGroupId        = item.PaymentGroup,
-                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
-                ProductName           = item.Name!,
-                ProductPrice          = item.SalePrice,
-                ProductPriceBtc       = Constants.EmptyValue,
-                ProductIva            = item.Tax,
-                ProductQuantity       = product.Count,
+                ProductId = item.Id,
+                PaymentGroupId = item.PaymentGroup,
+                AccumMinPurchase = Convert.ToByte(item.AcumCompMin),
+                ProductName = item.Name!,
+                ProductPrice = item.SalePrice,
+                ProductPriceBtc = Constants.EmptyValue,
+                ProductIva = item.Tax,
+                ProductQuantity = product.Count,
                 ProductCommissionable = item.CommissionableValue,
-                BinaryPoints          = item.BinaryPoints,
-                ProductPoints         = item.ValuePoints,
-                ProductDiscount       = item.ProductDiscount,
-                CombinationId         = Constants.EmptyValue,
-                ProductPack           = Convert.ToByte(item.ProductPacks),
-                BaseAmount            = (item.BaseAmount * product.Count),
-                DailyPercentage       = item.DailyPercentage,
-                WaitingDays           = item.DaysWait,
-                DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = Constants.EmptyValue,
+                BinaryPoints = item.BinaryPoints,
+                ProductPoints = item.ValuePoints,
+                ProductDiscount = item.ProductDiscount,
+                CombinationId = Constants.EmptyValue,
+                ProductPack = Convert.ToByte(item.ProductPacks),
+                BaseAmount = (item.BaseAmount * product.Count),
+                DailyPercentage = item.DailyPercentage,
+                WaitingDays = item.DaysWait,
+                DaysToPayQuantity = Constants.DaysToPayQuantity,
+                ProductStart = Constants.EmptyValue,
+                BrandId = request.BrandId,
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -263,34 +272,36 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
         var debitTransactionRequest = new DebitTransactionRequest
         {
-            Debit             = debit,
-            AffiliateId       = request.AffiliateId,
-            UserId            = Constants.AdminUserId,
-            ConceptType       = WalletConceptType.purchasing_pool.ToString(),
-            Points            = points,
-            Concept           = Constants.EcoPoolProductCategory,
-            Commissionable    = commissionable,
-            Bank              = Constants.CoinPay,
-            PaymentMethod     = Constants.CoinPay,
-            Origin            = origin,
-            Level             = Constants.EmptyValue,
+            Debit = debit,
+            AffiliateId = request.AffiliateId,
+            UserId = Constants.AdminUserId,
+            ConceptType = WalletConceptType.purchasing_pool.ToString(),
+            Points = points,
+            Concept = Constants.EcoPoolProductCategory,
+            Commissionable = commissionable,
+            Bank = Constants.CoinPay,
+            PaymentMethod = Constants.CoinPay,
+            Origin = origin,
+            Level = Constants.EmptyValue,
             AffiliateUserName = request.AffiliateUserName,
-            AdminUserName     = Constants.AdminEcosystemUserName,
-            ReceiptNumber     = request.ReceiptNumber,
-            Type              = Constants.EmptyValue,
-            SecretKey         = request.SecretKey,
-            invoices          = invoiceDetails,
-            Reason            = request.Bank
+            AdminUserName = Constants.AdminEcosystemUserName,
+            ReceiptNumber = request.ReceiptNumber,
+            Type = Constants.EmptyValue,
+            SecretKey = request.SecretKey,
+            invoices = invoiceDetails,
+            Reason = request.Bank,
+            BrandId = request.BrandId,
         };
 
-        var hasCourse  = await _invoiceRepository.GetInvoicesForTradingAcademyPurchases(request.AffiliateId);
+        var hasCourse = await _invoiceRepository.GetInvoicesForTradingAcademyPurchases(request.AffiliateId);
         var spResponse = await _invoiceRepository.HandleDebitTransactionForCourse(debitTransactionRequest);
 
         if (spResponse is null)
             return false;
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>();
-        var                        invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        var invoicePdf =
+            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         allPdfData["Invoice.pdf"] = invoicePdf;
 
@@ -301,41 +312,43 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
             {
                 allPdfData[pdf.Key] = pdf.Value;
             }
-            await _brevoEmailService.SendEmailPurchaseConfirmForAcademy(userInfoResponse!, allPdfData, spResponse);
+
+            await _brevoEmailService.SendEmailPurchaseConfirmForAcademy(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
         else if (invoicePdf.Length != Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
     }
+
     public async Task<bool> ExecuteMembershipPayment(WalletRequest request)
     {
-        var  debit          = 0;
-        var  points         = 0m;
-        var  commissionable = 0m;
-        byte origin         = 0;
+        var debit = 0;
+        var points = 0m;
+        var commissionable = 0m;
+        byte origin = 0;
 
-        var invoiceDetails       = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse     = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
-        var affiliateBonusWinner = await _accountServiceAdapter.GetUserInfo(userInfoResponse!.Father);
+        var invoiceDetails = new List<InvoiceDetailsTransactionRequest>();
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId, request.BrandId);
+        var affiliateBonusWinner = await _accountServiceAdapter.GetUserInfo(userInfoResponse!.Father, request.BrandId);
 
-        var firstProductId   = request.ProductsList.First().IdProduct;
-        var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
+        var firstProductId = request.ProductsList.First().IdProduct;
+        var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId, request.BrandId);
 
         var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
         if (productResponse?.Data == null)
             return false;
 
-        var item    = productResponse.Data;
+        var item = productResponse.Data;
         var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
         if (product != null)
         {
             var tax = item.Tax;
-            debit          += (int)((item.SalePrice * product.Count) * (1 + (tax / 100)));
-            points         += item.BinaryPoints * product.Count;
+            debit += (int)((item.SalePrice * product.Count) * (1 + (tax / 100)));
+            points += item.BinaryPoints * product.Count;
             commissionable += item.CommissionableValue * product.Count;
             if (item.CategoryId == 2)
             {
@@ -344,25 +357,26 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
             var invoiceDetail = new InvoiceDetailsTransactionRequest
             {
-                ProductId             = item.Id,
-                PaymentGroupId        = item.PaymentGroup,
-                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
-                ProductName           = item.Name!,
-                ProductPrice          = item.SalePrice,
-                ProductPriceBtc       = Constants.EmptyValue,
-                ProductIva            = item.Tax,
-                ProductQuantity       = product.Count,
+                ProductId = item.Id,
+                PaymentGroupId = item.PaymentGroup,
+                AccumMinPurchase = Convert.ToByte(item.AcumCompMin),
+                ProductName = item.Name!,
+                ProductPrice = item.SalePrice,
+                ProductPriceBtc = Constants.EmptyValue,
+                ProductIva = item.Tax,
+                ProductQuantity = product.Count,
                 ProductCommissionable = item.CommissionableValue,
-                BinaryPoints          = item.BinaryPoints,
-                ProductPoints         = item.ValuePoints,
-                ProductDiscount       = Constants.EmptyValue,
-                CombinationId         = Constants.EmptyValue,
-                ProductPack           = Convert.ToByte(item.ProductPacks),
-                BaseAmount            = item.BaseAmount,
-                DailyPercentage       = item.DailyPercentage,
-                WaitingDays           = item.DaysWait,
-                DaysToPayQuantity     = Constants.EmptyValue,
-                ProductStart          = Constants.EmptyValue,
+                BinaryPoints = item.BinaryPoints,
+                ProductPoints = item.ValuePoints,
+                ProductDiscount = Constants.EmptyValue,
+                CombinationId = Constants.EmptyValue,
+                ProductPack = Convert.ToByte(item.ProductPacks),
+                BaseAmount = item.BaseAmount,
+                DailyPercentage = item.DailyPercentage,
+                WaitingDays = item.DaysWait,
+                DaysToPayQuantity = Constants.EmptyValue,
+                ProductStart = Constants.EmptyValue,
+                BrandId = request.BrandId,
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -376,40 +390,168 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
         var debitTransactionRequest = new DebitTransactionRequest
         {
-            Debit             = debit,
-            AffiliateId       = request.AffiliateId,
-            UserId            = Constants.AdminUserId,
-            ConceptType       = WalletConceptType.purchasing_pool.ToString(),
-            Points            = points,
-            Concept           = Constants.Membership,
-            Commissionable    = commissionable,
-            Bank              = Constants.CoinPay,
-            PaymentMethod     = Constants.CoinPay,
-            Origin            = origin,
-            Level             = Constants.EmptyValue,
+            Debit = debit,
+            AffiliateId = request.AffiliateId,
+            UserId = Constants.AdminUserId,
+            ConceptType = WalletConceptType.purchasing_pool.ToString(),
+            Points = points,
+            Concept = Constants.Membership,
+            Commissionable = commissionable,
+            Bank = Constants.CoinPay,
+            PaymentMethod = Constants.CoinPay,
+            Origin = origin,
+            Level = Constants.EmptyValue,
             AffiliateUserName = request.AffiliateUserName,
-            AdminUserName     = Constants.AdminEcosystemUserName,
-            ReceiptNumber     = request.ReceiptNumber,
-            Type              = Constants.EmptyValue,
-            SecretKey         = request.SecretKey,
-            invoices          = invoiceDetails,
-            Reason            = request.Bank
-         };
+            AdminUserName = Constants.AdminEcosystemUserName,
+            ReceiptNumber = request.ReceiptNumber,
+            Type = Constants.EmptyValue,
+            SecretKey = request.SecretKey,
+            invoices = invoiceDetails,
+            Reason = request.Bank,
+            BrandId = request.BrandId,
+        };
 
         var spResponse = await _walletRepository.HandleMembershipTransaction(debitTransactionRequest);
 
         if (spResponse is null)
             return false;
 
-        await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
+        await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId, request.BrandId);
 
-        var pdfResult = await _mediatorPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
+        var pdfResult =
+            await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
 
-        await _brevoEmailService.SendEmailWelcome(userInfoResponse, spResponse);
+        await _brevoEmailService.SendEmailWelcome(userInfoResponse, spResponse,request.BrandId);
 
         if (pdfResult.Length != Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailMembershipConfirm(userInfoResponse, pdfResult, spResponse);
+            await _brevoEmailService.SendEmailMembershipConfirm(userInfoResponse, pdfResult, spResponse,request.BrandId);
+        }
+
+        return true;
+    }
+
+    public async Task<bool> ExecuteRecyCoinPayment(WalletRequest request)
+    {
+        var debit = 0;
+        var points = 0m;
+        var commissionable = 0m;
+        byte origin = 0;
+
+        var invoiceDetails = new List<InvoiceDetailsTransactionRequest>();
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId, request.BrandId);
+        var productIds = request.ProductsList.Select(p => p.IdProduct).ToArray();
+        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds, request.BrandId);
+
+        if (!responseList.IsSuccessful)
+            return false;
+
+        if (string.IsNullOrEmpty(responseList.Content))
+            return false;
+
+        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
+
+        if (result?.Data.Count == Constants.EmptyValue)
+        {
+            var firstProductId = request.ProductsList.First().IdProduct;
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId, request.BrandId);
+
+            var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
+
+            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId, request.BrandId);
+
+            result.Data.Add(productResponse!.Data);
+        }
+
+        if (result?.Data == null)
+            return false;
+
+        if (result.Data.Count != request.ProductsList.Count)
+            return false;
+        
+        foreach (var item in result.Data)
+        {
+            var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
+            var tax = item.Tax;
+            debit += (int)((item.SalePrice * product!.Count) * (1 + (tax / 100)));
+            points += item.BinaryPoints * product.Count;
+            commissionable += item.CommissionableValue * product.Count;
+            if (item.CategoryId == 2)
+            {
+                origin = 1;
+            }
+
+            var invoiceDetail = new InvoiceDetailsTransactionRequest
+            {
+                ProductId = item.Id,
+                PaymentGroupId = item.PaymentGroup,
+                AccumMinPurchase = Convert.ToByte(item.AcumCompMin),
+                ProductName = item.Name!,
+                ProductPrice = item.SalePrice,
+                ProductPriceBtc = Constants.EmptyValue,
+                ProductIva = item.Tax,
+                ProductQuantity = product.Count,
+                ProductCommissionable = item.CommissionableValue,
+                BinaryPoints = item.BinaryPoints,
+                ProductPoints = item.ValuePoints,
+                ProductDiscount = item.ProductDiscount,
+                CombinationId = Constants.EmptyValue,
+                ProductPack = Convert.ToByte(item.ProductPacks),
+                BaseAmount = (item.BaseAmount * product.Count),
+                DailyPercentage = item.DailyPercentage,
+                WaitingDays = item.DaysWait,
+                DaysToPayQuantity = Constants.DaysToPayQuantity,
+                ProductStart = Constants.EmptyValue,
+                BrandId = request.BrandId,
+            };
+
+            invoiceDetails.Add(invoiceDetail);
+        }
+
+        if (debit == Constants.EmptyValue)
+            return false;
+
+        if (invoiceDetails.Count == Constants.EmptyValue)
+            return false;
+
+        var debitTransactionRequest = new DebitTransactionRequest
+        {
+            Debit = debit,
+            AffiliateId = request.AffiliateId,
+            UserId = Constants.AdminUserId,
+            ConceptType = WalletConceptType.purchasing_pool.ToString(),
+            Points = points,
+            Concept = Constants.EcoPoolProductCategory,
+            Commissionable = commissionable,
+            Bank = Constants.CoinPay,
+            PaymentMethod = Constants.CoinPay,
+            Origin = origin,
+            Level = Constants.EmptyValue,
+            AffiliateUserName = request.AffiliateUserName,
+            AdminUserName = Constants.AdminEcosystemUserName,
+            ReceiptNumber = request.ReceiptNumber,
+            Type = Constants.EmptyValue,
+            SecretKey = request.SecretKey,
+            invoices = invoiceDetails,
+            Reason = request.Bank,
+            BrandId = request.BrandId,
+        };
+
+        var spResponse = await _invoiceRepository.HandleDebitTransaction(debitTransactionRequest);
+
+        if (spResponse is null)
+            return false;
+
+        var invoicePdf = await _recyCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        
+        Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
+        {
+            ["Invoice.pdf"] = invoicePdf
+        };
+        
+        if (invoicePdf.Length != Constants.EmptyValue)
+        {
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;

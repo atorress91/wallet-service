@@ -4,5 +4,6 @@ public enum ProductType
 {
     EcoPool,
     Membership,
+    RecyCoin = 11,
     Course
 }

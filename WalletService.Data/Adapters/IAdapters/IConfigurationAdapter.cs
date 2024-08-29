@@ -4,8 +4,8 @@ namespace WalletService.Data.Adapters.IAdapters;
 
 public interface IConfigurationAdapter
 {
-    Task<IRestResponse> GetGradings();
-    Task<IRestResponse> GetConfigurationProduct();
-    Task<IRestResponse> GetPointsConfiguration();
+    Task<IRestResponse> GetGradings(int brandId);
+    Task<IRestResponse> GetConfigurationProduct(int brandId);
+    Task<IRestResponse> GetPointsConfiguration(int brandId);
 
 }

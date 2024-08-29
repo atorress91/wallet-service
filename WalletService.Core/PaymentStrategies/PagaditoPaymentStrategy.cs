@@ -18,20 +18,23 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
     private readonly IInvoiceRepository       _invoiceRepository;
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
     private readonly IAccountServiceAdapter   _accountServiceAdapter;
-    private readonly IMediatorPdfService      _mediatorPdfService;
+    private readonly IEcosystemPdfService      _ecosystemPdfService;
     private readonly IBrevoEmailService       _brevoEmailService;
     private readonly IWalletRepository        _walletRepository;
     private readonly RedisCache               _redisCache;
+    private readonly IBrandService            _brandService;
     public PagaditoPaymentStrategy(IInvoiceRepository invoiceRepository,     IInventoryServiceAdapter inventoryServiceAdapter,
-        IAccountServiceAdapter                            accountServiceAdapter, IBrevoEmailService       brevoEmailService, IMediatorPdfService mediatorPdfService, IWalletRepository walletRepository,RedisCache redisCache)
+        IAccountServiceAdapter                            accountServiceAdapter, IBrevoEmailService       brevoEmailService,
+        IEcosystemPdfService ecosystemPdfService, IWalletRepository walletRepository,RedisCache redisCache,IBrandService brandService)
     {
         _invoiceRepository       = invoiceRepository;
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter   = accountServiceAdapter;
         _brevoEmailService       = brevoEmailService;
-        _mediatorPdfService      = mediatorPdfService;
+        _ecosystemPdfService      = ecosystemPdfService;
         _walletRepository        = walletRepository;
         _redisCache              = redisCache;
+        _brandService            = brandService;
     }
       private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
     {
@@ -62,9 +65,9 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -77,11 +80,11 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
         if (result?.Data.Count == 0)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
-            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,_brandService.BrandId);
 
             var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
 
-            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
+            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,_brandService.BrandId);
 
             result.Data.Add(productResponse!.Data);
         }
@@ -170,7 +173,7 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1A);
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
 
-        var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        var invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
@@ -185,12 +188,12 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
         }
         if (result.Data.Find(dto => dto.ProductType) != null)
         {
-            await _brevoEmailService.SendEmailWelcome(userInfoResponse!, spResponse);
+            await _brevoEmailService.SendEmailWelcome(userInfoResponse!, spResponse,request.BrandId);
         }
 
         if (invoicePdf.Length != Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
@@ -204,9 +207,9 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -301,7 +304,7 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>();
-        var                        invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        var                        invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         allPdfData["Invoice.pdf"] = invoicePdf;
 
@@ -312,11 +315,11 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
             {
                 allPdfData[pdf.Key] = pdf.Value;
             }
-            await _brevoEmailService.SendEmailPurchaseConfirmForAcademy(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirmForAcademy(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
         else if (invoicePdf.Length != Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
@@ -329,10 +332,10 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails       = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse     = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse     = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
 
         var firstProductId   = request.ProductsList.First().IdProduct;
-        var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
+        var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,_brandService.BrandId);
 
         var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
         
@@ -415,19 +418,19 @@ public class PagaditoPaymentStrategy : IPagaditoPaymentStrategy
         if (spResponse is null)
             return false;
         
-        await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
+        await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,_brandService.BrandId);
         
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1A);
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
 
-        var pdfResult = await _mediatorPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
+        var pdfResult = await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
 
-        await _brevoEmailService.SendEmailWelcome(userInfoResponse, spResponse);
+        await _brevoEmailService.SendEmailWelcome(userInfoResponse, spResponse,request.BrandId);
 
         if (pdfResult.Length != Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailMembershipConfirm(userInfoResponse, pdfResult, spResponse);
+            await _brevoEmailService.SendEmailMembershipConfirm(userInfoResponse, pdfResult, spResponse,request.BrandId);
         }
 
         return true;

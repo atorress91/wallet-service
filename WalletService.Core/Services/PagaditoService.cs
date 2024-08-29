@@ -37,12 +37,12 @@ public class PagaditoService : BaseService, IPagaditoService
     private readonly ILogger<PagaditoService> _logger;
     private readonly IAccountServiceAdapter _accountServiceAdapter;
     private readonly IInvoiceRepository _invoiceRepository;
-
+    private readonly IBrandService _brandService;
     public PagaditoService(IOptions<ApplicationConfiguration> appSettings, IMapper mapper,
         IPagaditoAdapter pagaditoAdapter, ICoinPaymentTransactionRepository transactionRepository,
         IPagaditoPaymentStrategy pagaditoPaymentStrategy,
         IInventoryServiceAdapter inventoryServiceAdapter, ILogger<PagaditoService> logger,
-        IAccountServiceAdapter accountServiceAdapter, IInvoiceRepository invoiceRepository) : base(mapper)
+        IAccountServiceAdapter accountServiceAdapter, IInvoiceRepository invoiceRepository,IBrandService brandService) : base(mapper)
     {
         _pagaditoAdapter = pagaditoAdapter;
         _appSettings = appSettings.Value;
@@ -52,6 +52,7 @@ public class PagaditoService : BaseService, IPagaditoService
         _logger = logger;
         _accountServiceAdapter = accountServiceAdapter;
         _invoiceRepository = invoiceRepository;
+        _brandService = brandService;
     }
 
     private async Task ExecuteMembershipPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
@@ -95,7 +96,7 @@ public class PagaditoService : BaseService, IPagaditoService
         }
 
         var productIds = request.Select(p => p.ProductId).ToArray();
-        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content!);
 
@@ -107,7 +108,7 @@ public class PagaditoService : BaseService, IPagaditoService
         }
         else
         {
-            var membershipResult = await _inventoryServiceAdapter.GetProductById(productIds.First());
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(productIds.First(),_brandService.BrandId);
             var productResult = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
             firstProductCategory = productResult!.Data.PaymentGroup;
         }
@@ -126,7 +127,7 @@ public class PagaditoService : BaseService, IPagaditoService
         _logger.LogInformation(
             $"[PagaditoService] | ProcessPaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
 
-        var userInfo = await _accountServiceAdapter.GetUserInfo(transactionResult.AffiliateId);
+        var userInfo = await _accountServiceAdapter.GetUserInfo(transactionResult.AffiliateId,_brandService.BrandId);
 
         if (userInfo == null || userInfo.UserName == null)
             return;
@@ -161,7 +162,7 @@ public class PagaditoService : BaseService, IPagaditoService
 
         _logger.LogInformation($"[PagaditoService] | ProcessPaymentTransaction | products: {products.ToJsonString()}");
 
-        var isExists = await _invoiceRepository.InvoiceExistsByReceiptNumber(transactionResult.IdTransaction);
+        var isExists = await _invoiceRepository.InvoiceExistsByReceiptNumber(transactionResult.IdTransaction,_brandService.BrandId);
         if (isExists)
             return;
 
@@ -224,7 +225,8 @@ public class PagaditoService : BaseService, IPagaditoService
             Status = Constants.EmptyValue,
             Acredited = false,
             CreatedAt = today,
-            UpdatedAt = today
+            UpdatedAt = today,
+            BrandId   = _brandService.BrandId 
         };
 
         await _transactionRepository.CreateCoinPaymentTransaction(paymentTransaction);
@@ -298,7 +300,7 @@ public class PagaditoService : BaseService, IPagaditoService
         }
 
         var existingTransaction =
-            await _transactionRepository.GetCoinPaymentTransactionByIdTransaction(purchaseRequest.Resource!.Ern!);
+            await _transactionRepository.GetCoinPaymentTransactionByIdTransaction(purchaseRequest.Resource!.Ern!,_brandService.BrandId);
 
         if (existingTransaction is null)
         {

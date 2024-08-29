@@ -31,19 +31,7 @@
     </ItemGroup>
 
   <ItemGroup>
-    <None Update="EmailTemplates\confirm-purchase.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="EmailTemplates\welcome.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="Assets\logo.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="EmailTemplates\PaymentsToThirdParties.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="EmailTemplates\confirm-bonus.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Assets\EcoPooles\eco_pool_hormiga.pdf">
@@ -109,10 +97,28 @@
     <None Update="Assets\TradingAcademy\6.- Pip.pdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="EmailTemplates\confirm-purchase-academy.html">
+    <None Update="EmailTemplates\RecyCoin\confirm-purchase.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="EmailTemplates\invitation-trading-academy.html">
+    <None Update="EmailTemplates\Ecosystem\confirm-bonus.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\Ecosystem\confirm-purchase.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\Ecosystem\confirm-purchase-academy.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\Ecosystem\invitation-trading-academy.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\Ecosystem\PaymentsToThirdParties.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\Ecosystem\welcome.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\logo-recy.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
 

@@ -17,10 +17,12 @@ public class TokenValidationMiddleware
         _next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context, IApiClientRepository apiClientService, ILogger<TokenValidationMiddleware> logger)
+    public async Task InvokeAsync(HttpContext context, IApiClientRepository apiClientService,
+        IBrandRepository brandRepository, ILogger<TokenValidationMiddleware> logger)
     {
         if (context.Request.Path.Value!.Equals("/health", StringComparison.OrdinalIgnoreCase) ||
-            context.Request.Path.Value.Equals("/api/v1/ConPayments/coinPaymentsIPN", StringComparison.OrdinalIgnoreCase) ||
+            context.Request.Path.Value.Equals("/api/v1/ConPayments/coinPaymentsIPN",
+                StringComparison.OrdinalIgnoreCase) ||
             context.Request.Path.Value.Equals("/api/v1/Pagadito/webhook", StringComparison.OrdinalIgnoreCase) ||
             context.Request.Path.Value.Equals("/api/v1/CoinPay/Webhook", StringComparison.OrdinalIgnoreCase))
         {
@@ -29,18 +31,20 @@ public class TokenValidationMiddleware
         }
 
         var token = context.Request.Headers["Authorization"].ToString();
+        var secretKey = context.Request.Headers["X-Client-ID"].ToString();
+
         if (string.IsNullOrEmpty(token) && context.Request.HasFormContentType)
         {
             var form = await context.Request.ReadFormAsync();
             token = form["Authorization"];
         }
 
-        if (string.IsNullOrEmpty(token))
+        if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(secretKey))
         {
             var response = new ServicesResponse
             {
                 Success = false,
-                Code    = (int)HttpStatusCode.Unauthorized,
+                Code = (int)HttpStatusCode.Unauthorized,
                 Message = "Unauthorized"
             };
 
@@ -51,12 +55,13 @@ public class TokenValidationMiddleware
         }
 
         var isValidate = await apiClientService.ValidateApiClient(token);
-        if (!isValidate)
+        var brand = await brandRepository.GetBrandByIdAsync(secretKey);
+        if (!isValidate || brand == null)
         {
             var response = new ServicesResponse
             {
                 Success = false,
-                Code    = (int)HttpStatusCode.Unauthorized,
+                Code = (int)HttpStatusCode.Unauthorized,
                 Message = "Unauthorized"
             };
 
@@ -66,6 +71,7 @@ public class TokenValidationMiddleware
             return;
         }
 
+        context.Items["brandId"] = brand.Id;
         logger.LogInformation($"Request accepted. CLIENT URL:{context.Request.GetDisplayUrl()}");
 
         await _next(context);

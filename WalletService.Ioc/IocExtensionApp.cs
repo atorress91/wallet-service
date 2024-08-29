@@ -53,15 +53,15 @@ public static class IocExtensionApp
         InjectSingletonsAndFactories(services);
         RegisterServiceProvider(services);
     }
-    
+
     private static void InjectCaching(IServiceCollection services)
     {
         var serviceProvider = services.BuildServiceProvider();
-        var settings        = serviceProvider
+        var settings = serviceProvider
             .GetRequiredService<IOptions<ApplicationConfiguration>>().Value;
         var multiplexer = ConnectionMultiplexer
             .Connect(settings.ConnectionStrings!.RedisConnection!);
-        
+
         services.AddSingleton<IConnectionMultiplexer>(multiplexer);
         services.AddSingleton<RedisCache>();
         services.AddSingleton<InMemoryCache>();
@@ -73,16 +73,16 @@ public static class IocExtensionApp
 
     private static void InjectConfiguration(IServiceCollection services)
     {
-        var serviceProvider      = services.BuildServiceProvider();
-        var env                  = serviceProvider.GetRequiredService<IHostEnvironment>();
+        var serviceProvider = services.BuildServiceProvider();
+        var env = serviceProvider.GetRequiredService<IHostEnvironment>();
         var lowercaseEnvironment = env.EnvironmentName.ToLower();
-        var executableLocation   = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
+        var executableLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
         var builder = new ConfigurationBuilder()
             .SetBasePath(executableLocation)
             .AddJsonFile($"appsettings.{lowercaseEnvironment}.json", false, true)
             .AddEnvironmentVariables();
 
-        var configuration      = builder.Build();
+        var configuration = builder.Build();
         var appSettingsSection = configuration.GetSection("AppSettings");
 
         services.Configure<ApplicationConfiguration>(appSettingsSection);
@@ -91,7 +91,10 @@ public static class IocExtensionApp
     }
 
     private static void InjectSwagger(this IServiceCollection services)
-        => services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo { Title = "WalletService", Version = "v1" }); });
+        => services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "WalletService", Version = "v1" });
+        });
 
 
     private static void InjectDataBases(IServiceCollection services)
@@ -101,13 +104,16 @@ public static class IocExtensionApp
 
         var connectionString = appConfig.ConnectionStrings?.SqlServerConnection;
 
-        services.AddDbContext<WalletServiceDbContext>(options => { options.UseSqlServer(connectionString).EnableSensitiveDataLogging().EnableDetailedErrors(); });
+        services.AddDbContext<WalletServiceDbContext>(options =>
+        {
+            options.UseSqlServer(connectionString).EnableSensitiveDataLogging().EnableDetailedErrors();
+        });
     }
 
     private static void InjectLogging(IServiceCollection services)
     {
-        var serviceProvider      = services.BuildServiceProvider();
-        var env                  = serviceProvider.GetRequiredService<IWebHostEnvironment>();
+        var serviceProvider = services.BuildServiceProvider();
+        var env = serviceProvider.GetRequiredService<IWebHostEnvironment>();
         var lowerCaseEnvironment = env.EnvironmentName.ToLower();
 
         services.AddLogging(config =>
@@ -119,7 +125,8 @@ public static class IocExtensionApp
         Console.WriteLine($"IocLoggingRegister -> nlog.{lowerCaseEnvironment}.config");
     }
 
-    private static void InjectControllersAndDocumentation(IServiceCollection services, int majorVersion = 1, int minorVersion = 0)
+    private static void InjectControllersAndDocumentation(IServiceCollection services, int majorVersion = 1,
+        int minorVersion = 0)
     {
         services.AddResponseCompression(options =>
         {
@@ -137,7 +144,7 @@ public static class IocExtensionApp
         services.AddFluentValidationClientsideAdapters();
         services.AddApiVersioning(config =>
         {
-            config.DefaultApiVersion                   = new ApiVersion(majorVersion, minorVersion);
+            config.DefaultApiVersion = new ApiVersion(majorVersion, minorVersion);
             config.AssumeDefaultVersionWhenUnspecified = true;
         });
 
@@ -152,6 +159,7 @@ public static class IocExtensionApp
                 });
         });
     }
+
     private static void InjectRepositories(IServiceCollection services)
     {
         services.AddScoped<IWalletHistoryRepository, WalletHistoryRepository>();
@@ -171,7 +179,7 @@ public static class IocExtensionApp
         services.AddScoped<IResultsEcoPoolRepository, ResultsEcoPoolRepository>();
         services.AddScoped<IApiClientRepository, ApiClientRepository>();
         services.AddScoped<ICoinPaymentTransactionRepository, CoinPaymentTransactionRepository>();
-        
+        services.AddScoped<IBrandRepository, BrandRepository>();
     }
 
     private static void InjectAdapters(IServiceCollection services)
@@ -182,17 +190,17 @@ public static class IocExtensionApp
         services.AddScoped<IConfigurationAdapter, ConfigurationAdapter>();
         services.AddScoped<IPagaditoAdapter, PagaditoAdapter>();
     }
-    
+
     private static void InjectStrategies(IServiceCollection services)
     {
-        services.AddScoped<IBalancePaymentStrategy,BalancePaymentStrategy>();
-        services.AddScoped<IBalancePaymentStrategyModel2,BalancePaymentStrategyModel2>();
+        services.AddScoped<IBalancePaymentStrategy, BalancePaymentStrategy>();
+        services.AddScoped<IBalancePaymentStrategyModel2, BalancePaymentStrategyModel2>();
         services.AddScoped<ToThirdPartiesPaymentStrategy>();
-        services.AddScoped<ICoinPayPaymentStrategy,CoinPayPaymentStrategy>();
-        services.AddScoped<ICoinPaymentsPaymentStrategy,CoinPaymentsPaymentStrategy>();
-        services.AddScoped<IWireTransferStrategy,WireTransferStrategy>();
-        services.AddScoped<IBalancePaymentStrategyModel1A,BalancePaymentStrategy1A>();
-        services.AddScoped<IBalancePaymentStrategyModel1B,BalancePaymentStrategy1B>();
+        services.AddScoped<ICoinPayPaymentStrategy, CoinPayPaymentStrategy>();
+        services.AddScoped<ICoinPaymentsPaymentStrategy, CoinPaymentsPaymentStrategy>();
+        services.AddScoped<IWireTransferStrategy, WireTransferStrategy>();
+        services.AddScoped<IBalancePaymentStrategyModel1A, BalancePaymentStrategy1A>();
+        services.AddScoped<IBalancePaymentStrategyModel1B, BalancePaymentStrategy1B>();
         services.AddScoped<IPagaditoPaymentStrategy, PagaditoPaymentStrategy>();
     }
 
@@ -210,7 +218,7 @@ public static class IocExtensionApp
         services.AddScoped<IInvoiceService, InvoiceService>();
         services.AddScoped<IProcessGradingService, ProcessGradingService>();
         services.AddScoped<IEcoPoolConfigurationService, EcoPoolConfigurationService>();
-        services.AddScoped<IMediatorPdfService, MediatorPdfService>();
+        services.AddScoped<IEcosystemPdfService, EcosystemPdfService>();
         services.AddScoped<IResultsEcoPoolService, ResultsEcoPoolService>();
         services.AddScoped<IConPaymentService, ConPaymentService>();
         services.AddScoped<IBrevoEmailService, BrevoEmailService>();
@@ -219,6 +227,8 @@ public static class IocExtensionApp
         services.AddScoped<IWalletModel1BService, WalletModel1BService>();
         services.AddScoped<IPagaditoService, PagaditoService>();
         services.AddScoped<IUserStatisticsService, UserStatisticsService>();
+        services.AddScoped<IBrandService, BrandService>();
+        services.AddScoped<IRecyCoinPdfService, RecyCoinPdfService>();
     }
 
     private static void InjectPackages(IServiceCollection services)

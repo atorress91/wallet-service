@@ -1,7 +1,7 @@
 
 {
     "region" : "us-east-1",
-    "profile" : "HeroSystem",
+    "profile" : "Jeff_Hero",
     "configuration" : "Release",
     "image-tag"     : "walletserviceapi:latest",
     "docker-build-working-dir" : "",
