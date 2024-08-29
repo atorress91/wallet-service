@@ -25,7 +25,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
     private readonly IConfigurationAdapter _configurationAdapter;
     private readonly IAccountServiceAdapter _accountServiceAdapter;
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
-
+    private readonly IBrandService _brandService; 
     public ProcessGradingService(
         IMapper                         mapper,
         KafkaProducer                   kafkaProducer,
@@ -33,7 +33,8 @@ public class ProcessGradingService : BaseService, IProcessGradingService
         IWalletRepository               walletRepository,
         IConfigurationAdapter           configurationAdapter,
         IAccountServiceAdapter          accountServiceAdapter,
-        IInventoryServiceAdapter        inventoryServiceAdapter
+        IInventoryServiceAdapter        inventoryServiceAdapter,
+        IBrandService                   brandService
     ) : base(mapper)
     {
         _configurationRepository = configurationRepository;
@@ -42,6 +43,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
         _configurationAdapter    = configurationAdapter;
         _accountServiceAdapter   = accountServiceAdapter;
         _inventoryServiceAdapter = inventoryServiceAdapter;
+        _brandService            = brandService;
     }
 
 
@@ -86,7 +88,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
         var listResultModel2Products   = await GetListProducts(productsModel2);
         var listResultModel2Accounts   = await GetListAccount(accountsModel2, model2Configuration);
         listAccounts.AddRange(accountsModel2.ToList());
-        var pointConfigurationResponse = await _configurationAdapter.GetPointsConfiguration();
+        var pointConfigurationResponse = await _configurationAdapter.GetPointsConfiguration(_brandService.BrandId);
         var points                     = pointConfigurationResponse.Content?.ToDecimal();
 
         var poolsWithinMothMapped  = Mapper.Map<ICollection<InvoiceDetailDto>>(poolsModel2Within);
@@ -119,7 +121,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
         var listResultModel1AProducts   = await GetListProducts(productsModel1A);
         var listResultModel1AAccounts   = await GetListAccount(accountsModel1A, model1AConfiguration);
         listAccounts.AddRange(accountsModel1A.ToList());
-        var pointConfigurationResponse = await _configurationAdapter.GetPointsConfiguration();
+        var pointConfigurationResponse = await _configurationAdapter.GetPointsConfiguration(_brandService.BrandId);
         var points                     = pointConfigurationResponse.Content?.ToDecimal();
 
         var itemsWithinMothMapped  = Mapper.Map<ICollection<InvoiceDetailDto>>(itemsModel1AWithin);
@@ -152,7 +154,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
         var listResultModel1BProducts   = await GetListProducts(productsModel1B);
         var listResultModel1BAccounts   = await GetListAccount(accountsModel1B, model1BConfiguration);
         listAccounts.AddRange(accountsModel1B.ToList());
-        var pointConfigurationResponse = await _configurationAdapter.GetPointsConfiguration();
+        var pointConfigurationResponse = await _configurationAdapter.GetPointsConfiguration(_brandService.BrandId);
         var points                     = pointConfigurationResponse.Content?.ToDecimal();
 
         var itemsWithinMothMapped  = Mapper.Map<ICollection<InvoiceDetailDto>>(itemsModel1BWithin);
@@ -409,7 +411,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
             {
                 var batchList = accounts.Skip(i * limit).Take(limit).ToArray();
                 var accountResponse = await _accountServiceAdapter
-                    .GetAccountsToEcoPool(batchList, configuration.ModelConfigurationLevels.Count);
+                    .GetAccountsToEcoPool(batchList, configuration.ModelConfigurationLevels.Count,_brandService.BrandId);
 
                 if (!accountResponse.IsSuccessful)
                     continue;
@@ -442,7 +444,7 @@ public class ProcessGradingService : BaseService, IProcessGradingService
         for (var i = 0; i < batchesProduct; i++)
         {
             var batchList       = products.Skip(i * limit).Take(limit).ToArray();
-            var productResponse = await _inventoryServiceAdapter.GetProductsIds(batchList);
+            var productResponse = await _inventoryServiceAdapter.GetProductsIds(batchList,_brandService.BrandId);
 
             if (!productResponse.IsSuccessful)
                 continue;

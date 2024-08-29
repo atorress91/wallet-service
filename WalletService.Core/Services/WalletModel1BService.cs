@@ -16,17 +16,18 @@ public class WalletModel1BService : BaseService, IWalletModel1BService
     private readonly IBalancePaymentStrategyModel1B _balancePaymentStrategyModel1B;
     private readonly RedisCache                     _redisCache;
     private readonly IAccountServiceAdapter        _accountServiceAdapter;
-
+    private readonly IBrandService                 _brandService;
     public WalletModel1BService(
         IMapper mapper, 
         IWalletModel1BRepository walletModel1BRepository,
         IBalancePaymentStrategyModel1B balancePaymentStrategyModel1B,
-        RedisCache redisCache,IAccountServiceAdapter accountServiceAdapter) : base(mapper)
+        RedisCache redisCache,IAccountServiceAdapter accountServiceAdapter,IBrandService brandService) : base(mapper)
     {
         _walletModel1BRepository       = walletModel1BRepository;
         _balancePaymentStrategyModel1B = balancePaymentStrategyModel1B;
         _redisCache                    = redisCache;
         _accountServiceAdapter         = accountServiceAdapter;
+        _brandService                  = brandService;
     }
 
     public async Task<BalanceInformationModel1BDto> GetBalanceInformationByAffiliateId(int affiliateId)
@@ -102,7 +103,7 @@ public class WalletModel1BService : BaseService, IWalletModel1BService
         if (request.Amount == 0)
             return false;
 
-        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
 
         if (user is null)
             return false;

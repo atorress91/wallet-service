@@ -24,4 +24,5 @@ public class PaymentTransaction
     
     [MaxLength(50)]
     public string? Reference { get; set; }
+    public int BrandId { get; set; }
 }

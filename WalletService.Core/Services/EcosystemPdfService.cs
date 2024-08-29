@@ -9,7 +9,7 @@ using WalletService.Models.Responses;
 
 namespace WalletService.Core.Services;
 
-public class MediatorPdfService : IMediatorPdfService
+public class EcosystemPdfService : IEcosystemPdfService
 {
     public async Task<byte[]> GenerateInvoice(UserInfoResponse userInfo, DebitTransactionRequest invoice,
         InvoicesSpResponse spResponse)
@@ -108,10 +108,10 @@ public class MediatorPdfService : IMediatorPdfService
                                         txt.Span("Domicilio: ").SemiBold().FontSize(10);
                                         txt.Span(userInfo.Address).FontSize(10);
                                     });
-                                    
+
                                     col2.Item().AlignRight().Text(txt =>
                                     {
-                                        if (!string.IsNullOrEmpty(spResponse.Reason)) 
+                                        if (!string.IsNullOrEmpty(spResponse.Reason))
                                         {
                                             txt.Span("Aprobación Pagadito:").SemiBold().FontSize(10);
                                             txt.Span(spResponse.Reason).FontSize(10);
@@ -299,10 +299,10 @@ public class MediatorPdfService : IMediatorPdfService
                                         txt.Span("Domicilio: ").SemiBold().FontSize(10);
                                         txt.Span(userInfo.Address).FontSize(10);
                                     });
-                                    
+
                                     col2.Item().AlignRight().Text(txt =>
                                     {
-                                        if (!string.IsNullOrEmpty(invoice.Reason)) 
+                                        if (!string.IsNullOrEmpty(invoice.Reason))
                                         {
                                             txt.Span("Aprobación Pagadito:").SemiBold().FontSize(10);
                                             txt.Span(invoice.Reason).FontSize(10);

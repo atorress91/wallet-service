@@ -19,6 +19,7 @@ public class DebitTransactionRequest
     public string? SecretKey { get; set; }
     public string? ConceptType { get; set; }
     public string? Reason { get; set; }
+    public int BrandId { get; set; }
 
     public List<InvoiceDetailsTransactionRequest> invoices { get; set; }
 }

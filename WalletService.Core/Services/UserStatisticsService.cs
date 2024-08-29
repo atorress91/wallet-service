@@ -13,15 +13,17 @@ public class UserStatisticsService : IUserStatisticsService
     private readonly IResultsEcoPoolRepository _resultsEcoPoolRepository;
     private readonly IAccountServiceAdapter _accountServiceAdapter;
     private readonly RedisCache               _redisCache;
+    private readonly IBrandService            _brandService;
 
     public UserStatisticsService(IInvoiceRepository invoiceRepository, 
         IAccountServiceAdapter accountServiceAdapter,
-        IResultsEcoPoolRepository resultsEcoPoolRepository, RedisCache redisCache)
+        IResultsEcoPoolRepository resultsEcoPoolRepository, RedisCache redisCache,IBrandService brandService)
     {
         _invoiceRepository = invoiceRepository;
         _accountServiceAdapter = accountServiceAdapter;
         _resultsEcoPoolRepository = resultsEcoPoolRepository;
         _redisCache = redisCache;
+        _brandService = brandService;
     }
     public async Task<UserStatistics> GetUserStatisticsAsync(int userId)
     {
@@ -31,11 +33,11 @@ public class UserStatisticsService : IUserStatisticsService
         if (!isExists)
         {
             var pointsModel4 = await _invoiceRepository.Model4StatisticsByUser(userId);
-            var amountModel1A = await _invoiceRepository.CountDetailsByPaymentGroup(7, userId);
-            var amountModel1B = await _invoiceRepository.CountDetailsByPaymentGroup(8, userId);
-            var amountModel2 = await _invoiceRepository.CountDetailsByPaymentGroup(2, userId);
-            var amountModel3 = await _invoiceRepository.CountDetailsModel3ByPaymentGroup(userId);
-            var accountInformation = await _accountServiceAdapter.NetworkDetails(userId);
+            var amountModel1A = await _invoiceRepository.CountDetailsByPaymentGroup(7, userId,_brandService.BrandId);
+            var amountModel1B = await _invoiceRepository.CountDetailsByPaymentGroup(8, userId,_brandService.BrandId);
+            var amountModel2 = await _invoiceRepository.CountDetailsByPaymentGroup(2, userId,_brandService.BrandId);
+            var amountModel3 = await _invoiceRepository.CountDetailsModel3ByPaymentGroup(userId, _brandService.BrandId);
+            var accountInformation = await _accountServiceAdapter.NetworkDetails(userId,_brandService.BrandId);
             var residualModel1A= await _resultsEcoPoolRepository.SumResidualModel1AByUserId(userId);
             var passiveModel1A= await _resultsEcoPoolRepository.SumPassiveModel1AByUserId(userId);
             var residualModel1B= await _resultsEcoPoolRepository.SumResidualModel1BByUserId(userId);

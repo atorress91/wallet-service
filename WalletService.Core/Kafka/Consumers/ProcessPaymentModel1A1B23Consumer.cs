@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using WalletService.Core.Kafka.Messages;
 using WalletService.Core.Kafka.Producer;
 using WalletService.Core.Kafka.Topics;
+using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
@@ -60,9 +61,11 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         var                             wallet1BRepository         = scope.ServiceProvider.GetService<IWalletModel1BRepository>();
         var                             configurationAdapter     = scope.ServiceProvider.GetService<IConfigurationAdapter>();
         var                             kafkaProducer            = scope.ServiceProvider.GetService<KafkaProducer>();
+        var                             brandService             = scope.ServiceProvider.GetService<IBrandService>();
         ICollection<UserGradingRequest> listGrading              = new List<UserGradingRequest>();
         var                             responseGradings         = new GradingResponse();
-        
+
+        var branId = brandService!.BrandId;
         var listModel1AResults = await resultsEcoPoolRepository!.GetResultsModel1AToPayment();
         var listModel1BResults = await resultsEcoPoolRepository!.GetResultsModel1BToPayment();
         var listModel2Results = await resultsEcoPoolRepository!.GetResultsModel2ToPayment();
@@ -85,7 +88,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         if (listModel2Results is { Count: 0 } && listModel3Results is { Count: 0 })
             return false;
 
-        var gradingResponse = await configurationAdapter!.GetGradings();
+        var gradingResponse = await configurationAdapter!.GetGradings(branId);
         if (gradingResponse.IsSuccessful && !string.IsNullOrEmpty(gradingResponse.Content))
             responseGradings = gradingResponse.Content.ToJsonObject<GradingResponse>();
 

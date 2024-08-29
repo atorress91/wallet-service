@@ -16,19 +16,21 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
     private readonly IInvoiceRepository       _invoiceRepository;
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
     private readonly IAccountServiceAdapter   _accountServiceAdapter;
-    private readonly IMediatorPdfService      _mediatorPdfService;
+    private readonly IEcosystemPdfService      _ecosystemPdfService;
     private readonly IBrevoEmailService       _brevoEmailService;
     private readonly IWalletRepository        _walletRepository;
-
+    private readonly IBrandService _brandService;
     public CoinPaymentsPaymentStrategy(IInvoiceRepository invoiceRepository,     IInventoryServiceAdapter inventoryServiceAdapter,
-        IAccountServiceAdapter                            accountServiceAdapter, IBrevoEmailService       brevoEmailService, IMediatorPdfService mediatorPdfService, IWalletRepository walletRepository)
+        IAccountServiceAdapter                            accountServiceAdapter, IBrevoEmailService       brevoEmailService,
+        IEcosystemPdfService ecosystemPdfService, IWalletRepository walletRepository,IBrandService brandService)
     {
         _invoiceRepository       = invoiceRepository;
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter   = accountServiceAdapter;
         _brevoEmailService       = brevoEmailService;
-        _mediatorPdfService      = mediatorPdfService;
+        _ecosystemPdfService      = ecosystemPdfService;
         _walletRepository        = walletRepository;
+        _brandService            = brandService;
     }
     
     private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
@@ -60,9 +62,9 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -75,11 +77,11 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         if (result?.Data.Count == Constants.EmptyValue)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
-            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,_brandService.BrandId);
 
             var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
-            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
+            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,_brandService.BrandId);
 
             result.Data.Add(productResponse!.Data);
         }
@@ -164,7 +166,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         if (spResponse is null)
             return false;
 
-        var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        var invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
@@ -179,12 +181,12 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         }
         if (result.Data.Find(dto => dto.ProductType) != null)
         {
-            await _brevoEmailService.SendEmailWelcome(userInfoResponse!, spResponse);
+            await _brevoEmailService.SendEmailWelcome(userInfoResponse!, spResponse,request.BrandId);
         }
 
         if (invoicePdf.Length != Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
@@ -198,9 +200,9 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -289,7 +291,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             return false;
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>();
-        var                        invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        var                        invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         allPdfData["Invoice.pdf"] = invoicePdf;
 
@@ -300,11 +302,11 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             {
                 allPdfData[pdf.Key] = pdf.Value;
             }
-            await _brevoEmailService.SendEmailPurchaseConfirmForAcademy(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirmForAcademy(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
         else if (invoicePdf.Length != Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
@@ -317,11 +319,11 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails       = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse     = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
-        var affiliateBonusWinner = await _accountServiceAdapter.GetUserInfo(userInfoResponse!.Father);
+        var userInfoResponse     = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
+        var affiliateBonusWinner = await _accountServiceAdapter.GetUserInfo(userInfoResponse!.Father,_brandService.BrandId);
 
         var firstProductId   = request.ProductsList.First().IdProduct;
-        var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
+        var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,_brandService.BrandId);
 
         var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
@@ -400,15 +402,15 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         if (spResponse is null)
             return false;
 
-        await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
+        await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,_brandService.BrandId);
 
-        var pdfResult = await _mediatorPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
+        var pdfResult = await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
 
-        await _brevoEmailService.SendEmailWelcome(userInfoResponse, spResponse);
+        await _brevoEmailService.SendEmailWelcome(userInfoResponse, spResponse,request.BrandId);
 
         if (pdfResult.Length != Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailMembershipConfirm(userInfoResponse, pdfResult, spResponse);
+            await _brevoEmailService.SendEmailMembershipConfirm(userInfoResponse, pdfResult, spResponse,request.BrandId);
         }
 
         return true;

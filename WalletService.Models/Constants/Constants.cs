@@ -85,7 +85,11 @@ public static class Constants
     public static int[] CustomerModel4Scope = { 1, 2, 3};
     public const int CustomerModel5Scope    = 4;
     public static int[] CustomerModel6Scope = { 5,6,7,8,9,10, 11 };
-    
+
+    public const int Ecosystem                      = 1;
+    public const int RecyCoin                       = 2;
+    public const string EcosystemSenderName         = "Ecosystem Sharing Evolution";
+    public const string RecyCoinSenderName          = "RecyCoin";
     public const string SubjectInvitationForAcademy = "Invitación al curso de trading";
     public const string PurchasingPoolRevertBalance = "Pool Adquisitivo con saldo revertido";
     public const string WireTransfer                = "Transferencia bancaria";
