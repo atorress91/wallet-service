@@ -13,10 +13,12 @@ public class ApplicationConfiguration
     public ConPayments? ConPayments { get; set; }
 
     public SendingBlue? SendingBlue { get; set; }
-    
+
     public CoinPay? CoinPay { get; set; }
-    
+
     public Pagadito? Pagadito { get; set; }
+    
+    public WebTokens? WebTokens { get; set; }
 }
 
 public class ConnectionStrings
@@ -39,7 +41,7 @@ public class Endpoints
     public string? SystemConfigurationURL { get; set; }
 
     public string? InventoryServiceURL { get; set; }
-    
+
     public string? CoinPayURL { get; set; }
 }
 
@@ -88,4 +90,10 @@ public class Pagadito
     public string? Url { get; set; }
     public string? Uid { get; set; }
     public string? Wsk { get; set; }
+}
+
+public class WebTokens
+{
+    public string? EcosystemToken { get; set; }
+    public string? RecyCoinToken { get; set; }
 }

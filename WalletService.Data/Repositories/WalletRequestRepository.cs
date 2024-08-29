@@ -18,27 +18,26 @@ public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
     public Task<List<WalletsRequests>> GetAllWalletRequestByAffiliateId(int id)
         => Context.WalletsRequests.Where(x => x.AffiliateId == id).AsNoTracking().ToListAsync();
 
-    public async Task<decimal> GetTotalWalletRequestAmountByAffiliateId(int id)
+    public async Task<decimal> GetTotalWalletRequestAmountByAffiliateId(int id,int brandId)
     {
         var walletRequests = await Context.WalletsRequests
-            .Where(x => x.AffiliateId == id && x.Status == 0 && x.Type == WalletRequestType.withdrawal_request.ToString())
+            .Where(x => x.AffiliateId == id && x.Status == 0 && x.Type == WalletRequestType.withdrawal_request.ToString() && x.BrandId == brandId)
             .ToListAsync();
 
         decimal totalAmount = walletRequests.Sum(x => x.Amount);
         return totalAmount;
     }
 
-	public async Task<decimal> GetTotalWalletRequestAmount()
+	public async Task<decimal> GetTotalWalletRequestAmount(int brandId)
 	{
 		var walletRequests = await Context.WalletsRequests
-			.Where(x => x.Status == 0 && x.Type == WalletRequestType.withdrawal_request.ToString())
+			.Where(x => x.Status == 0 && x.Type == WalletRequestType.withdrawal_request.ToString() && x.BrandId == brandId)
 			.ToListAsync();
 
 		decimal totalAmount = walletRequests.Sum(x => x.Amount);
 		return totalAmount;
 	}
-
-
+    
 	public Task<List<WalletsRequests>> GetWalletRequestsByIds(List<int> ids)
         => Context.WalletsRequests.Where(x => ids.Contains(x.Id)).ToListAsync();
 

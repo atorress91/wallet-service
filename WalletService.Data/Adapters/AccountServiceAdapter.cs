@@ -22,8 +22,18 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
 
     protected override string? GetTokenUrl()
         => AppSettings.EndpointTokens?.AccountServiceToken;
+    
+    protected override string? GetWebToken(int brandId)
+    {
+        return brandId switch
+        {
+            1 => AppSettings.WebTokens!.EcosystemToken,
+            2 => AppSettings.WebTokens!.RecyCoinToken,
+            _ => null
+        };
+    }
 
-    public Task<IRestResponse> VerificationCode(string code, string password, int userId)
+    public Task<IRestResponse> VerificationCode(string code, string password, int userId, int brandId)
     {
         var requestValidationCode = new RequestValidationCode
         {
@@ -32,10 +42,10 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
             UserId   = userId
         };
 
-        return Post("/userAffiliateInfo/validationCode/", requestValidationCode.ToJsonString());
+        return Post("/userAffiliateInfo/validationCode/", requestValidationCode.ToJsonString(),brandId);
     }
 
-    public Task<IRestResponse> GetAccountsToEcoPool(int[] id, int levels)
+    public Task<IRestResponse> GetAccountsToEcoPool(int[] id, int levels, int brandId)
     {
         var json = new
         {
@@ -43,28 +53,28 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
             Levels        = levels
         }.ToJsonString();
 
-        return Post($"/userAffiliateInfo/get_accounts_eco_pool/", json);
+        return Post($"/userAffiliateInfo/get_accounts_eco_pool/", json, brandId);
     }
 
-    public Task<IRestResponse> UpdateActivationDate(int id)
+    public Task<IRestResponse> UpdateActivationDate(int id, int brandId)
     {
-        return Put($"/userAffiliateInfo/update_activation_date/{id}/");
+        return Put($"/userAffiliateInfo/update_activation_date/{id}/", brandId);
     }
 
-    public Task<IRestResponse> RevertActivationUser(int id)
+    public Task<IRestResponse> RevertActivationUser(int id, int brandId)
     {
-        return Put($"/userAffiliateInfo/revert_activation/{id}/");
+        return Put($"/userAffiliateInfo/revert_activation/{id}/", brandId);
     }
-    public Task<IRestResponse> GetTotalActiveMembers()
+    public Task<IRestResponse> GetTotalActiveMembers(int brandId)
     {
-        return Get($"/userAffiliateInfo/getTotalActiveMembers/", new Dictionary<string, string>());
+        return Get($"/userAffiliateInfo/getTotalActiveMembers/", new Dictionary<string, string>(), brandId);
     }
     
-    public async Task<IRestResponse> UpdateGradingByUser(int userId, int gradingId)
+    public async Task<IRestResponse> UpdateGradingByUser(int userId, int gradingId, int brandId)
     {
         try
         {
-            var response = await Put($"/userAffiliateInfo/update_grading/{userId}/{gradingId}");
+            var response = await Put($"/userAffiliateInfo/update_grading/{userId}/{gradingId}",brandId);
             return response;
         }
         catch (Exception e)
@@ -74,45 +84,45 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
         }
     }
 
-    public Task<IRestResponse> GetHave2Children(int[]                       users)
+    public Task<IRestResponse> GetHave2Children(int[]                       users, int brandId)
     {
         var data = new Dictionary<string, object>
         {
             { "Users", users }
         }.ToJsonString();
         
-        return Post($"/matrix/have_2_children/", data);
+        return Post($"/matrix/have_2_children/", data, brandId);
     }
     
-    public Task<IRestResponse> GetTreeModel4(Dictionary<int, decimal>       dictionary)
+    public Task<IRestResponse> GetTreeModel4(Dictionary<int, decimal>       dictionary, int brandId)
     {
         var json = dictionary.ToJsonString();
-        return Post($"/leaderboard/model4/getResultTree/", json);
+        return Post($"/leaderboard/model4/getResultTree/", json, brandId);
     }
     
-    public Task<IRestResponse> AddTreeModel5(IEnumerable<LeaderBoardModel5> leaderBoard)
+    public Task<IRestResponse> AddTreeModel5(IEnumerable<LeaderBoardModel5> leaderBoard, int brandId)
     {
-        return Post($"/leaderboard/model5/addTree/", leaderBoard.ToJsonString());
+        return Post($"/leaderboard/model5/addTree/", leaderBoard.ToJsonString(), brandId);
     }
     
-    public Task<IRestResponse> AddTreeModel6(IEnumerable<LeaderBoardModel6> leaderBoard)
+    public Task<IRestResponse> AddTreeModel6(IEnumerable<LeaderBoardModel6> leaderBoard , int brandId)
     {
-        return Post($"/leaderboard/model6/addTree/", leaderBoard.ToJsonString());
+        return Post($"/leaderboard/model6/addTree/", leaderBoard.ToJsonString(), brandId);
     }
 
-    public Task<IRestResponse> DeleteTreeModel6()
+    public Task<IRestResponse> DeleteTreeModel6(int brandId)
     {
-        return Post($"/leaderboard/model6/deleteTree/", new Dictionary<string,string>().ToJsonString());
+        return Post($"/leaderboard/model6/deleteTree/", new Dictionary<string,string>().ToJsonString(), brandId);
     }
 
-    public Task<IRestResponse> DeleteTreeModel5()
+    public Task<IRestResponse> DeleteTreeModel5(int brandId)
     {
-        return Post($"/leaderboard/model5/deleteTree/", new Dictionary<string,string>().ToJsonString());
+        return Post($"/leaderboard/model5/deleteTree/", new Dictionary<string,string>().ToJsonString(), brandId);
     }
 
-    public async Task<UserInfoResponse?> GetUserInfo(int id)
+    public async Task<UserInfoResponse?> GetUserInfo(int id, int brandId)
     {
-        var response = await Get($"/userAffiliateInfo/get_user_id/{id}/", new Dictionary<string, string>());
+        var response = await Get($"/userAffiliateInfo/get_user_id/{id}/", new Dictionary<string, string>(), brandId);
         if (!response.IsSuccessful)
             throw new Exception("Failed to retrieve user information");
 
@@ -142,9 +152,9 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
         return userInfoResponse;
     }
     
-    public async Task<NetworkDetailsResponse> NetworkDetails(int id)
+    public async Task<NetworkDetailsResponse> NetworkDetails(int id, int brandId)
     {
-        var response = await Get($"/userAffiliateInfo/getNetworkDetails/{id}", new Dictionary<string, string>());
+        var response = await Get($"/userAffiliateInfo/getNetworkDetails/{id}", new Dictionary<string, string>(), brandId);
         if (!response.IsSuccessful)
             throw new Exception("Failed to retrieve user information");
 
@@ -155,14 +165,13 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
 
         return networkDetails;
     }
-
-
-    public Task<IRestResponse> GetAffiliateByUserName(string userName)
-        => Get($"/userAffiliateInfo/get_user_username/{userName}/", new Dictionary<string, string>());
-
-    public Task<IRestResponse> GetPersonalNetwork(int id)
-        => Get($"/userAffiliateInfo/getPersonalNetwork/{id}/", new Dictionary<string, string>());
     
-    public Task<IRestResponse> GetAffiliateBtcByAffiliateId(int affiliateId)
-        => Get($"/AffiliateBtc/get_affiliate_btc_by_affiliate_id/{affiliateId.ToJsonString()}/", new Dictionary<string, string>());
+    public Task<IRestResponse> GetAffiliateByUserName(string userName, int brandId)
+        => Get($"/userAffiliateInfo/get_user_username/{userName}/", new Dictionary<string, string>(), brandId);
+
+    public Task<IRestResponse> GetPersonalNetwork(int id, int brandId)
+        => Get($"/userAffiliateInfo/getPersonalNetwork/{id}/", new Dictionary<string, string>(), brandId);
+    
+    public Task<IRestResponse> GetAffiliateBtcByAffiliateId(int affiliateId, int brandId)
+        => Get($"/AffiliateBtc/get_affiliate_btc_by_affiliate_id/{affiliateId.ToJsonString()}/", new Dictionary<string, string>(), brandId);
 }

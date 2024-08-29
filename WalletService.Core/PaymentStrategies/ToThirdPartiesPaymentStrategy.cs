@@ -19,20 +19,22 @@ public class ToThirdPartiesPaymentStrategy : BaseService
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
     private readonly IAccountServiceAdapter   _accountServiceAdapter;
     private readonly IWalletRepository        _walletRepository;
-    private readonly IMediatorPdfService      _mediatorPdfService;
+    private readonly IEcosystemPdfService      _ecosystemPdfService;
     private readonly IBrevoEmailService       _brevoEmailService;
     private readonly IWalletRequestRepository _walletRequestRepository;
-
+    private readonly IBrandService _brandService;
     public ToThirdPartiesPaymentStrategy(IInventoryServiceAdapter inventoryServiceAdapter,
-        IAccountServiceAdapter                                    accountServiceAdapter,   IWalletRepository walletRepository, IMediatorPdfService mediatorPdfService,
-        IBrevoEmailService                                        brevoEmailService,       IWalletRequestRepository walletRequestRepository,IMapper                    mapper):base(mapper)
+        IAccountServiceAdapter                                    accountServiceAdapter,   IWalletRepository walletRepository, IEcosystemPdfService ecosystemPdfService,
+        IBrevoEmailService                                        brevoEmailService,       IWalletRequestRepository walletRequestRepository,
+        IMapper                    mapper,IBrandService brandService):base(mapper)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter   = accountServiceAdapter;
         _walletRepository        = walletRepository;
         _brevoEmailService       = brevoEmailService;
-        _mediatorPdfService      = mediatorPdfService;
+        _ecosystemPdfService      = ecosystemPdfService;
         _walletRequestRepository = walletRequestRepository;
+        _brandService            = brandService;
     }
     public async Task<bool> ExecutePayment(WalletRequest request)
     {
@@ -43,13 +45,12 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         var today  = DateTime.Now;
 
         var          invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var          userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
-        var          purchaseFor      = await _accountServiceAdapter.GetUserInfo(request.PurchaseFor);
+        var          userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
+        var          purchaseFor      = await _accountServiceAdapter.GetUserInfo(request.PurchaseFor,_brandService.BrandId);
         var          balanceInfo      = await GetBalanceInformationByAffiliateId(request.AffiliateId);
         var          productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var          responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
-   
-
+        var          responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
+        
         if (!responseList.IsSuccessful)
             return false;
 
@@ -61,11 +62,11 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         if (result?.Data.Count == Constants.EmptyValue)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
-            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,_brandService.BrandId);
 
             var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
-            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
+            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,_brandService.BrandId);
 
             result.Data.Add(productResponse!.Data);
         }
@@ -195,8 +196,8 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         if (spResponse is null)
             return false;
         
-        var fullName                   = purchaseFor.Name + " " + purchaseFor.LastName;
-        var invoicePdf = await _mediatorPdfService.GenerateInvoice(purchaseFor, debitTransactionRequest, spResponse);
+        // var fullName                   = purchaseFor.Name + " " + purchaseFor.LastName;
+        var invoicePdf = await _ecosystemPdfService.GenerateInvoice(purchaseFor, debitTransactionRequest, spResponse);
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
         
         // await _brevoEmailService.SendEmailConfirmationEmailToThirdParty(userInfoResponse, fullName, productNames);
@@ -213,7 +214,7 @@ public class ToThirdPartiesPaymentStrategy : BaseService
 
         if (invoicePdf.Length != Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(purchaseFor, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(purchaseFor, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
@@ -221,10 +222,10 @@ public class ToThirdPartiesPaymentStrategy : BaseService
 
     private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId)
     {
-        var amountRequests    = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId);
-        var availableBalance  = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId);
-        var reverseBalance    = await _walletRepository.GetReverseBalanceByAffiliateId(affiliateId);
-        var totalAcquisitions = await _walletRepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
+        var amountRequests    = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId,_brandService.BrandId);
+        var availableBalance  = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId,_brandService.BrandId);
+        var reverseBalance    = await _walletRepository.GetReverseBalanceByAffiliateId(affiliateId,_brandService.BrandId);
+        var totalAcquisitions = await _walletRepository.GetTotalAcquisitionsByAffiliateId(affiliateId,_brandService.BrandId);
 
         var response = new BalanceInformationDto
         {

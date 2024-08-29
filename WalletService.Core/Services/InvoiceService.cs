@@ -27,15 +27,15 @@ public class InvoiceService : BaseService, IInvoiceService
     private readonly IWalletModel1ARepository          _walletModel1ARepository;
     private readonly IWalletModel1BRepository          _walletModel1BRepository;
     private readonly IWalletRepository                 _walletRepository;
-    private readonly IMediatorPdfService              _mediatorPdfService;
-    private readonly RedisCache                       _redisCache;
-
+    private readonly IEcosystemPdfService              _ecosystemPdfService;
+    private readonly RedisCache                       _redisCache; 
+    private readonly IBrandService                    _brandService;
     public InvoiceService(IMapper         mapper, IInvoiceRepository invoiceRepository,
         ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
         ILogger<InvoiceService>           logger,                  IAccountServiceAdapter   accountServiceAdapter,
         IBrevoEmailService                brevoEmailService,       IWalletModel1ARepository walletModel1ARepository,
         IWalletModel1BRepository          walletModel1BRepository, IWalletRepository        walletRepository, 
-        IMediatorPdfService mediatorPdfService,RedisCache redisCache) : base(mapper)
+        IEcosystemPdfService ecosystemPdfService,RedisCache redisCache,IBrandService brandService) : base(mapper)
     {
         _invoiceRepository                = invoiceRepository;
         _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
@@ -45,13 +45,14 @@ public class InvoiceService : BaseService, IInvoiceService
         _walletModel1ARepository          = walletModel1ARepository;
         _walletModel1BRepository          = walletModel1BRepository;
         _walletRepository                 = walletRepository;
-        _mediatorPdfService               = mediatorPdfService;
+        _ecosystemPdfService               = ecosystemPdfService;
         _redisCache                       = redisCache;
+        _brandService                     = brandService;
     }
 
     public async Task<IEnumerable<InvoiceDto>> GetAllInvoiceUserAsync(int id)
     {
-        var response   = await _invoiceRepository.GetAllInvoicesUser(id);
+        var response   = await _invoiceRepository.GetAllInvoicesUser(id, _brandService.BrandId);
         var mappedList = Mapper.Map<IEnumerable<InvoiceDto>>(response).ToList();
         mappedList.Reverse();
 
@@ -67,7 +68,7 @@ public class InvoiceService : BaseService, IInvoiceService
 
     public async Task<IEnumerable<InvoiceDto>> GetAllInvoices()
     {
-        var response   = await _invoiceRepository.GetAllInvoices();
+        var response   = await _invoiceRepository.GetAllInvoices(_brandService.BrandId);
         var mappedList = Mapper.Map<IEnumerable<InvoiceDto>>(response).ToList();
         mappedList.Reverse();
         return mappedList;
@@ -78,7 +79,7 @@ public class InvoiceService : BaseService, IInvoiceService
         var builder = new StringBuilder();
 
         builder.AppendLine($"[InvoiceService] | RevertUnconfirmedOrUnpaidTransactions | Started");
-        var transactionsResults = await _coinPaymentTransactionRepository.GetAllUnconfirmedOrUnpaidTransactions();
+        var transactionsResults = await _coinPaymentTransactionRepository.GetAllUnconfirmedOrUnpaidTransactions(_brandService.BrandId);
         var idsTransactions     = transactionsResults.Select(e => e.IdTransaction).ToList();
 
         if (idsTransactions is { Count: 0 })
@@ -159,12 +160,12 @@ public class InvoiceService : BaseService, IInvoiceService
                 if (endDate.Date < nextMonday)
                     return null;
 
-                var userResponse = await _accountServiceAdapter.GetAffiliateByUserName(invoice.UserName);
+                var userResponse = await _accountServiceAdapter.GetAffiliateByUserName(invoice.UserName,_brandService.BrandId);
                 if (userResponse.Content is null)
                     return null;
 
                 var user = userResponse.Content.ToJsonObject<UserAffiliateResponse>();
-                await _brevoEmailService.SendInvitationsForTradingAcademy(user!, link, code);
+                await _brevoEmailService.SendInvitationsForTradingAcademy(user!, link, code,_brandService.BrandId);
                 return user?.Data is null ? null : user;
             });
 
@@ -213,7 +214,7 @@ public class InvoiceService : BaseService, IInvoiceService
 
         if (isAnyCreditTransactionSuccessful && validInvoiceIds.Any())
         {
-            await _invoiceRepository.DeleteMultipleInvoicesAndDetailsAsync(validInvoiceIds.ToArray());
+            await _invoiceRepository.DeleteMultipleInvoicesAndDetailsAsync(validInvoiceIds.ToArray(),_brandService.BrandId);
         }
 
         return new ModelBalancesAndInvoicesDto
@@ -236,7 +237,7 @@ public class InvoiceService : BaseService, IInvoiceService
         {
             if (!validInvoiceIds.Contains(invoiceId))
             {
-                var invoice = await _invoiceRepository.GetInvoiceById(invoiceId);
+                var invoice = await _invoiceRepository.GetInvoiceById(invoiceId,_brandService.BrandId);
 
                 if (invoice != null)
                 {
@@ -302,32 +303,32 @@ public class InvoiceService : BaseService, IInvoiceService
     
     public async Task<byte[]> CreateInvoice(int invoiceId)
     {
-        var invoice = await _invoiceRepository.GetInvoiceById(invoiceId);
+        var invoice = await _invoiceRepository.GetInvoiceById(invoiceId,_brandService.BrandId);
         if (invoice is null)
             return Array.Empty<byte>();
 
-        var user = await _accountServiceAdapter.GetUserInfo(invoice.AffiliateId);
+        var user = await _accountServiceAdapter.GetUserInfo(invoice.AffiliateId,_brandService.BrandId);
     
         if (user is null)
             return Array.Empty<byte>();
     
-        var generatedInvoice = await _mediatorPdfService.RegenerateInvoice(user,invoice);
+        var generatedInvoice = await _ecosystemPdfService.RegenerateInvoice(user,invoice);
 
         return generatedInvoice;
     }
     
     public async Task<byte[]> CreateInvoiceByReference(string reference)
     {
-        var invoice = await _invoiceRepository.GetInvoiceByReceiptNumber(reference);
+        var invoice = await _invoiceRepository.GetInvoiceByReceiptNumber(reference,_brandService.BrandId);
         if (invoice is null)
             return Array.Empty<byte>();
 
-        var user = await _accountServiceAdapter.GetUserInfo(invoice.AffiliateId);
+        var user = await _accountServiceAdapter.GetUserInfo(invoice.AffiliateId,_brandService.BrandId);
     
         if (user is null)
             return Array.Empty<byte>();
     
-        var generatedInvoice = await _mediatorPdfService.RegenerateInvoice(user,invoice);
+        var generatedInvoice = await _ecosystemPdfService.RegenerateInvoice(user,invoice);
 
         return generatedInvoice;
     }

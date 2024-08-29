@@ -17,14 +17,14 @@ public class WalletModel1AService : BaseService, IWalletModel1AService
     private readonly RedisCache                    _redisCache;
     private readonly IAccountServiceAdapter        _accountServiceAdapter;
     private readonly IWalletModel1ARepository      _walletRepositoryModel1A;
-
+    private readonly IBrandService                 _brandService;
     public WalletModel1AService(
         IMapper                         mapper, 
         IWalletModel1ARepository        walletModel1ARepository,
         RedisCache                      redisCache,
         IBalancePaymentStrategyModel1A  balancePaymentStrategyModel1A,
         IAccountServiceAdapter accountServiceAdapter,
-        IWalletModel1ARepository walletRepositoryModel1A) : base(mapper)
+        IWalletModel1ARepository walletRepositoryModel1A,IBrandService brandService) : base(mapper)
     {
         _walletModel1ARepository       = walletModel1ARepository;
         _balancePaymentStrategyModel1A = balancePaymentStrategyModel1A;
@@ -106,7 +106,7 @@ public class WalletModel1AService : BaseService, IWalletModel1AService
         if (request.Amount == 0)
             return false;
 
-        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
 
         if (user is null)
             return false;

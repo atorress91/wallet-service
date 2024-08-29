@@ -18,32 +18,34 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
     private readonly IAccountServiceAdapter   _accountServiceAdapter;
     private readonly IWalletRepository        _walletRepository;
-    private readonly IMediatorPdfService      _mediatorPdfService;
+    private readonly IEcosystemPdfService      _ecosystemPdfService;
     private readonly IBrevoEmailService       _brevoEmailService;
     private readonly IWalletRequestRepository _walletRequestRepository;
     private readonly RedisCache               _redisCache;
+    private readonly IBrandService            _brandService;
 
     public BalancePaymentStrategy(IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter                             accountServiceAdapter, IWalletRepository walletRepository,
-        IMediatorPdfService                                mediatorPdfService,
+        IEcosystemPdfService                                ecosystemPdfService,
         IBrevoEmailService                                 brevoEmailService, IWalletRequestRepository walletRequestRepository,
-        RedisCache                                         redisCache)
+        RedisCache                                         redisCache,IBrandService brandService)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter   = accountServiceAdapter;
         _walletRepository        = walletRepository;
         _brevoEmailService       = brevoEmailService;
-        _mediatorPdfService      = mediatorPdfService;
+        _ecosystemPdfService      = ecosystemPdfService;
         _walletRequestRepository = walletRequestRepository;
         _redisCache              = redisCache;
+        _brandService            = brandService;
     }
 
     private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId)
     {
-        var amountRequests    = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId);
-        var availableBalance  = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId);
-        var reverseBalance    = await _walletRepository.GetReverseBalanceByAffiliateId(affiliateId);
-        var totalAcquisitions = await _walletRepository.GetTotalAcquisitionsByAffiliateId(affiliateId);
+        var amountRequests    = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId,_brandService.BrandId);
+        var availableBalance  = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId,_brandService.BrandId);
+        var reverseBalance    = await _walletRepository.GetReverseBalanceByAffiliateId(affiliateId,_brandService.BrandId);
+        var totalAcquisitions = await _walletRepository.GetTotalAcquisitionsByAffiliateId(affiliateId,_brandService.BrandId);
 
         var response = new BalanceInformationDto
         {
@@ -75,10 +77,10 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
         var balanceInfo      = await GetBalanceInformationByAffiliateId(request.AffiliateId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -91,11 +93,11 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (result?.Data.Count == Constants.EmptyValue)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
-            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,_brandService.BrandId);
 
             var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
-            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
+            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,_brandService.BrandId);
 
             result.Data.Add(productResponse!.Data);
         }
@@ -187,7 +189,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
         
         var invoicePdf =
-            await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
@@ -203,7 +205,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         if (allPdfData.Count > Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
@@ -217,9 +219,9 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -232,11 +234,11 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (result?.Data.Count == Constants.EmptyValue)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
-            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,_brandService.BrandId);
 
             var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
-            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
+            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,_brandService.BrandId);
 
             result.Data.Add(productResponse!.Data);
         }
@@ -323,7 +325,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
 
         var invoicePdf =
-            await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
@@ -338,7 +340,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         if (allPdfData.Count > Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
@@ -351,10 +353,10 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
         var balanceInfo      = await GetBalanceInformationByAffiliateId(request.AffiliateId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -447,7 +449,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
 
         var invoicePdf =
-            await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
         {
@@ -456,7 +458,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         if (allPdfData.Count > Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
@@ -470,9 +472,9 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -565,7 +567,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
 
         var invoicePdf =
-            await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
         {
@@ -574,7 +576,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         if (allPdfData.Count > Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
@@ -588,12 +590,12 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails       = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse     = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse     = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
         var balanceInfo          = await GetBalanceInformationByAffiliateId(request.AffiliateId);
-        var affiliateBonusWinner = await _accountServiceAdapter.GetUserInfo(userInfoResponse!.Father);
+        var affiliateBonusWinner = await _accountServiceAdapter.GetUserInfo(userInfoResponse!.Father,_brandService.BrandId);
 
         var firstProductId   = request.ProductsList.First().IdProduct;
-        var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
+        var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,_brandService.BrandId);
 
         var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
@@ -677,7 +679,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
 
-        await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
+        await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,_brandService.BrandId);
 
         var creditTransactionForWinningBonus = new CreditTransactionRequest
         {
@@ -697,14 +699,14 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         
         await RemoveCacheKey(affiliateBonusWinner.Id, CacheKeys.BalanceInformationModel2);
 
-        await _brevoEmailService.SendBonusConfirmation(affiliateBonusWinner, request.AffiliateUserName);
+        await _brevoEmailService.SendBonusConfirmation(affiliateBonusWinner, request.AffiliateUserName,request.BrandId);
         var pdfResult =
-            await _mediatorPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
-        await _brevoEmailService.SendEmailWelcome(userInfoResponse, spResponse);
+            await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
+        await _brevoEmailService.SendEmailWelcome(userInfoResponse, spResponse,request.BrandId);
 
         if (pdfResult.Length != Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailMembershipConfirm(userInfoResponse, pdfResult, spResponse);
+            await _brevoEmailService.SendEmailMembershipConfirm(userInfoResponse, pdfResult, spResponse,request.BrandId);
         }
 
         return true;

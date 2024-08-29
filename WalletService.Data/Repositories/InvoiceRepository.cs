@@ -22,36 +22,36 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
         base(context)
         => _appSettings = appSettings.Value;
 
-    public Task<int> CountDetailsByPaymentGroup(int paymentGroupId, int userId)
+    public Task<int> CountDetailsByPaymentGroup(int paymentGroupId, int userId, int brandId)
         => Context.InvoicesDetails.Where(x 
             => !x.Invoice.CancellationDate.HasValue && x.Invoice.Status &&
                x.Invoice.AffiliateId == userId && 
-               x.PaymentGroupId == paymentGroupId).CountAsync();
+               x.PaymentGroupId == paymentGroupId && x.BrandId == brandId).CountAsync();
     
-    public Task<int> CountDetailsModel3ByPaymentGroup(int userId)
+    public Task<int> CountDetailsModel3ByPaymentGroup(int userId, int brandId)
         => Context.InvoicesDetails.Where(x 
             => !x.Invoice.CancellationDate.HasValue && x.Invoice.Status &&
                x.Invoice.AffiliateId == userId && 
-               new []{5,6}.Contains(x.PaymentGroupId)).CountAsync();
+               new []{5,6}.Contains(x.PaymentGroupId) && x.BrandId == brandId).CountAsync();
 
     public Task<List<ModelFourStatistics>> Model4StatisticsByUser(int userId)
         => Context.ModelFourStatistics.Where(x => x.AffiliateId == userId).ToListAsync();
 
-    public Task<List<Invoices>> GetAllInvoicesUser(int id)
-        => Context.Invoices.Include(x => x.InvoiceDetail).Where(x => x.AffiliateId == id).AsNoTracking().ToListAsync();
+    public Task<List<Invoices>> GetAllInvoicesUser(int id, int brandId)
+        => Context.Invoices.Include(x => x.InvoiceDetail).Where(x => x.AffiliateId == id && x.BrandId == brandId).AsNoTracking().ToListAsync();
 
-    public Task<List<Invoices>> GetAllInvoices()
-        => Context.Invoices.Include(x => x.InvoiceDetail).AsNoTracking().ToListAsync();
+    public Task<List<Invoices>> GetAllInvoices(int brandId)
+        => Context.Invoices.Where(x=>x.BrandId==brandId).Include(x => x.InvoiceDetail).AsNoTracking().ToListAsync();
 
-    public Task<Invoices?> GetInvoiceById(int id)
-        => Context.Invoices.Include(e=>e.InvoiceDetail).FirstOrDefaultAsync(x => x.Id == id);
+    public Task<Invoices?> GetInvoiceById(int id, int brandId)
+        => Context.Invoices.Include(e=>e.InvoiceDetail).FirstOrDefaultAsync(x => x.Id == id && x.BrandId == brandId);
 
-    public Task<Invoices?> GetInvoiceByReceiptNumber(string receiptNumber)
-        => Context.Invoices.Include(x=> x.InvoiceDetail).FirstOrDefaultAsync(e => e.ReceiptNumber == receiptNumber);
+    public Task<Invoices?> GetInvoiceByReceiptNumber(string receiptNumber, int brandId)
+        => Context.Invoices.Include(x=> x.InvoiceDetail).FirstOrDefaultAsync(e => e.ReceiptNumber == receiptNumber && e.BrandId == brandId);
     
-    public Task<bool> InvoiceExistsByReceiptNumber(string idTransaction)
+    public Task<bool> InvoiceExistsByReceiptNumber(string idTransaction, int brandId)
         => Context.Invoices
-            .AnyAsync(e => e.ReceiptNumber == idTransaction);
+            .AnyAsync(e => e.ReceiptNumber == idTransaction && e.BrandId == brandId);
 
     public async Task<Invoices> CreateInvoiceAsync(Invoices invoice)
     {
@@ -78,13 +78,13 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
 
         return invoice;
     }
-    public async Task<List<Invoices>> DeleteMultipleInvoicesAndDetailsAsync(int[] invoiceIds)
+    public async Task<List<Invoices>> DeleteMultipleInvoicesAndDetailsAsync(int[] invoiceIds, int brandId)
     {
         var today = DateTime.Now;
         
         var invoices = await Context.Invoices
                            .Include(i => i.InvoiceDetail)
-                           .Where(i => invoiceIds.Contains(i.Id))
+                           .Where(i => invoiceIds.Contains(i.Id) && i.BrandId == brandId)
                            .ToListAsync();
 
         if (!invoices.Any())
@@ -266,7 +266,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
         cmd.Parameters.Add(new SqlParameter("@InvoicesDetails", SqlDbType.Structured)
         {
             Value    = dataTableDetails,
-            TypeName = "dbo.InvoicesDetailsType"
+            TypeName = "dbo.InvoicesDetailsTypeWithBrand"
         });
         
         cmd.Parameters.Add(new SqlParameter("@Reason", SqlDbType.VarChar)
@@ -274,6 +274,11 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             Value      = string.IsNullOrEmpty(request.Reason) ? null : request.Reason,
             IsNullable = true,
             Size       = 250
+        });
+        
+        cmd.Parameters.Add(new SqlParameter("@BrandId", SqlDbType.Int)
+        {
+            Value = request.BrandId
         });
     }
 

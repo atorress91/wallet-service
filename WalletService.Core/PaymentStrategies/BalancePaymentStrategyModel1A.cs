@@ -16,20 +16,22 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
     private readonly IAccountServiceAdapter _accountServiceAdapter;
     private readonly IWalletModel1ARepository _walletModel1ARepository;
-    private readonly IMediatorPdfService _mediatorPdfService;
+    private readonly IEcosystemPdfService _ecosystemPdfService;
     private readonly IBrevoEmailService _brevoEmailService;
+    private readonly IBrandService _brandService;
 
 
     public BalancePaymentStrategy1A(IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter accountServiceAdapter, IWalletModel1ARepository walletModel1ARepository,
-        IMediatorPdfService mediatorPdfService,
-        IBrevoEmailService brevoEmailService)
+        IEcosystemPdfService ecosystemPdfService,
+        IBrevoEmailService brevoEmailService,IBrandService brandService)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter = accountServiceAdapter;
         _walletModel1ARepository = walletModel1ARepository;
         _brevoEmailService = brevoEmailService;
-        _mediatorPdfService = mediatorPdfService;
+        _ecosystemPdfService = ecosystemPdfService;
+        _brandService = brandService;
     }
     
     private async Task<BalanceInformationModel1ADto> GetBalanceInformationByAffiliateId(int affiliateId)
@@ -62,10 +64,10 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
         byte origin = 0;
 
         var invoiceDetails = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
         var balanceInfo = await GetBalanceInformationByAffiliateId(request.AffiliateId);
         var productIds = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -158,7 +160,7 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
             return false;
 
         var invoicePdf =
-            await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
@@ -174,7 +176,7 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
 
         if (allPdfData.Count > Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
@@ -188,10 +190,10 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
         byte origin = 0;
 
         var invoiceDetails = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
         var balanceInfo = await GetBalanceInformationByAffiliateId(request.AffiliateId);
         var productIds = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -284,7 +286,7 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
             return false;
 
         var invoicePdf =
-            await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
@@ -300,7 +302,7 @@ public class BalancePaymentStrategy1A : IBalancePaymentStrategyModel1A
 
         if (allPdfData.Count > Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;

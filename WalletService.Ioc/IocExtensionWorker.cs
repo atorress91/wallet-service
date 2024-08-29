@@ -136,6 +136,7 @@ public static class IocExtensionWorker
         services.AddScoped<ICoinPaymentTransactionRepository, CoinPaymentTransactionRepository>();
         services.AddScoped<IWalletModel1ARepository, WalletModel1ARepository>();
         services.AddScoped<IWalletModel1BRepository, WalletModel1BRepository>();
+        services.AddScoped<IBrandRepository, BrandRepository>();
     }
 
     private static void InjectAdapters(IServiceCollection services)
@@ -160,7 +161,7 @@ public static class IocExtensionWorker
         services.AddScoped<IInvoiceService, InvoiceService>();
         services.AddScoped<IProcessGradingService, ProcessGradingService>();
         services.AddScoped<IEcoPoolConfigurationService, EcoPoolConfigurationService>();
-        services.AddScoped<IMediatorPdfService, MediatorPdfService>();
+        services.AddScoped<IEcosystemPdfService, EcosystemPdfService>();
         services.AddScoped<IResultsEcoPoolService, ResultsEcoPoolService>();
         services.AddScoped<IConPaymentService, ConPaymentService>();
         services.AddScoped<IBrevoEmailService, BrevoEmailService>();
@@ -168,6 +169,8 @@ public static class IocExtensionWorker
         services.AddScoped<IWalletModel1AService, WalletModel1AService>();
         services.AddScoped<IWalletModel1BService, WalletModel1BService>();
         services.AddScoped<IUserStatisticsService, UserStatisticsService>();
+        services.AddScoped<IBrandService, BrandService>();
+        services.AddScoped<IRecyCoinPdfService, RecyCoinPdfService>();
     }
 
     private static void InjectPackages(IServiceCollection services)

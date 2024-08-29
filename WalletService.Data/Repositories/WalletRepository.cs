@@ -23,22 +23,22 @@ public class WalletRepository : BaseRepository, IWalletRepository
         base(context)
         => _appSettings = appSettings.Value;
 
-    public Task<List<Wallets>> GetWalletByAffiliateId(int affiliateId)
-        => Context.Wallets.Where(x => x.AffiliateId == affiliateId).ToListAsync();
+    public Task<List<Wallets>> GetWalletByAffiliateId(int affiliateId, int brandId)
+        => Context.Wallets.Where(x => x.AffiliateId == affiliateId && x.BrandId == brandId).ToListAsync();
 
-    public async Task<decimal> GetAvailableBalanceByAffiliateId(int affiliateId)
+    public async Task<decimal> GetAvailableBalanceByAffiliateId(int affiliateId, int brandId)
     {
         var list = await Context.Wallets
-            .Where(x => x.AffiliateId == affiliateId && x.Status == true).ToListAsync();
+            .Where(x => x.AffiliateId == affiliateId && x.Status == true && x.BrandId == brandId).ToListAsync();
 
         var result = list.Sum(x => x.Credit - x.Debit);
         return result.ToDecimal();
     }
 
-    public async Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance()
+    public async Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance(int brandId)
     {
         var list = await Context.Wallets
-            .Where(x => x.Status == true)
+            .Where(x => x.Status == true && x.BrandId == brandId)
             .GroupBy(x => x.AffiliateId)
             .Select(g => new AffiliateBalance
             {
@@ -52,25 +52,25 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return list;
     }
 
-    public async Task<decimal> GetAvailableBalanceAdmin()
+    public async Task<decimal> GetAvailableBalanceAdmin(int brandId)
     {
         var result = await Context.Wallets
-            .Where(x => x.Status == true)
+            .Where(x => x.Status == true && x.BrandId == brandId)
             .Select(x => x.Credit - x.Debit).SumAsync();
 
         return (decimal)result;
     }
 
-    public async Task<decimal?> GetReverseBalanceByAffiliateId(int affiliateId)
+    public async Task<decimal?> GetReverseBalanceByAffiliateId(int affiliateId, int brandId)
     {
         var totalCredits = await Context.Wallets
-            .Where(x => x.AffiliateId == affiliateId && x.ConceptType == WalletConceptType.revert_pool.ToString())
+            .Where(x => x.AffiliateId == affiliateId && x.ConceptType == WalletConceptType.revert_pool.ToString() && x.BrandId == brandId)
             .Select(x => x.Credit)
             .SumAsync();
 
         var totalDebits = await Context.Wallets
             .Where(x => x.AffiliateId == affiliateId &&
-                        x.ConceptType == WalletConceptType.purchase_with_reverse_balance.ToString())
+                        x.ConceptType == WalletConceptType.purchase_with_reverse_balance.ToString() && x.BrandId == brandId)
             .Select(x => x.Debit)
             .SumAsync();
 
@@ -78,16 +78,16 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return Convert.ToDecimal(reverseBalance);
     }
     
-    public async Task<decimal> GetTotalReverseBalance()
+    public async Task<decimal> GetTotalReverseBalance(int brandId)
     {
         var totalCredits = await Context.Wallets
-            .Where(x=> x.ConceptType == WalletConceptType.revert_pool.ToString())
+            .Where(x=> x.ConceptType == WalletConceptType.revert_pool.ToString() && x.BrandId == brandId)
             .Select(x => x.Credit)
             .SumAsync();
 
         var totalDebits = await Context.Wallets
             .Where(x =>
-                        x.ConceptType == WalletConceptType.purchase_with_reverse_balance.ToString())
+                        x.ConceptType == WalletConceptType.purchase_with_reverse_balance.ToString() && x.BrandId == brandId)
             .Select(x => x.Debit)
             .SumAsync();
 
@@ -95,15 +95,17 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return Convert.ToDecimal(reverseBalance);
     }
 
-    public Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId)
+    public Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId, int brandId)
         => Context.InvoicesDetails.Include(x => x.Invoice).AsNoTracking()
-            .Where(x 
-                => x.Invoice.AffiliateId == affiliateId && x.PaymentGroupId == 2 
-                                                        && x.ProductPack && !x.Invoice.CancellationDate.HasValue)
+            .Where(x => 
+                x.Invoice.AffiliateId == affiliateId &&
+                x.ProductPack && 
+                !x.Invoice.CancellationDate.HasValue &&
+                ((brandId == 1 && x.PaymentGroupId == 2) || (brandId == 2 && x.PaymentGroupId == 11))
+            )
             .SumAsync(s => s.BaseAmount);
-
-
-    public async Task<double?> GetTotalCommissionsPaid(int affiliateId)
+    
+    public async Task<double?> GetTotalCommissionsPaid(int affiliateId, int brandId)
     {
         var status = new HashSet<string>
         {
@@ -116,7 +118,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             "membership_bonus"
         };
         var total = await Context.Wallets
-            .Where(x => x.AffiliateId == affiliateId && x.ConceptType != null && status.Contains(x.ConceptType) && x.Status == true)
+            .Where(x => x.AffiliateId == affiliateId && x.ConceptType != null && status.Contains(x.ConceptType) && x.Status == true && x.BrandId == brandId)
             .SumAsync(x => x.Credit);
 
         return total;
@@ -609,6 +611,11 @@ public class WalletRepository : BaseRepository, IWalletRepository
             IsNullable = true,
             Size = 250
         });
+        
+        cmd.Parameters.Add(new SqlParameter("@BrandId", SqlDbType.Int)
+        {
+            Value = request.BrandId
+        });
     }
 
     private void CreateModel2Parameters(Model2TransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
@@ -839,16 +846,16 @@ public class WalletRepository : BaseRepository, IWalletRepository
         });
     }
 
-    public Task<List<Wallets>> GetWalletByUserId(int userId)
-        => Context.Wallets.Where(x => x.UserId == userId).ToListAsync();
+    public Task<List<Wallets>> GetWalletByUserId(int userId , int brandId)
+        => Context.Wallets.Where(x => x.UserId == userId && x.BrandId == brandId).ToListAsync();
 
-    public Task<List<Wallets>> GetWalletsRequest(int userId)
+    public Task<List<Wallets>> GetWalletsRequest(int userId, int brandId)
         => Context.Wallets.AsNoTracking().Where(x
             => x.ConceptType == WalletConceptType.wallet_withdrawal_request.ToString()
-               && x.AffiliateId == userId).ToListAsync();
+               && x.AffiliateId == userId && x.BrandId == brandId).ToListAsync();
 
-    public Task<List<Wallets>> GetAllWallets()
-        => Context.Wallets.AsNoTracking().ToListAsync();
+    public Task<List<Wallets>> GetAllWallets(int brandId)
+        => Context.Wallets.Where(x=>x.BrandId == brandId).AsNoTracking().ToListAsync();
 
     public Task<List<ModelFourStatistics>> GetUserModelFour(int[] affiliateIds)
     {
@@ -856,8 +863,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
             => affiliateIds.Contains(x.AffiliateId)).ToListAsync();
     }
 
-    public Task<Wallets?> GetWalletById(int id)
-        => Context.Wallets.FirstOrDefaultAsync(x => x.Id == id);
+    public Task<Wallets?> GetWalletById(int id, int brandId)
+        => Context.Wallets.FirstOrDefaultAsync(x => x.Id == id && x.BrandId == brandId);
 
     public async Task<Wallets> CreateWalletAsync(Wallets request)
     {
@@ -969,11 +976,11 @@ public class WalletRepository : BaseRepository, IWalletRepository
         await sql.CloseAsync();
     }
 
-    public async Task<bool> IsActivePoolGreaterThanOrEqualTo25(int affiliateId)
+    public async Task<bool> IsActivePoolGreaterThanOrEqualTo25(int affiliateId, int brandId)
     {
         var result = await Context.InvoicesDetails.Include(x => x.Invoice)
             .Where(x => x.ProductPack && x.Invoice.AffiliateId == affiliateId && x.Invoice.Status == true &&
-                        x.Invoice.CancellationDate == null && x.PaymentGroupId == 2).ToListAsync();
+                        x.Invoice.CancellationDate == null && x.PaymentGroupId == 2 && x.BrandId == brandId).ToListAsync();
 
         if (result is { Count: 0 })
             return false;
@@ -1131,10 +1138,10 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return Context.SaveChangesAsync();
     }
     
-    public Task<decimal?> GetTotalServiceBalance(int affiliateId)
+    public Task<decimal?> GetTotalServiceBalance(int affiliateId, int brandId)
     {
         return Context.WalletsServiceModel2
-            .Where(x => x.AffiliateId == affiliateId)
+            .Where(x => x.AffiliateId == affiliateId && x.BrandId == brandId)
             .Select(s => s.Credit - s.Debit)
             .SumAsync();
     }

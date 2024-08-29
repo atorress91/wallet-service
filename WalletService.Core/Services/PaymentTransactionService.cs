@@ -21,21 +21,22 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
     private readonly IAccountServiceAdapter            _accountServiceAdapter;
     private readonly IInventoryServiceAdapter          _inventoryServiceAdapter;
     private readonly IWireTransferStrategy             _wireTransferStrategy;
-
+    private readonly IBrandService                     _brandService;
     public PaymentTransactionService(IMapper mapper,                ICoinPaymentTransactionRepository paymentTransactionRepository,
         IAccountServiceAdapter               accountServiceAdapter, IInventoryServiceAdapter          inventoryServiceAdapter,
-        IWireTransferStrategy                wireTransferStrategy) :
+        IWireTransferStrategy                wireTransferStrategy,IBrandService brandService) :
         base(mapper)
     {
         _paymentTransactionRepository = paymentTransactionRepository;
         _accountServiceAdapter        = accountServiceAdapter;
         _inventoryServiceAdapter      = inventoryServiceAdapter;
         _wireTransferStrategy         = wireTransferStrategy;
+        _brandService                 = brandService;
     }
 
     public async Task<PaymentTransactionDto?> CreatePaymentTransactionAsync(PaymentTransactionRequest request)
     {
-        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var user = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
 
         if (user is null)
             return null;
@@ -73,10 +74,10 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
 
     public async Task<IEnumerable<PaymentTransactionDto>> GetAllWireTransfer()
     {
-        var transactions       = await _paymentTransactionRepository.GetAllWireTransfer();
+        var transactions       = await _paymentTransactionRepository.GetAllWireTransfer(_brandService.BrandId);
         var uniqueAffiliateIds = transactions.Select(trans => trans.AffiliateId).Distinct();
 
-        var userTasks     = uniqueAffiliateIds.Select(id => _accountServiceAdapter.GetUserInfo(id)).ToList();
+        var userTasks     = uniqueAffiliateIds.Select(id => _accountServiceAdapter.GetUserInfo(id, _brandService.BrandId)).ToList();
         var userResponses = await Task.WhenAll(userTasks);
 
         var usersInfo = userResponses
@@ -108,7 +109,7 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
 
     public async Task<bool> ConfirmPayment(ConfirmPaymentTransactionRequest request)
     {
-        var paymentTransaction = await _paymentTransactionRepository.GetPaymentTransactionById(request.Id);
+        var paymentTransaction = await _paymentTransactionRepository.GetPaymentTransactionById(request.Id, _brandService.BrandId);
 
         if (paymentTransaction is null)
             return false;
@@ -163,7 +164,7 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
     private async Task<ProductType> GetProductType(List<ProductRequest> request)
     {
         var productIds   = request.Select(p => p.ProductId).ToArray();
-        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         var result = responseList.Content!.ToJsonObject<ProductsResponse>();
 

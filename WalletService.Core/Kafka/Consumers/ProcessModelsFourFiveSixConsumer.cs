@@ -2,6 +2,7 @@ using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WalletService.Core.Kafka.Messages;
+using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Configuration;
@@ -19,11 +20,12 @@ namespace WalletService.Core.Kafka.Consumers;
 public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
 {
     public ProcessModelsFourFiveSixConsumer(
-        ConsumerSettings         consumerSettings,
+        ConsumerSettings consumerSettings,
         ApplicationConfiguration configuration,
-        ILogger                  logger,
-        IServiceScopeFactory     serviceScopeFactory
-    ) : base(consumerSettings, configuration, logger, serviceScopeFactory) { }
+        ILogger logger,
+        IServiceScopeFactory serviceScopeFactory
+    ) : base(consumerSettings, configuration, logger, serviceScopeFactory){
+    }
 
     protected override Task<bool> OnMessage(ConsumeResult<Ignore, string> e)
     {
@@ -48,20 +50,24 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
     {
         try
         {
-            using var scope                 = ServiceScopeFactory.CreateScope();
-            var       walletRepository      = scope.ServiceProvider.GetService<IWalletRepository>();
-            var       accountServiceAdapter = scope.ServiceProvider.GetService<IAccountServiceAdapter>();
+            using var scope = ServiceScopeFactory.CreateScope();
+            var walletRepository = scope.ServiceProvider.GetService<IWalletRepository>();
+            var accountServiceAdapter = scope.ServiceProvider.GetService<IAccountServiceAdapter>();
+            var brandService = scope.ServiceProvider.GetService<IBrandService>();
+            
+            var brandId = brandService!.BrandId; 
 
-            var listUsersGraded = model.UserGradings.Where(x => x.Grading!.ScopeLevel >= Constants.CustomerModel4Scope[0]).ToList();
+            var listUsersGraded = model.UserGradings
+                .Where(x => x.Grading!.ScopeLevel >= Constants.CustomerModel4Scope[0])
+                .ToList();
 
             if (listUsersGraded is { Count: 0 })
                 return false;
 
             listUsersGraded = listUsersGraded.OrderByDescending(x => x.Commissions).ToList();
-            var dictionary      = await DebitModelFourFiveProcess(model, listUsersGraded, walletRepository, accountServiceAdapter);
-        
-            
-            var treeUsersInformation = await LeaderBoardModelFourProcess(accountServiceAdapter, dictionary);
+            var dictionary = await DebitModelFourFiveProcess(model, listUsersGraded, walletRepository, accountServiceAdapter, brandId);
+
+            var treeUsersInformation = await LeaderBoardModelFourProcess(accountServiceAdapter, dictionary, brandId);
 
             var leaderBoardModel5 = new List<LeaderBoardModel5>();
             var leaderBoardModel6 = new List<LeaderBoardModel6>();
@@ -74,12 +80,11 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                 dictionary,
                 leaderBoardModel5,
                 leaderBoardModel6,
-                treeUsersInformation);
+                treeUsersInformation,
+                brandId);
 
-            
-            
-            await LeaderBoardModelFiveProcess(leaderBoardModel5, accountServiceAdapter, walletRepository!, model.Gradings);
-            await LeaderBoardModelSixProcess(leaderBoardModel6, accountServiceAdapter, walletRepository!, model.Gradings);
+            await LeaderBoardModelFiveProcess(leaderBoardModel5, accountServiceAdapter, walletRepository!, model.Gradings, brandId);
+            await LeaderBoardModelSixProcess(leaderBoardModel6, accountServiceAdapter, walletRepository!, model.Gradings, brandId);
 
             return true;
         }
@@ -88,19 +93,17 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             Console.WriteLine(e);
             throw;
         }
-
     }
-
     private static async Task LeaderBoardModelFiveProcess(
         List<LeaderBoardModel5>         leaderBoardModel5,
         IAccountServiceAdapter?         accountServiceAdapter,
         IWalletRepository               walletRepository,
-        ICollection<GradingDto> gradings)
+        ICollection<GradingDto> gradings,int brandId)
     {
 
         leaderBoardModel5 = leaderBoardModel5.OrderModel5();
-        await accountServiceAdapter!.DeleteTreeModel5();
-        await accountServiceAdapter.AddTreeModel5(leaderBoardModel5);
+        await accountServiceAdapter!.DeleteTreeModel5(brandId);
+        await accountServiceAdapter.AddTreeModel5(leaderBoardModel5,brandId);
 
         foreach (var item in leaderBoardModel5)
         {
@@ -125,11 +128,11 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         List<LeaderBoardModel6> leaderBoardModel6,
         IAccountServiceAdapter? accountServiceAdapter,
         IWalletRepository       walletRepository,
-        ICollection<GradingDto> gradings)
+        ICollection<GradingDto> gradings,int brandId)
     {
         leaderBoardModel6 = leaderBoardModel6.OrderModel6();
-        await accountServiceAdapter!.DeleteTreeModel6();
-        await accountServiceAdapter.AddTreeModel6(leaderBoardModel6);
+        await accountServiceAdapter!.DeleteTreeModel6(brandId);
+        await accountServiceAdapter.AddTreeModel6(leaderBoardModel6,brandId);
         
         foreach (var item in leaderBoardModel6)
         {
@@ -152,11 +155,11 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
 
     private static async Task<ICollection<UserBinaryInformation>> LeaderBoardModelFourProcess(
         IAccountServiceAdapter? accountServiceAdapter, 
-        Dictionary<int, decimal> dictionary)
+        Dictionary<int, decimal> dictionary, int brandId)
     {
         var result = new List<UserBinaryInformation>();
 
-        var response = await accountServiceAdapter!.GetTreeModel4(dictionary);
+        var response = await accountServiceAdapter!.GetTreeModel4(dictionary, brandId);
         
         if (string.IsNullOrEmpty(response.Content))
             return result;
@@ -169,7 +172,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         ModelFourFiveSixMessage         model,
         List<UserGradingRequest> listUsersGraded,
         IWalletRepository?       walletRepository,
-        IAccountServiceAdapter?  accountServiceAdapter)
+        IAccountServiceAdapter?  accountServiceAdapter, int brandId)
     {
         var userDictionary = listUsersGraded.ToDictionary(x => x.AffiliateId, _ => 0m);
         foreach (var item in listUsersGraded)
@@ -197,7 +200,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                         string.Format(description, item.Grading.PersonalPurchases, item.Grading.Name),
                         WalletConceptType.model_five_payment.ToString());
                 
-                await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
+                await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id, brandId);
             }
             else
             {
@@ -212,7 +215,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                     );
                 userDictionary[item.AffiliateId] = item.Grading.PurchasesNetwork;
                 
-                await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id);
+                await accountServiceAdapter!.UpdateGradingByUser(item.AffiliateId, item.Grading.Id, brandId);
             }
         }
 
@@ -228,12 +231,12 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         Dictionary<int, decimal>           userDictionary,
         ICollection<LeaderBoardModel5>     leaderBoardModel5,
         ICollection<LeaderBoardModel6>     leaderBoardModel6,
-        ICollection<UserBinaryInformation> resultPoints)
+        ICollection<UserBinaryInformation> resultPoints,int brandId)
     {
         var resultOldPoints   = await walletRepository!.GetUserModelFour(userDictionary.Select(x => x.Key).ToArray());
         
         var userIds           = listUsersGraded!.Select(x => x.AffiliateId).ToArray();
-        var responseCondition = await accountServiceAdapter!.GetHave2Children(userIds);
+        var responseCondition = await accountServiceAdapter!.GetHave2Children(userIds, brandId);
         
         if (string.IsNullOrEmpty(responseCondition.Content))
             return;
@@ -270,7 +273,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                     userInformation,
                     hasTwoChildren);
                 
-                var grading = await GradingModelFiveSix(model, accountServiceAdapter, walletRepository, payment, userInformation, user);
+                var grading = await GradingModelFiveSix(model, accountServiceAdapter, walletRepository, payment, userInformation, user,brandId);
 
                 if (grading is null)
                     continue;
@@ -315,7 +318,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
                     userInformation,
                     hasTwoChildren);
                 
-                var grading = await GradingModelFiveSix(model, accountServiceAdapter, walletRepository, payment, userInformation, user);
+                var grading = await GradingModelFiveSix(model, accountServiceAdapter, walletRepository, payment, userInformation, user,brandId);
                 
                 if (grading is null)
                     continue;
@@ -394,7 +397,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         IWalletRepository          walletRepository,
         decimal                    payment,
         UserGradingRequest         userInformation,
-        KeyValuePair<int, decimal> user)
+        KeyValuePair<int, decimal> user,int brandId)
     {
         var pointsModel = payment + (decimal)userInformation.Commissions;
 
@@ -415,7 +418,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             grading!.PersonalPurchases,
             string.Format(Constants.ConceptCommissionModelSixPayment, grading.PersonalPurchases, grading.Name),
             WalletConceptType.model_six_payment.ToString());
-        await accountServiceAdapter!.UpdateGradingByUser(user.Key, grading.Id);
+        await accountServiceAdapter!.UpdateGradingByUser(user.Key, grading.Id, brandId);
 
         return grading;
     }

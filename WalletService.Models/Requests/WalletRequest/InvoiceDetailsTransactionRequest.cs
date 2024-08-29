@@ -23,6 +23,7 @@ public class InvoiceDetailsTransactionRequest
     
     public int? DaysToPayQuantity { get; set; }
     public byte ProductStart { get; set; }
+    public int BrandId { get; set; }
     
     
 }

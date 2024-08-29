@@ -5,7 +5,7 @@ using WalletService.Models.Responses;
 
 namespace WalletService.Core.Services.IServices;
 
-public interface IMediatorPdfService
+public interface IRecyCoinPdfService
 {
     Task<byte[]> GenerateInvoice(UserInfoResponse userInfo, DebitTransactionRequest invoice, InvoicesSpResponse spResponse);
     Task<byte[]> RegenerateInvoice(UserInfoResponse userInfo, Invoices invoice);

@@ -16,18 +16,20 @@ public class WireTransferStrategy : IWireTransferStrategy
     private readonly IInvoiceRepository       _invoiceRepository;
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
     private readonly IAccountServiceAdapter   _accountServiceAdapter;
-    private readonly IMediatorPdfService      _mediatorPdfService;
+    private readonly IEcosystemPdfService      _ecosystemPdfService;
     private readonly IBrevoEmailService       _brevoEmailService;
+    private readonly IBrandService _brandService;
 
     public WireTransferStrategy(IInvoiceRepository invoiceRepository, IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter                     accountServiceAdapter, IBrevoEmailService brevoEmailService,
-        IMediatorPdfService                        mediatorPdfService)
+        IEcosystemPdfService                        ecosystemPdfService,IBrandService brandService)
     {
         _invoiceRepository       = invoiceRepository;
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter   = accountServiceAdapter;
         _brevoEmailService       = brevoEmailService;
-        _mediatorPdfService      = mediatorPdfService;
+        _ecosystemPdfService      = ecosystemPdfService;
+        _brandService            = brandService;
     }
     private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
     {
@@ -58,9 +60,9 @@ public class WireTransferStrategy : IWireTransferStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -73,11 +75,11 @@ public class WireTransferStrategy : IWireTransferStrategy
         if (result?.Data.Count == 0)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
-            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId);
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,_brandService.BrandId);
 
             var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
-            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId);
+            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,_brandService.BrandId);
 
             result.Data.Add(productResponse!.Data);
         }
@@ -162,7 +164,7 @@ public class WireTransferStrategy : IWireTransferStrategy
             return false;
 
         var invoicePdf =
-            await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
@@ -178,12 +180,12 @@ public class WireTransferStrategy : IWireTransferStrategy
 
         if (result.Data.Find(dto => dto.ProductType) != null)
         {
-            await _brevoEmailService.SendEmailWelcome(userInfoResponse!, spResponse);
+            await _brevoEmailService.SendEmailWelcome(userInfoResponse!, spResponse,request.BrandId);
         }
 
         if (invoicePdf.Length != 0)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
@@ -197,9 +199,9 @@ public class WireTransferStrategy : IWireTransferStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -288,7 +290,7 @@ public class WireTransferStrategy : IWireTransferStrategy
             return false;
     
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>();
-        var invoicePdf = await _mediatorPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        var invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         allPdfData["Invoice.pdf"] = invoicePdf;
         
@@ -299,11 +301,11 @@ public class WireTransferStrategy : IWireTransferStrategy
             {
                 allPdfData[pdf.Key] = pdf.Value;
             }
-            await _brevoEmailService.SendEmailPurchaseConfirmForAcademy(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirmForAcademy(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
         else if (invoicePdf.Length != 0)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
         }
 
         return true;
