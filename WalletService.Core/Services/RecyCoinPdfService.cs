@@ -46,12 +46,12 @@ public class RecyCoinPdfService : IRecyCoinPdfService
                                 .Text($"Recibo #{spResponse.Id}")
                                 .FontColor("#39FF14"); 
 
-                            col.Item().AlignRight().Text("Razón Social: RecyCoin").FontColor("#FFFFFF").FontSize(10); 
-                            col.Item().AlignRight().Text("C.I.F: 3-101-844938").FontColor("#FFFFFF").FontSize(10); 
+                            col.Item().AlignRight().Text("Razón Social: OCX GROUP SOCIEDAD ANONIMA").FontColor("#FFFFFF").FontSize(10); 
+                            col.Item().AlignRight().Text("C.I.F: 3-101-865783").FontColor("#FFFFFF").FontSize(10); 
                             col.Item().AlignRight()
-                                .Text("Domicilio: San José-Santa Ana, Brasil, Centro Comercial Plaza del Rio, Local #3")
+                                .Text("Domicilio: Costa Rica Provincia Puntarenas. Cantón Golfito. Distrito Guaycara 3")
                                 .FontColor("#FFFFFF").FontSize(10); 
-                            col.Item().AlignRight().Text("Tel/Fax: 50663321239").FontColor("#FFFFFF").FontSize(10); 
+                            col.Item().AlignRight().Text("Tel/Fax: +9802510215").FontColor("#FFFFFF").FontSize(10); 
                             col.Item().AlignRight().Text("Correo: support@recycoin.net").FontColor("#FFFFFF").FontSize(10); 
                             col.Item().AlignRight().Text(date).FontColor("#FFFFFF").FontSize(10); 
                         });
