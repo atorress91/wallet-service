@@ -13,4 +13,5 @@ public interface ICoinPaymentTransactionRepository
     Task<PaymentTransaction?> GetPaymentTransactionById(int id, int brandId);
     Task<int> GetLastTransactionId(int brandId);
     Task<PaymentTransaction?> GetTransactionByReference(string reference);
+    Task<PaymentTransaction?> GetTransactionByTxnId(string idTransaction);
 }

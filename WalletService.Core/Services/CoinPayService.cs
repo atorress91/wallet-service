@@ -3,6 +3,7 @@ using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -34,7 +35,7 @@ public class CoinPayService : BaseService, ICoinPayService
     private readonly IWalletRequestRepository _walletRequestRepository;
     private readonly IWalletWithdrawalService _walletWithDrawalService;
     private readonly IBrandService _brandService;
-
+    private readonly RedisCache _redisCache;
     public CoinPayService(IMapper mapper, ICoinPayAdapter coinPayAdapter,
         ICoinPaymentTransactionRepository transactionRepository, ILogger<CoinPayService> logger,
         IAccountServiceAdapter accountServiceAdapter,
@@ -43,7 +44,8 @@ public class CoinPayService : BaseService, ICoinPayService
         IInventoryServiceAdapter inventoryServiceAdapter,
         IWalletRequestRepository walletRequestRepository,
         IWalletWithdrawalService walletWithDrawalService,
-        IBrandService brandService
+        IBrandService brandService,
+        RedisCache redisCache
     ) : base(mapper)
     {
         _coinPayAdapter = coinPayAdapter;
@@ -56,6 +58,7 @@ public class CoinPayService : BaseService, ICoinPayService
         _walletRequestRepository = walletRequestRepository;
         _walletWithDrawalService = walletWithDrawalService;
         _brandService = brandService;
+        _redisCache = redisCache;
     }
 
     #region coingPay
@@ -124,8 +127,7 @@ public class CoinPayService : BaseService, ICoinPayService
         }
         else
         {
-            var membershipResult =
-                await _inventoryServiceAdapter.GetProductById(productIds.First(), brandId);
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(productIds.First(), brandId);
             var productResult = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
             firstProductCategory = productResult!.Data.PaymentGroup;
         }
@@ -133,7 +135,10 @@ public class CoinPayService : BaseService, ICoinPayService
         switch (firstProductCategory)
         {
             case 1: return ProductType.Membership;
-            case 2: return ProductType.EcoPool;
+            case 2:
+            case 7:
+            case 8:
+                return ProductType.EcoPool;
             case 11: return ProductType.RecyCoin;
             default:
                 return ProductType.Course;
@@ -181,14 +186,15 @@ public class CoinPayService : BaseService, ICoinPayService
 
         _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | products: {products.ToJsonString()}");
 
-        var isExists =
-            await _invoiceRepository.InvoiceExistsByReceiptNumber(transactionResult.IdTransaction,
-                transactionResult.BrandId);
+        var isExists = await _invoiceRepository.InvoiceExistsByReceiptNumber(transactionResult.IdTransaction, transactionResult.BrandId);
         if (isExists)
             return;
 
         var productType = await GetProductType(products,transactionResult.BrandId);
-
+        
+        await RemoveCacheKey(walletRequest.AffiliateId, CacheKeys.BalanceInformationModel2);
+        await RemoveCacheKey(walletRequest.AffiliateId, CacheKeys.BalanceInformationModel1A);
+        await RemoveCacheKey(walletRequest.AffiliateId, CacheKeys.BalanceInformationModel1B);
         switch (productType)
         {
             case ProductType.Membership:
@@ -663,6 +669,13 @@ public class CoinPayService : BaseService, ICoinPayService
 
         return false;
     }
+    private async Task RemoveCacheKey(int affiliateId, string stringKey)
+    {
+        var key = string.Format(stringKey, affiliateId);
+        var existsKey = await _redisCache.KeyExists(key);
 
+        if (existsKey)
+            await _redisCache.Delete(key);
+    }
     #endregion
 }
