@@ -22,6 +22,9 @@ public class CoinPaymentTransactionRepository : BaseRepository, ICoinPaymentTran
         => Context.PaymentTransaction.FirstOrDefaultAsync(e =>
             e.IdTransaction == idTransaction && e.BrandId == brandId);
 
+    public Task<PaymentTransaction?> GetTransactionByTxnId(string idTransaction)
+        => Context.PaymentTransaction.FirstOrDefaultAsync(e =>
+            e.IdTransaction == idTransaction);
     public async Task<PaymentTransaction?> CreateCoinPaymentTransaction(PaymentTransaction request)
     {
         var today = DateTime.Now;

@@ -30,12 +30,13 @@ public class InvoiceService : BaseService, IInvoiceService
     private readonly IEcosystemPdfService              _ecosystemPdfService;
     private readonly RedisCache                       _redisCache; 
     private readonly IBrandService                    _brandService;
+    private readonly IRecyCoinPdfService              _recyCoinPdfService;
     public InvoiceService(IMapper         mapper, IInvoiceRepository invoiceRepository,
         ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
         ILogger<InvoiceService>           logger,                  IAccountServiceAdapter   accountServiceAdapter,
         IBrevoEmailService                brevoEmailService,       IWalletModel1ARepository walletModel1ARepository,
         IWalletModel1BRepository          walletModel1BRepository, IWalletRepository        walletRepository, 
-        IEcosystemPdfService ecosystemPdfService,RedisCache redisCache,IBrandService brandService) : base(mapper)
+        IEcosystemPdfService ecosystemPdfService,RedisCache redisCache,IBrandService brandService,IRecyCoinPdfService recyCoinPdfService) : base(mapper)
     {
         _invoiceRepository                = invoiceRepository;
         _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
@@ -45,9 +46,10 @@ public class InvoiceService : BaseService, IInvoiceService
         _walletModel1ARepository          = walletModel1ARepository;
         _walletModel1BRepository          = walletModel1BRepository;
         _walletRepository                 = walletRepository;
-        _ecosystemPdfService               = ecosystemPdfService;
+        _ecosystemPdfService              = ecosystemPdfService;
         _redisCache                       = redisCache;
         _brandService                     = brandService;
+        _recyCoinPdfService               = recyCoinPdfService;
     }
 
     public async Task<IEnumerable<InvoiceDto>> GetAllInvoiceUserAsync(int id)
@@ -311,9 +313,17 @@ public class InvoiceService : BaseService, IInvoiceService
     
         if (user is null)
             return Array.Empty<byte>();
-    
-        var generatedInvoice = await _ecosystemPdfService.RegenerateInvoice(user,invoice);
 
+        var generatedInvoice = Array.Empty<byte>();
+        if (Constants.Ecosystem == _brandService.BrandId)
+        {
+            generatedInvoice = await _ecosystemPdfService.RegenerateInvoice(user,invoice);
+        }
+        else if(Constants.RecyCoin == _brandService.BrandId)
+        {
+            generatedInvoice = await _recyCoinPdfService.RegenerateInvoice(user,invoice);
+        }
+        
         return generatedInvoice;
     }
     
@@ -327,9 +337,16 @@ public class InvoiceService : BaseService, IInvoiceService
     
         if (user is null)
             return Array.Empty<byte>();
-    
-        var generatedInvoice = await _ecosystemPdfService.RegenerateInvoice(user,invoice);
-
+        
+        var generatedInvoice = Array.Empty<byte>();
+        if (Constants.Ecosystem == _brandService.BrandId)
+        {
+            generatedInvoice = await _ecosystemPdfService.RegenerateInvoice(user,invoice);
+        }
+        else if(Constants.RecyCoin == _brandService.BrandId)
+        {
+            generatedInvoice = await _recyCoinPdfService.RegenerateInvoice(user,invoice);
+        }
         return generatedInvoice;
     }
     
