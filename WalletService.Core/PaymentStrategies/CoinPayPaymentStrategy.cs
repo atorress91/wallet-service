@@ -5,6 +5,7 @@ using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Constants;
 using WalletService.Models.Enums;
+using WalletService.Models.Requests.BonusRequest;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
 using WalletService.Utility.Extensions;
@@ -21,10 +22,12 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
     private readonly IBrevoEmailService _brevoEmailService;
     private readonly IWalletRepository _walletRepository;
     private readonly IRecyCoinPdfService _recyCoinPdfService;
+    private readonly IBonusRepository _bonusRepository;
     public CoinPayPaymentStrategy(IInvoiceRepository invoiceRepository,
         IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter accountServiceAdapter, IBrevoEmailService brevoEmailService,
-        IEcosystemPdfService ecosystemPdfService, IWalletRepository walletRepository,IRecyCoinPdfService recyCoinPdfService)
+        IEcosystemPdfService ecosystemPdfService, IWalletRepository walletRepository,IRecyCoinPdfService recyCoinPdfService,
+        IBonusRepository bonusRepository)
     {
         _invoiceRepository = invoiceRepository;
         _inventoryServiceAdapter = inventoryServiceAdapter;
@@ -33,6 +36,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         _ecosystemPdfService = ecosystemPdfService;
         _walletRepository = walletRepository;
         _recyCoinPdfService = recyCoinPdfService;
+        _bonusRepository = bonusRepository;
     }
 
     private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
@@ -542,6 +546,17 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         if (spResponse is null)
             return false;
 
+        if (request.BrandId == Constants.RecyCoin)
+        { 
+            await _bonusRepository.CreateBonus(new BonusRequest
+            {
+                AffiliateId = request.AffiliateId,
+                Amount = (debitTransactionRequest.Debit / 2),
+                InvoiceId = spResponse.Id,
+                Comment = "Bonus for Recycoin"
+            });
+        }
+        
         var invoicePdf = await _recyCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
         
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>

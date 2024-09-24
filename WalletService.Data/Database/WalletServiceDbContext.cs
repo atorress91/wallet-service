@@ -50,6 +50,7 @@ public class WalletServiceDbContext : DbContext
     public virtual DbSet<WalletsServiceModel1B> WalletsServiceModel1B { get; set; }
     public virtual DbSet<WalletsServiceModel2> WalletsServiceModel2 { get; set; }
     public virtual DbSet<Brand> Brand { get; set; }
+    public virtual DbSet<Bonuses> Bonuses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -952,6 +953,19 @@ public class WalletServiceDbContext : DbContext
             entity.Property(e => e.UpdatedAt).IsRequired().HasColumnType("datetime");
             entity.Property(e => e.DeletedAt).HasColumnType("datetime");
 
+            entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
+        });
+
+        modelBuilder.Entity<Bonuses>(entity =>
+        {
+            entity.HasKey(e   => e.BonusId);
+            entity.Property(e => e.AffiliateId).IsRequired().HasColumnType("int");
+            entity.Property(e => e.CurrentAmount).IsRequired().HasColumnType("decimal(18,8)");
+            entity.Property(e => e.Status).HasColumnType("bit");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).IsRequired().HasColumnType("datetime");
+            entity.Property(e => e.DeletedAt).HasColumnType("datetime");
+            
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
     }

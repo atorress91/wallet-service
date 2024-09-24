@@ -137,6 +137,7 @@ public static class IocExtensionWorker
         services.AddScoped<IWalletModel1ARepository, WalletModel1ARepository>();
         services.AddScoped<IWalletModel1BRepository, WalletModel1BRepository>();
         services.AddScoped<IBrandRepository, BrandRepository>();
+        services.AddScoped<IBonusRepository, BonusRepository>();
     }
 
     private static void InjectAdapters(IServiceCollection services)
