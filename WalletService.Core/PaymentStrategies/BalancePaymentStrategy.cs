@@ -6,6 +6,7 @@ using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Constants;
 using WalletService.Models.DTO.BalanceInformationDto;
 using WalletService.Models.Enums;
+using WalletService.Models.Requests.BonusRequest;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
 using WalletService.Utility.Extensions;
@@ -23,29 +24,34 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
     private readonly IWalletRequestRepository _walletRequestRepository;
     private readonly RedisCache               _redisCache;
     private readonly IBrandService            _brandService;
-
+    private readonly IRecyCoinPdfService      _recyCoinPdfService;
+    private readonly IBonusRepository         _bonusRepository;
     public BalancePaymentStrategy(IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter                             accountServiceAdapter, IWalletRepository walletRepository,
         IEcosystemPdfService                                ecosystemPdfService,
         IBrevoEmailService                                 brevoEmailService, IWalletRequestRepository walletRequestRepository,
-        RedisCache                                         redisCache,IBrandService brandService)
+        RedisCache                                         redisCache,IBrandService brandService,
+        IRecyCoinPdfService                                recyCoinPdfService,
+        IBonusRepository bonusRepository)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter   = accountServiceAdapter;
         _walletRepository        = walletRepository;
         _brevoEmailService       = brevoEmailService;
-        _ecosystemPdfService      = ecosystemPdfService;
+        _ecosystemPdfService     = ecosystemPdfService;
         _walletRequestRepository = walletRequestRepository;
         _redisCache              = redisCache;
         _brandService            = brandService;
+        _recyCoinPdfService      = recyCoinPdfService;
+        _bonusRepository         = bonusRepository;
     }
 
-    private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId)
+    private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId,int brandId)
     {
-        var amountRequests    = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId,_brandService.BrandId);
-        var availableBalance  = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId,_brandService.BrandId);
-        var reverseBalance    = await _walletRepository.GetReverseBalanceByAffiliateId(affiliateId,_brandService.BrandId);
-        var totalAcquisitions = await _walletRepository.GetTotalAcquisitionsByAffiliateId(affiliateId,_brandService.BrandId);
+        var amountRequests    = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId, brandId);
+        var availableBalance  = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId,brandId);
+        var reverseBalance    = await _walletRepository.GetReverseBalanceByAffiliateId(affiliateId,brandId);
+        var totalAcquisitions = await _walletRepository.GetTotalAcquisitionsByAffiliateId(affiliateId,brandId);
 
         var response = new BalanceInformationDto
         {
@@ -77,10 +83,10 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
-        var balanceInfo      = await GetBalanceInformationByAffiliateId(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,request.BrandId);
+        var balanceInfo      = await GetBalanceInformationByAffiliateId(request.AffiliateId,request.BrandId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,request.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -93,11 +99,11 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (result?.Data.Count == Constants.EmptyValue)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
-            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,_brandService.BrandId);
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,request.BrandId);
 
             var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
-            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,_brandService.BrandId);
+            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,request.BrandId);
 
             result.Data.Add(productResponse!.Data);
         }
@@ -143,6 +149,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
                 ProductStart          = Constants.EmptyValue,
+                BrandId               = request.BrandId, 
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -176,7 +183,8 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
-            Reason            = string.Empty         
+            Reason            = string.Empty,
+            BrandId           = request.BrandId, 
         };
 
         var spResponse = await _walletRepository.DebitTransaction(debitTransactionRequest);
@@ -184,13 +192,31 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
         
+        if (request.BrandId == Constants.RecyCoin)
+        { 
+            await _bonusRepository.CreateBonus(new BonusRequest
+            {
+                AffiliateId = request.AffiliateId,
+                Amount = (debitTransactionRequest.Debit / 2),
+                InvoiceId = spResponse.Id,
+                Comment = "Bonus for Recycoin"
+            });
+        }
+        
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1A);
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
-        
-        var invoicePdf =
-            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
+        byte[] invoicePdf;
+        if (request.BrandId == Constants.RecyCoin)
+        {
+            invoicePdf = await _recyCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        }
+        else
+        {
+            invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        }
+        
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
@@ -219,9 +245,9 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,request.BrandId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,request.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -234,11 +260,11 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (result?.Data.Count == Constants.EmptyValue)
         {
             var firstProductId   = request.ProductsList.First().IdProduct;
-            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,_brandService.BrandId);
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,request.BrandId);
 
             var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
-            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,_brandService.BrandId);
+            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,request.BrandId);
 
             result.Data.Add(productResponse!.Data);
         }
@@ -284,6 +310,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
                 ProductStart          = Constants.EmptyValue,
+                BrandId               = request.BrandId
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -314,7 +341,8 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
-            Reason            = string.Empty    
+            Reason            = string.Empty,
+            BrandId           = request.BrandId
         };
 
         var spResponse = await _walletRepository.AdminDebitTransaction(debitTransactionRequest);
@@ -324,8 +352,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
 
-        var invoicePdf =
-            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        var invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
@@ -353,10 +380,10 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
-        var balanceInfo      = await GetBalanceInformationByAffiliateId(request.AffiliateId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,request.BrandId);
+        var balanceInfo      = await GetBalanceInformationByAffiliateId(request.AffiliateId, request.BrandId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,request.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -405,6 +432,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
                 ProductStart          = Constants.EmptyValue,
+                BrandId               = request.BrandId 
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -438,7 +466,8 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
-            Reason            = string.Empty    
+            Reason            = string.Empty ,
+            BrandId           = request.BrandId,
         };
 
         var spResponse = await _walletRepository.CoursesDebitTransaction(debitTransactionRequest);
@@ -472,9 +501,9 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,request.BrandId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
-        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
+        var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,request.BrandId);
 
         if (!responseList.IsSuccessful)
             return false;
@@ -526,6 +555,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
                 ProductStart          = Constants.EmptyValue,
+                BrandId               = request.BrandId
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -556,7 +586,8 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
-            Reason            = string.Empty    
+            Reason            = string.Empty ,
+            BrandId           = request.BrandId,
         };
 
         var spResponse = await _walletRepository.AdminDebitTransaction(debitTransactionRequest);
@@ -566,8 +597,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
 
-        var invoicePdf =
-            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        var invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
         {
@@ -590,12 +620,12 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails       = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse     = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,_brandService.BrandId);
-        var balanceInfo          = await GetBalanceInformationByAffiliateId(request.AffiliateId);
-        var affiliateBonusWinner = await _accountServiceAdapter.GetUserInfo(userInfoResponse!.Father,_brandService.BrandId);
+        var userInfoResponse     = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,request.BrandId);
+        var balanceInfo          = await GetBalanceInformationByAffiliateId(request.AffiliateId, request.BrandId);
+        var affiliateBonusWinner = await _accountServiceAdapter.GetUserInfo(userInfoResponse!.Father,request.BrandId);
 
         var firstProductId   = request.ProductsList.First().IdProduct;
-        var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,_brandService.BrandId);
+        var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId,request.BrandId);
 
         var productResponse = membershipResult.Content!.ToJsonObject<ProductResponse>();
 
@@ -636,6 +666,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.EmptyValue,
                 ProductStart          = Constants.EmptyValue,
+                BrandId               = request.BrandId 
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -669,7 +700,8 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Type              = Constants.EmptyValue,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
-            Reason            = string.Empty    
+            Reason            = string.Empty,
+            BrandId           = request.BrandId 
         };
 
         var spResponse = await _walletRepository.MembershipDebitTransaction(debitTransactionRequest);
@@ -700,8 +732,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         await RemoveCacheKey(affiliateBonusWinner.Id, CacheKeys.BalanceInformationModel2);
 
         await _brevoEmailService.SendBonusConfirmation(affiliateBonusWinner, request.AffiliateUserName,request.BrandId);
-        var pdfResult =
-            await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
+        var pdfResult = await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
         await _brevoEmailService.SendEmailWelcome(userInfoResponse, spResponse,request.BrandId);
 
         if (pdfResult.Length != Constants.EmptyValue)
@@ -713,7 +744,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
     }
     private async Task RemoveCacheKey(int affiliateId, string stringKey)
     {
-        var key       = string.Format(stringKey, affiliateId);
+        var key      = string.Format(stringKey, affiliateId);
         var existsKey = await _redisCache.KeyExists(key);
         
         if (existsKey)

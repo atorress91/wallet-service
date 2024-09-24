@@ -31,6 +31,7 @@ public class WalletService : BaseService, IWalletService
     private readonly RedisCache                    _redisCache;
     private readonly IBalancePaymentStrategyModel2 _balancePaymentStrategyModel2;
     private readonly IBrandService                 _brandService;
+    private readonly IBonusRepository              _bonusRepository;
     public WalletService(
         IMapper                       mapper,
         IWalletRepository             walletRepository,
@@ -41,7 +42,7 @@ public class WalletService : BaseService, IWalletService
         INetworkPurchaseRepository    networkPurchaseRepository, IBalancePaymentStrategy balancePaymentStrategy,
         IBalancePaymentStrategyModel2 balancePaymentStrategyModel2,
         RedisCache                    redisCache,
-        IBrandService brandService) :
+        IBrandService brandService, IBonusRepository bonusRepository) :
         base(mapper)
     {
         _walletRepository             = walletRepository;
@@ -54,9 +55,9 @@ public class WalletService : BaseService, IWalletService
         _balancePaymentStrategyModel2 = balancePaymentStrategyModel2;
         _redisCache                   = redisCache;
         _brandService                 = brandService;
+        _bonusRepository              = bonusRepository;
     }
-
-
+    
     #region wallets
 
     public async Task<IEnumerable<WalletDto>> GetAllWallets()
@@ -121,6 +122,7 @@ public class WalletService : BaseService, IWalletService
             var totalAcquisitions    = await _walletRepository.GetTotalAcquisitionsByAffiliateId(affiliateId, _brandService.BrandId);
             var totalCommissionsPaid = await _walletRepository.GetTotalCommissionsPaid(affiliateId, _brandService.BrandId);
             var totalServiceBalance  = await _walletRepository.GetTotalServiceBalance(affiliateId, _brandService.BrandId);
+            var bonusAmount           = await _bonusRepository.GetBonusAmountByAffiliateId(affiliateId);
 
             response = new BalanceInformationDto
             {
@@ -128,7 +130,8 @@ public class WalletService : BaseService, IWalletService
                 ReverseBalance       = reverseBalance ?? 0,
                 TotalAcquisitions    = Math.Round(totalAcquisitions ?? 0, 2),
                 TotalCommissionsPaid = totalCommissionsPaid ?? 0,
-                ServiceBalance       = totalServiceBalance ?? 0
+                ServiceBalance       = totalServiceBalance ?? 0,
+                BonusAmount          = bonusAmount,
             };
 
             if (amountRequests != 0m || response.ReverseBalance != 0m)
@@ -179,6 +182,7 @@ public class WalletService : BaseService, IWalletService
         if (request.ProductsList.Count == 0)
             return false;
 
+        request.BrandId = _brandService.BrandId; 
         var response = await _balancePaymentStrategy.ExecuteEcoPoolPayment(request);
 
         return response;
@@ -582,7 +586,8 @@ public class WalletService : BaseService, IWalletService
             Credit            = request.Amount,
             AffiliateUserName = user.UserName,
             ConceptType       = WalletConceptType.balance_transfer.ToString(),
-            UserId            = Constants.AdminUserId
+            UserId            = Constants.AdminUserId,
+            BrandId           = _brandService.BrandId,
         };
 
         var result = await _walletRepository.CreditTransaction(credit);

@@ -10,4 +10,5 @@ public class BalanceInformationDto
 
     public double? TotalCommissionsPaid { get; set; }
     public decimal? ServiceBalance { get; set; }
+    public decimal BonusAmount { get; set; }
 }
