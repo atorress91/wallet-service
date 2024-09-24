@@ -599,7 +599,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         cmd.Parameters.Add(new SqlParameter("@InvoicesDetails", SqlDbType.Structured)
         {
             Value = dataTableDetails,
-            TypeName = "dbo.InvoicesDetailsType"
+            TypeName = "dbo.InvoicesDetailsTypeWithBrand"
         });
         
         cmd.Parameters.Add(new SqlParameter("@Reason", SqlDbType.VarChar)
@@ -840,6 +840,11 @@ public class WalletRepository : BaseRepository, IWalletRepository
         {
             Value = request.ConceptType,
             Size = 50
+        });
+
+        cmd.Parameters.Add(new SqlParameter("@BrandId", SqlDbType.Int)
+        {
+          Value = request.BrandId
         });
     }
 
