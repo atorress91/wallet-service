@@ -201,6 +201,11 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 InvoiceId = spResponse.Id,
                 Comment = "Bonus for Recycoin"
             });
+            await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
+            {
+                AffiliateId = request.AffiliateId, InvoiceAmount = debitTransactionRequest.Debit,
+                BrandId = request.BrandId
+            });
         }
         
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
@@ -211,6 +216,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (request.BrandId == Constants.RecyCoin)
         {
             invoicePdf = await _recyCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+          
         }
         else
         {

@@ -54,4 +54,5 @@ public interface IWalletRepository
     Task<InvoicesSpResponse?> DebitServiceBalanceEcoPoolTransactionSp(DebitTransactionRequest request);
 
     Task<bool> CreditServiceBalanceTransaction(CreditTransactionRequest request);
+    Task<bool> DistributeCommissionsPerPurchaseAsync(DistributeCommissionsRequest request);
 }
