@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -21,13 +22,14 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
     private readonly IEcosystemPdfService _ecosystemPdfService;
     private readonly IBrevoEmailService _brevoEmailService;
     private readonly IWalletRepository _walletRepository;
+    private readonly RedisCache               _redisCache;
     private readonly IRecyCoinPdfService _recyCoinPdfService;
     private readonly IBonusRepository _bonusRepository;
     public CoinPayPaymentStrategy(IInvoiceRepository invoiceRepository,
         IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter accountServiceAdapter, IBrevoEmailService brevoEmailService,
         IEcosystemPdfService ecosystemPdfService, IWalletRepository walletRepository,IRecyCoinPdfService recyCoinPdfService,
-        IBonusRepository bonusRepository)
+        IBonusRepository bonusRepository, RedisCache                                         redisCache)
     {
         _invoiceRepository = invoiceRepository;
         _inventoryServiceAdapter = inventoryServiceAdapter;
@@ -37,6 +39,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         _walletRepository = walletRepository;
         _recyCoinPdfService = recyCoinPdfService;
         _bonusRepository = bonusRepository;
+        _redisCache = redisCache;
     }
 
     private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
@@ -548,15 +551,11 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
         if (request.BrandId == Constants.RecyCoin)
         { 
-            await _bonusRepository.CreateBonus(new BonusRequest
-            {
-                AffiliateId = request.AffiliateId,
-                Amount = (debitTransactionRequest.Debit / 2),
-                InvoiceId = spResponse.Id,
-                Comment = "Bonus for Recycoin"
-            });
+            await _bonusRepository.CreateBonus(new BonusRequest { AffiliateId = request.AffiliateId, Amount = (debitTransactionRequest.Debit / 2), InvoiceId = spResponse.Id, Comment = "Bonus for Recycoin" });
+            await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest { AffiliateId = request.AffiliateId, InvoiceAmount = debitTransactionRequest.Debit, BrandId = request.BrandId });
         }
         
+        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
         var invoicePdf = await _recyCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
         
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
@@ -570,5 +569,13 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         }
 
         return true;
+    }
+    private async Task RemoveCacheKey(int affiliateId, string stringKey)
+    {
+        var key      = string.Format(stringKey, affiliateId);
+        var existsKey = await _redisCache.KeyExists(key);
+        
+        if (existsKey)
+            await _redisCache.Delete(key);
     }
 }

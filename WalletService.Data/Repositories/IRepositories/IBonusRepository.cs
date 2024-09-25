@@ -5,6 +5,6 @@ namespace WalletService.Data.Repositories.IRepositories;
 
 public interface IBonusRepository
 {
-    Task<Bonuses?> CreateBonus(BonusRequest request);
+    Task<int> CreateBonus(BonusRequest request);
     Task<decimal> GetBonusAmountByAffiliateId(int affiliateId);
 }

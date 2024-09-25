@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WalletService.Data.Database;
-using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Requests.BonusRequest;
 
@@ -12,17 +11,14 @@ public class BonusRepository : BaseRepository, IBonusRepository
     {
     }
 
-    public async Task<Bonuses?> CreateBonus(BonusRequest request)
+    public async Task<int> CreateBonus(BonusRequest request)
     {
-        var result = await Context.Set<Bonuses>()
-            .FromSqlInterpolated(
-                $"EXEC ManageBonus @InvoiceId = {request.InvoiceId}, @AffiliateId = {request.AffiliateId}, @Amount = {request.Amount}, @Comment = {request.Comment}")
-            .AsNoTracking()
-            .FirstOrDefaultAsync();
+        var result = await Context.Database.ExecuteSqlInterpolatedAsync(
+            $"EXEC ManageBonus @InvoiceId = {request.InvoiceId}, @AffiliateId = {request.AffiliateId}, @Amount = {request.Amount}, @Comment = {request.Comment}");
 
-        return result;
+        return result; 
     }
-
+    
     public async Task<decimal> GetBonusAmountByAffiliateId(int affiliateId)
     {
         var amount = await Context.Bonuses

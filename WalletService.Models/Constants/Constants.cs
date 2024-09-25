@@ -81,6 +81,7 @@ public static class Constants
     public const int    ChildrenLimitModel6                   = 3;
     public const int    LevelsLimitModel6                     = 10;
     public const string GetAllDetailsModelOneAndTwo           = "dbo.GetAllDetailsModelOneAndTwo";
+    public const string DistributeCommissionsPerPurchase      = "dbo.DistributeCommissionsPerPurchase";
     //Models
     public static int[] CustomerModel4Scope = { 1, 2, 3};
     public const int CustomerModel5Scope    = 4;
