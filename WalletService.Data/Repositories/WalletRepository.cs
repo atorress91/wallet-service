@@ -1119,8 +1119,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         }
     }
 
-    public Task TransactionPoints(
-        int affiliateId, decimal debitLeft, decimal debitRight, decimal creditLeft, decimal creditRight)
+    public Task TransactionPoints(int affiliateId, decimal debitLeft, decimal debitRight, decimal creditLeft, decimal creditRight) 
     {
         // return Task.CompletedTask;
         var debit = new ModelFourStatistics()
@@ -1189,7 +1188,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     }
     
     
-        private void CreateDebitServiceBalanceListParameters(DebitTransactionRequest request, DataTable dataTableDetails, SqlCommand cmd)
+    private void CreateDebitServiceBalanceListParameters(DebitTransactionRequest request, DataTable dataTableDetails, SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
         cmd.Parameters.Add(new SqlParameter("@AffiliateId", SqlDbType.Int)
@@ -1263,5 +1262,41 @@ public class WalletRepository : BaseRepository, IWalletRepository
             TypeName = "dbo.InvoicesDetailsType"
         });
     }
+        
+    public async Task<bool> DistributeCommissionsPerPurchaseAsync(DistributeCommissionsRequest request)
+    {
+        try
+        {
+            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
 
+            await using var cmd = new SqlCommand(Constants.DistributeCommissionsPerPurchase, sqlConnection);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            cmd.Parameters.Add(new SqlParameter("@AffiliateId", SqlDbType.Int)
+            {
+                Value = request.AffiliateId
+            });
+
+            cmd.Parameters.Add(new SqlParameter("@InvoiceAmount", SqlDbType.Decimal)
+            {
+                Value = request.InvoiceAmount
+            });
+
+            cmd.Parameters.Add(new SqlParameter("@BrandId", SqlDbType.Int)
+            {
+                Value = request.BrandId
+            });
+
+            await sqlConnection.OpenAsync();
+            await cmd.ExecuteNonQueryAsync();
+            await sqlConnection.CloseAsync();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return false;
+        }
+    }    
 }
