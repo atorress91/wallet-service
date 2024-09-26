@@ -8,20 +8,12 @@ namespace WalletService.Data.Adapters;
 public abstract class BaseAdapter
 {
     protected readonly ApplicationConfiguration AppSettings;
-    private readonly   IHttpClientFactory       HttpClientFactory;
 
-    protected BaseAdapter(
-        IOptions<ApplicationConfiguration> appSettings,
-        IHttpClientFactory                 httpClientFactory, HttpClient httpClient)
+    protected BaseAdapter(IOptions<ApplicationConfiguration> appSettings)
     {
         AppSettings       = appSettings.Value;
-        HttpClientFactory = httpClientFactory;
     }
-    protected BaseAdapter()
-    {
-        throw new NotImplementedException();
-    }
-
+    
     protected abstract string? GetServiceUrl();
 
     protected abstract string? GetTokenUrl();
@@ -31,7 +23,7 @@ public abstract class BaseAdapter
     protected async Task<baseResponse.IRestResponse> Get(string path, Dictionary<string, string>? queryParams, int brandId)
     {
         var client  = new RestClient(GetServiceUrl()!);
-        var request = new RestRequest(path, Method.Get);
+        var request = new RestRequest(path);
         request.AddHeader("Accept", "application/json");
         request.AddHeader("Authorization", GetTokenUrl()!);
         request.AddHeader("X-Client-Id",GetWebToken(brandId)!);
