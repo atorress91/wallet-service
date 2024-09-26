@@ -1298,5 +1298,9 @@ public class WalletRepository : BaseRepository, IWalletRepository
             Console.WriteLine(e);
             return false;
         }
-    }    
+    }
+    public async Task<decimal> GetTotalCommissionsPaid(int brandId)
+    => await Context.Wallets
+            .Where(x => x.BrandId == brandId && x.ConceptType == WalletConceptType.commission_passed_wallet.ToString() && x.Status == true)
+            .SumAsync(x => (decimal)x.Credit);
 }

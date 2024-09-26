@@ -363,4 +363,9 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
 
         return invoiceDetailsList;
     }
+    
+    public async Task<decimal> GetTotalRecyCoinSold()
+    => await Context.InvoicesDetails.Where(x
+            => !x.Invoice.CancellationDate.HasValue && x.Invoice.Status && x.PaymentGroupId == Constants.RecyCoinPaymentGroup)
+        .SumAsync(x=>x.BaseAmount ?? 0);
 }
