@@ -13,9 +13,7 @@ namespace WalletService.Data.Adapters;
 public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
 {
     public AccountServiceAdapter(
-        IOptions<ApplicationConfiguration> appSettings,
-        IHttpClientFactory                 httpClientFactory,
-        HttpClient                         httpClient) : base(appSettings, httpClientFactory, httpClient) { }
+        IOptions<ApplicationConfiguration> appSettings) : base(appSettings) { }
 
     protected override string? GetServiceUrl()
         => AppSettings.Endpoints?.AccountServiceURL;

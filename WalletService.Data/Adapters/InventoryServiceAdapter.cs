@@ -9,9 +9,7 @@ namespace WalletService.Data.Adapters;
 public class InventoryServiceAdapter : BaseAdapter, IInventoryServiceAdapter
 {
     public InventoryServiceAdapter(
-        IOptions<ApplicationConfiguration> appSettings,
-        IHttpClientFactory                 httpClientFactory,
-        HttpClient                         httpClient) : base(appSettings, httpClientFactory, httpClient) { }
+        IOptions<ApplicationConfiguration> appSettings) : base(appSettings) { }
 
     protected override string? GetServiceUrl()
         => AppSettings.Endpoints!.InventoryServiceURL;

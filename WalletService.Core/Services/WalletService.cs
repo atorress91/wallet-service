@@ -154,11 +154,11 @@ public class WalletService : BaseService, IWalletService
         var response           = responseAffiliates.Content!.ToJsonObject<GetTotalActiveMembersResponse>();
 
         var enabledAffiliates     = response!.Data;
-        var walletProfit          = await _walletRepository.GetAvailableBalanceAdmin(_brandService.BrandId);
-        var amountRequests        = await _walletRequestRepository.GetTotalWalletRequestAmount(_brandService.BrandId);
+        var walletProfit         = await _walletRepository.GetAvailableBalanceAdmin(_brandService.BrandId);
+        var amountRequests       = await _walletRequestRepository.GetTotalWalletRequestAmount(_brandService.BrandId);
         var reverseBalance       = await _walletRepository.GetTotalReverseBalance(_brandService.BrandId);
-        var paidCommissions       = 0m;
-        var calculatedCommissions = 0m;
+        var paidCommissions      = await _walletRepository.GetTotalCommissionsPaid(_brandService.BrandId);  
+        var calculatedCommissions = _brandService.BrandId == 2 ? await _invoiceRepository.GetTotalRecyCoinSold() : 0m;
 
         var information = new BalanceInformationAdminDto
         {

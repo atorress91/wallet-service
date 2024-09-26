@@ -8,9 +8,7 @@ namespace WalletService.Data.Adapters;
 public class ConfigurationAdapter : BaseAdapter, IConfigurationAdapter
 {
     public ConfigurationAdapter(
-        IOptions<ApplicationConfiguration> appSettings,
-        IHttpClientFactory                 httpClientFactory,
-        HttpClient                         httpClient) : base(appSettings, httpClientFactory, httpClient) { }
+        IOptions<ApplicationConfiguration> appSettings) : base(appSettings) { }
 
     protected override string? GetServiceUrl()
         => AppSettings.Endpoints!.SystemConfigurationURL;

@@ -24,4 +24,5 @@ public interface IInvoiceRepository
     Task<List<InvoicesTradingAcademyResponse>?> GetAllInvoicesForTradingAcademyPurchases();
     Task<List<InvoiceModelOneAndTwoResponse>?>  GetAllInvoicesModelOneAndTwo();
     Task<int> CountDetailsModel3ByPaymentGroup(int userId, int brandId);
+    Task<decimal> GetTotalRecyCoinSold();
 }

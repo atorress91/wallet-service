@@ -89,6 +89,7 @@ public static class Constants
 
     public const int Ecosystem                      = 1;
     public const int RecyCoin                       = 2;
+    public const int RecyCoinPaymentGroup           = 11;
     public const string EcosystemSenderName         = "Ecosystem Sharing Evolution";
     public const string RecyCoinSenderName          = "RecyCoin";
     public const string SubjectInvitationForAcademy = "Invitación al curso de trading";
