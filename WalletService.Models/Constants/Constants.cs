@@ -9,6 +9,7 @@ public static class Constants
     public const string SubjectConfirmAffiliation             = "Membresía activa";
     public const string RevertEcoPoolConcept                  = "Devolucion Pool Adquisitivo";
     public const string AdminEcosystemUserName                = "adminecosystem";
+    public const string RecycoinAdmin                         = "adminrecycoin";
     public const int    AdminUserId                           = 1;
     public const string AdminCredit                           = "Crédito Administrativo";
     public const string HandleDebitTransactionCourse          = "dbo.HandleDebit_Transation_For_Courses_SP";

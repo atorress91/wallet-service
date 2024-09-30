@@ -1,4 +1,5 @@
 using QuestPDF.Infrastructure;
+using WalletService.Core.BackgroundServices;
 using WalletService.Core.Middlewares;
 using WalletService.Ioc;
 
@@ -11,6 +12,7 @@ builder.Services.IocAppInjectDependencies();
 QuestPDF.Settings.License = LicenseType.Community;
 
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHostedService<RedisCacheCleanupBackgroundService>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
