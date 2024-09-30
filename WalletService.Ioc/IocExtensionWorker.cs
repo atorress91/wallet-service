@@ -172,6 +172,7 @@ public static class IocExtensionWorker
         services.AddScoped<IUserStatisticsService, UserStatisticsService>();
         services.AddScoped<IBrandService, BrandService>();
         services.AddScoped<IRecyCoinPdfService, RecyCoinPdfService>();
+        services.AddScoped<IRedisCacheCleanupService, RedisCacheCleanupService>();
     }
 
     private static void InjectPackages(IServiceCollection services)

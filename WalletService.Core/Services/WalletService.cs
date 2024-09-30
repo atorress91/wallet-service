@@ -340,7 +340,7 @@ public class WalletService : BaseService, IWalletService
         var userInfo     = await _accountServiceAdapter.GetAffiliateByUserName(data.ToUserName,_brandService.BrandId);
         var isActivePool = await _walletRepository.IsActivePoolGreaterThanOrEqualTo25(data.FromAffiliateId,_brandService.BrandId);
 
-        if (!isActivePool)
+        if (!isActivePool && _brandService.BrandId == 1)
             return new ServicesResponse { Success = false, Message = "No tiene un Pool activo", Code = 400 };
 
         if (!userInfo.IsSuccessful)
@@ -371,7 +371,7 @@ public class WalletService : BaseService, IWalletService
             Deferred          = 0,
             Detail            = null,
             AffiliateId       = data.FromAffiliateId,
-            AdminUserName     = Constants.AdminEcosystemUserName,
+            AdminUserName     = _brandService.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
             Status            = true,
             UserId            = 1,
             Credit            = 0,
@@ -380,7 +380,8 @@ public class WalletService : BaseService, IWalletService
             Date              = today,
             Compression       = false,
             AffiliateUserName = data.FromUserName,
-            ConceptType       = WalletConceptType.balance_transfer
+            ConceptType       = WalletConceptType.balance_transfer,
+            BrandId           = _brandService.BrandId,  
         };
 
         var creditTransaction = new WalletTransactionRequest
@@ -389,7 +390,7 @@ public class WalletService : BaseService, IWalletService
             Deferred          = 0,
             Detail            = null,
             AffiliateId       = result.Data.Id,
-            AdminUserName     = Constants.AdminEcosystemUserName,
+            AdminUserName     = _brandService.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
             Status            = true,
             UserId            = 1,
             Credit            = amount,
@@ -398,7 +399,8 @@ public class WalletService : BaseService, IWalletService
             Date              = today,
             Compression       = false,
             AffiliateUserName = result.Data.UserName,
-            ConceptType       = WalletConceptType.balance_transfer
+            ConceptType       = WalletConceptType.balance_transfer,
+            BrandId           = _brandService.BrandId,  
         };
 
         var debitWallet  = Mapper.Map<Wallets>(debitTransaction);
