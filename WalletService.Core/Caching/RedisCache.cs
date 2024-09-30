@@ -4,12 +4,19 @@ using WalletService.Utility.Extensions;
 
 namespace WalletService.Core.Caching;
 
-public class RedisCache : ICache
+public class RedisCache : ICache, IDisposable
 {
     private readonly IDatabase _db;
+    private readonly IConnectionMultiplexer _connectionMultiplexer;
+    private bool _disposed;
 
     public RedisCache(IConnectionMultiplexer connectionMultiplexer)
-        => _db = connectionMultiplexer.GetDatabase();
+    {
+         _db = connectionMultiplexer.GetDatabase();
+         _connectionMultiplexer = connectionMultiplexer;
+         _disposed = false;
+    }
+     
 
     public async Task Set(string key, object? value, TimeSpan? timeOut = null, TimeSpan? slidingExpiration = null)
     {
@@ -72,4 +79,21 @@ public class RedisCache : ICache
 
     public Task<bool> KeyExists(string key)
         => _db.KeyExistsAsync(new RedisKey(key));
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+        if (disposing)
+        {
+            _connectionMultiplexer.Dispose();
+        }
+            
+        _disposed = true;
+    }
 }
