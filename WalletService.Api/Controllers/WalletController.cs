@@ -87,6 +87,14 @@ public class WalletController : BaseController
         return response is false ? Ok(Fail("The payment could not be processed")) : Ok(Success(response));
     }
     
+    [HttpPost("payWithMyBalanceForOthers")]
+    public async Task<IActionResult> PayWithMyBalanceForOthers([FromBody] WalletRequest request)
+    {
+        var response = await _walletService.PayWithMyBalanceForOthers(request);
+
+        return response is false ? Ok(Fail("The payment could not be processed")) : Ok(Success(response));
+    }
+    
     [HttpPost("payWithMyBalanceModel2")]
     public async Task<IActionResult> PayWithMyBalanceModel2([FromBody] WalletRequest request)
     {

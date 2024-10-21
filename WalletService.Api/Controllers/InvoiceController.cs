@@ -91,14 +91,13 @@ public class InvoiceController : BaseController
     public async Task<IActionResult> CreateInvoiceByReference([FromQuery] string reference)
     {
         var result = await _invoiceService.CreateInvoiceByReference(reference);
-        if (result.Length == 0)
-        {
+        if (result == null)
             return NotFound("The requested invoice could not be generated or does not exist.");
-        }
         
         Response.ContentType = "application/pdf";
         Response.Headers.ContentDisposition = $"attachment; filename=invoice_{reference}.pdf";
+        Response.Headers.Add("X-Brand-Id", result.BrandId.ToString());
 
-        return File(result, "application/pdf");
+        return File(result.PdfContent ?? throw new InvalidOperationException(), "application/pdf");
     }
 }
