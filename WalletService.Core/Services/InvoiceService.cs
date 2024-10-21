@@ -327,27 +327,36 @@ public class InvoiceService : BaseService, IInvoiceService
         return generatedInvoice;
     }
     
-    public async Task<byte[]> CreateInvoiceByReference(string reference)
+    public async Task<InvoiceResultDto?> CreateInvoiceByReference(string reference)
     {
-        var invoice = await _invoiceRepository.GetInvoiceByReceiptNumber(reference,_brandService.BrandId);
+        var invoice = await _invoiceRepository.GetInvoiceByReceiptNumber(reference, _brandService.BrandId);
         if (invoice is null)
-            return Array.Empty<byte>();
+            return null;
 
-        var user = await _accountServiceAdapter.GetUserInfo(invoice.AffiliateId,_brandService.BrandId);
-    
+        var user = await _accountServiceAdapter.GetUserInfo(invoice.AffiliateId, _brandService.BrandId);
+
         if (user is null)
-            return Array.Empty<byte>();
-        
-        var generatedInvoice = Array.Empty<byte>();
+            return null;
+    
+        byte[] generatedInvoice;
         if (Constants.Ecosystem == _brandService.BrandId)
         {
-            generatedInvoice = await _ecosystemPdfService.RegenerateInvoice(user,invoice);
+            generatedInvoice = await _ecosystemPdfService.RegenerateInvoice(user, invoice);
         }
         else if(Constants.RecyCoin == _brandService.BrandId)
         {
-            generatedInvoice = await _recyCoinPdfService.RegenerateInvoice(user,invoice);
+            generatedInvoice = await _recyCoinPdfService.RegenerateInvoice(user, invoice);
         }
-        return generatedInvoice;
+        else
+        {
+            return null;
+        }
+
+        return new InvoiceResultDto
+        {
+            PdfContent = generatedInvoice,
+            BrandId = _brandService.BrandId 
+        };
     }
     
     private async Task RemoveCacheKey(int affiliateId, string stringKey)

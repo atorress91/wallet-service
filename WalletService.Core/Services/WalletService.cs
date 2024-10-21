@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Newtonsoft.Json;
 using WalletService.Core.Caching;
+using WalletService.Core.PaymentStrategies;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -32,6 +33,7 @@ public class WalletService : BaseService, IWalletService
     private readonly IBalancePaymentStrategyModel2 _balancePaymentStrategyModel2;
     private readonly IBrandService                 _brandService;
     private readonly IBonusRepository              _bonusRepository;
+    private readonly ToThirdPartiesPaymentStrategy _toThirdPartiesPaymentStrategy;
     public WalletService(
         IMapper                       mapper,
         IWalletRepository             walletRepository,
@@ -39,9 +41,11 @@ public class WalletService : BaseService, IWalletService
         IAccountServiceAdapter        accountServiceAdapter,
         IInvoiceRepository            invoiceRepository,
         IInvoiceDetailRepository      invoiceDetailRepository,
-        INetworkPurchaseRepository    networkPurchaseRepository, IBalancePaymentStrategy balancePaymentStrategy,
+        INetworkPurchaseRepository    networkPurchaseRepository, 
+        IBalancePaymentStrategy       balancePaymentStrategy,
         IBalancePaymentStrategyModel2 balancePaymentStrategyModel2,
         RedisCache                    redisCache,
+        ToThirdPartiesPaymentStrategy toThirdPartiesPaymentStrategy,
         IBrandService brandService, IBonusRepository bonusRepository) :
         base(mapper)
     {
@@ -56,6 +60,7 @@ public class WalletService : BaseService, IWalletService
         _redisCache                   = redisCache;
         _brandService                 = brandService;
         _bonusRepository              = bonusRepository;
+        _toThirdPartiesPaymentStrategy= toThirdPartiesPaymentStrategy;
     }
     
     #region wallets
@@ -112,10 +117,10 @@ public class WalletService : BaseService, IWalletService
     public async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId)
     {
         var                   key       = string.Format(CacheKeys.BalanceInformationModel2, affiliateId);
-        var                   existsKey = await _redisCache.KeyExists(key);
+        // var                   existsKey = await _redisCache.KeyExists(key);
         BalanceInformationDto response;
-        if (!existsKey)
-        {
+        // if (!existsKey)
+        // {
             var amountRequests       = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId,_brandService.BrandId);
             var availableBalance     = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId, _brandService.BrandId);
             var reverseBalance       = await _walletRepository.GetReverseBalanceByAffiliateId(affiliateId, _brandService.BrandId);
@@ -140,11 +145,11 @@ public class WalletService : BaseService, IWalletService
                 response.AvailableBalance -= response.ReverseBalance;
             }
 
-            await _redisCache.Set(key, response, TimeSpan.FromHours(1));
-            return response;
-        }
+            // await _redisCache.Set(key, response, TimeSpan.FromHours(1));
+            // return response;
+        // }
 
-        response = await _redisCache.Get<BalanceInformationDto>(key) ?? new BalanceInformationDto();
+        // response = await _redisCache.Get<BalanceInformationDto>(key) ?? new BalanceInformationDto();
         return response;
     }
 
@@ -184,6 +189,17 @@ public class WalletService : BaseService, IWalletService
 
         request.BrandId = _brandService.BrandId; 
         var response = await _balancePaymentStrategy.ExecuteEcoPoolPayment(request);
+
+        return response;
+    }
+    
+    public async Task<bool> PayWithMyBalanceForOthers(WalletRequest request)
+    {
+        if (request.ProductsList.Count == 0)
+            return false;
+
+        request.BrandId = _brandService.BrandId; 
+        var response = await _toThirdPartiesPaymentStrategy.ExecutePayment(request);
 
         return response;
     }

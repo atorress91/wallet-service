@@ -36,7 +36,7 @@ public class CoinPayController : BaseController
     }
 
     [HttpGet("getNetworksByIdCurrency")]
-    public async Task<IActionResult> GetNetworkByIdCurrency(int idCurrency)
+    public async Task<IActionResult> GetNetworkByIdCurrency([FromQuery]int idCurrency)
     {
         var result = await _coinPayService.GetNetworksByIdCurrency(idCurrency);
 
