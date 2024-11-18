@@ -22,38 +22,38 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
         base(context)
         => _appSettings = appSettings.Value;
 
-    public Task<int> CountDetailsByPaymentGroup(int paymentGroupId, int userId, int brandId)
+    public Task<int> CountDetailsByPaymentGroup(int paymentGroupId, int userId, long brandId)
         => Context.InvoicesDetails.Where(x 
             => !x.Invoice.CancellationDate.HasValue && x.Invoice.Status &&
                x.Invoice.AffiliateId == userId && 
                x.PaymentGroupId == paymentGroupId && x.BrandId == brandId).CountAsync();
     
-    public Task<int> CountDetailsModel3ByPaymentGroup(int userId, int brandId)
+    public Task<int> CountDetailsModel3ByPaymentGroup(int userId, long brandId)
         => Context.InvoicesDetails.Where(x 
             => !x.Invoice.CancellationDate.HasValue && x.Invoice.Status &&
                x.Invoice.AffiliateId == userId && 
                new []{5,6}.Contains(x.PaymentGroupId) && x.BrandId == brandId).CountAsync();
 
-    public Task<List<ModelFourStatistics>> Model4StatisticsByUser(int userId)
+    public Task<List<ModelFourStatistic>> Model4StatisticsByUser(int userId)
         => Context.ModelFourStatistics.Where(x => x.AffiliateId == userId).ToListAsync();
 
-    public Task<List<Invoices>> GetAllInvoicesUser(int id, int brandId)
-        => Context.Invoices.Include(x => x.InvoiceDetail).Where(x => x.AffiliateId == id && x.BrandId == brandId).AsNoTracking().ToListAsync();
+    public Task<List<Invoice>> GetAllInvoicesUser(int id, long brandId)
+        => Context.Invoices.Include(x => x.InvoicesDetails).Where(x => x.AffiliateId == id && x.BrandId == brandId).AsNoTracking().ToListAsync();
 
-    public Task<List<Invoices>> GetAllInvoices(int brandId)
-        => Context.Invoices.Where(x=>x.BrandId==brandId).Include(x => x.InvoiceDetail).AsNoTracking().ToListAsync();
+    public Task<List<Invoice>> GetAllInvoices(long brandId)
+        => Context.Invoices.Where(x=>x.BrandId==brandId).Include(x => x.InvoicesDetails).AsNoTracking().ToListAsync();
 
-    public Task<Invoices?> GetInvoiceById(int id, int brandId)
-        => Context.Invoices.Include(e=>e.InvoiceDetail).FirstOrDefaultAsync(x => x.Id == id && x.BrandId == brandId);
+    public Task<Invoice?> GetInvoiceById(long id, long brandId)
+        => Context.Invoices.Include(e=>e.InvoicesDetails).FirstOrDefaultAsync(x => x.Id == id && x.BrandId == brandId);
 
-    public Task<Invoices?> GetInvoiceByReceiptNumber(string receiptNumber, int brandId)
-        => Context.Invoices.Include(x=> x.InvoiceDetail).FirstOrDefaultAsync(e => e.ReceiptNumber == receiptNumber && e.BrandId == brandId);
+    public Task<Invoice?> GetInvoiceByReceiptNumber(string receiptNumber, long brandId)
+        => Context.Invoices.Include(x=> x.InvoicesDetails).FirstOrDefaultAsync(e => e.ReceiptNumber == receiptNumber && e.BrandId == brandId);
     
-    public Task<bool> InvoiceExistsByReceiptNumber(string idTransaction, int brandId)
+    public Task<bool> InvoiceExistsByReceiptNumber(string idTransaction, long brandId)
         => Context.Invoices
             .AnyAsync(e => e.ReceiptNumber == idTransaction && e.BrandId == brandId);
 
-    public async Task<Invoices> CreateInvoiceAsync(Invoices invoice)
+    public async Task<Invoice> CreateInvoiceAsync(Invoice invoice)
     {
         var today = DateTime.Now;
         invoice.CreatedAt = today;
@@ -65,7 +65,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
         return invoice;
     }
 
-    public async Task<Invoices> DeleteInvoiceAsync(Invoices invoice)
+    public async Task<Invoice> DeleteInvoiceAsync(Invoice invoice)
     {
         var today = DateTime.Now;
         invoice.DeletedAt        = today;
@@ -78,12 +78,12 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
 
         return invoice;
     }
-    public async Task<List<Invoices>> DeleteMultipleInvoicesAndDetailsAsync(int[] invoiceIds, int brandId)
+    public async Task<List<Invoice>> DeleteMultipleInvoicesAndDetailsAsync(long[] invoiceIds, long brandId)
     {
         var today = DateTime.Now;
         
         var invoices = await Context.Invoices
-                           .Include(i => i.InvoiceDetail)
+                           .Include(i => i.InvoicesDetails)
                            .Where(i => invoiceIds.Contains(i.Id) && i.BrandId == brandId)
                            .ToListAsync();
 
@@ -99,7 +99,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             invoice.CancellationDate = today;
             invoice.Status           = false;
             
-            foreach (var detail in invoice.InvoiceDetail)
+            foreach (var detail in invoice.InvoicesDetails)
             {
                 detail.DeletedAt = today;
                 detail.UpdatedAt = today;
@@ -115,7 +115,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.HandleDebitTransactionSp, sql);
 
             var invoicesDetails = ConvertToDataTable(request.invoices);
@@ -144,7 +144,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.HandleDebitTransactionCourse, sql);
 
             var invoicesDetails = ConvertToDataTable(request.invoices);
@@ -301,14 +301,14 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             "EXEC " + Constants.CoinPaymentRevertTransactions + " @InvoiceNumbers", param);
     }
 
-    public Task<List<Invoices>> GetInvoicesByReceiptNumber(ICollection<string> transactionIds)
+    public Task<List<Invoice>> GetInvoicesByReceiptNumber(ICollection<string> transactionIds)
         => Context.Invoices.Where(e => e.ReceiptNumber != null && transactionIds.Contains(e.ReceiptNumber))
             .ToListAsync();
 
     public Task<bool> GetInvoicesForTradingAcademyPurchases(int affiliateId)
         => Context.Invoices
-            .Include(x => x.InvoiceDetail)
-            .AnyAsync(x => x.AffiliateId == affiliateId && x.InvoiceDetail.Any(d => d.PaymentGroupId == 6));
+            .Include(x => x.InvoicesDetails)
+            .AnyAsync(x => x.AffiliateId == affiliateId && x.InvoicesDetails.Any(d => d.PaymentGroupId == 6));
 
     public async Task<List<InvoicesTradingAcademyResponse>?> GetAllInvoicesForTradingAcademyPurchases()
     {

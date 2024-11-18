@@ -46,7 +46,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         _bonusRepository         = bonusRepository;
     }
 
-    private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId,int brandId)
+    private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId,long brandId)
     {
         var amountRequests    = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId, brandId);
         var availableBalance  = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId,brandId);

@@ -41,7 +41,7 @@ public class EcoPoolConfigurationService : BaseService, IEcoPoolConfigurationSer
 
     private async Task<ModelConfiguration> CreateEcoPoolModel(EcoPoolConfigurationRequest request)
     {
-        var listLevels = new List<ModelConfigurationLevels>();
+        var listLevels = new List<ModelConfigurationLevel>();
         var today      = DateTime.Today;
 
         var configuration = new ModelConfiguration
@@ -63,10 +63,10 @@ public class EcoPoolConfigurationService : BaseService, IEcoPoolConfigurationSer
         foreach (var level in request.Levels)
         {
             index++;
-            var ecoPoolLevels = new ModelConfigurationLevels
+            var ecoPoolLevels = new ModelConfigurationLevel
             {
                 Level                  = index,
-                EcoPoolConfigurationId = configuration.Id,
+                EcopoolConfigurationId = configuration.Id,
                 CreatedAt              = today,
                 UpdatedAt              = today,
                 Percentage             = level.Percentage
@@ -83,7 +83,7 @@ public class EcoPoolConfigurationService : BaseService, IEcoPoolConfigurationSer
 
     private async Task<ModelConfiguration> UpdateEcoPoolModel(EcoPoolConfigurationRequest request, ModelConfiguration configuration)
     {
-        var listLevels = new List<ModelConfigurationLevels>();
+        var listLevels = new List<ModelConfigurationLevel>();
         var today      = DateTime.Today;
         
         configuration.CompanyPercentageLevels = request.CompanyPercentageLevels;
@@ -103,10 +103,10 @@ public class EcoPoolConfigurationService : BaseService, IEcoPoolConfigurationSer
         foreach (var level in request.Levels)
         {
             index++;
-            var ecoPoolLevels = new ModelConfigurationLevels
+            var ecoPoolLevels = new ModelConfigurationLevel
             {
                 Level                  = index,
-                EcoPoolConfigurationId = configuration.Id,
+                EcopoolConfigurationId = configuration.Id,
                 CreatedAt              = today,
                 UpdatedAt              = today,
                 Percentage             = level.Percentage

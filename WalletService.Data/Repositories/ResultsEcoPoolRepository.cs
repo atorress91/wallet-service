@@ -27,16 +27,16 @@ public class ResultsEcoPoolRepository : BaseRepository, IResultsEcoPoolRepositor
             .Where(x => x.ModelConfiguration.CompletedAt == null).ToListAsync();
     }
 
-    public Task<List<ResultsModel1A>> GetResultsModel1AToPayment()
+    public Task<List<ResultsModel1a>> GetResultsModel1AToPayment()
     {
         return Context.ResultsModel1A
-            .Include(x => x.ResultsModel1ALevels).ToListAsync();
+            .Include(x => x.ResultsModel1aLevels).ToListAsync();
     }
 
-    public Task<List<ResultsModel1B>> GetResultsModel1BToPayment()
+    public Task<List<ResultsModel1b>> GetResultsModel1BToPayment()
     {
         return Context.ResultsModel1B
-            .Include(x => x.ResultsModel1BLevels).ToListAsync();
+            .Include(x => x.ResultsModel1bLevels).ToListAsync();
     }
 
     public Task<List<ResultsModel3>> GetResultsMode3ToPayment()

@@ -4,6 +4,6 @@ namespace WalletService.Data.Adapters.IAdapters;
 
 public interface IInventoryServiceAdapter
 {
-    Task<IRestResponse> GetProductsIds(int[] ids, int brandId);
-    Task<IRestResponse> GetProductById(int id, int brandId);
+    Task<IRestResponse> GetProductsIds(int[] ids, long brandId);
+    Task<IRestResponse> GetProductById(int id, long brandId);
 }

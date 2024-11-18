@@ -8,13 +8,13 @@ namespace WalletService.Data.Repositories;
 public class InvoiceDetailRepository : BaseRepository, IInvoiceDetailRepository
 {
     public InvoiceDetailRepository(WalletServiceDbContext context) : base(context) { }
-    public Task<List<InvoicesDetails>> GetAllInvoiceDetailAsync()
+    public Task<List<InvoicesDetail>> GetAllInvoiceDetailAsync()
         => Context.InvoicesDetails.Where(x => x.DeletedAt == null).AsNoTracking().ToListAsync();
 
-    public Task<List<InvoicesDetails>> GetInvoiceDetailByInvoiceIdAsync(int invoiceId)
+    public Task<List<InvoicesDetail>> GetInvoiceDetailByInvoiceIdAsync(long invoiceId)
         => Context.InvoicesDetails.Where(x => x.InvoiceId == invoiceId).ToListAsync();
 
-    public async Task<InvoicesDetails> CreateInvoiceDetailAsync(InvoicesDetails invoice)
+    public async Task<InvoicesDetail> CreateInvoiceDetailAsync(InvoicesDetail invoice)
     {
         var today = DateTime.Now;
         invoice.CreatedAt = today;
@@ -26,7 +26,7 @@ public class InvoiceDetailRepository : BaseRepository, IInvoiceDetailRepository
         return invoice;
     }
 
-    public async Task<List<InvoicesDetails>> CreateBulkInvoiceDetailAsync(List<InvoicesDetails> requests)
+    public async Task<List<InvoicesDetail>> CreateBulkInvoiceDetailAsync(List<InvoicesDetail> requests)
     {
         const int take         = 1000;
         var       packageCount = requests.Count / take;
@@ -41,7 +41,7 @@ public class InvoiceDetailRepository : BaseRepository, IInvoiceDetailRepository
 
         return requests;
     }
-    public async Task<List<InvoicesDetails>> DeleteBulkInvoiceDetailAsync(List<InvoicesDetails> requests)
+    public async Task<List<InvoicesDetail>> DeleteBulkInvoiceDetailAsync(List<InvoicesDetail> requests)
     {
         var today = DateTime.Now;
         foreach (var item in requests)

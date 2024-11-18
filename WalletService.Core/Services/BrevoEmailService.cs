@@ -13,7 +13,7 @@ public class BrevoEmailService : BaseEmailService, IBrevoEmailService
 {
     public BrevoEmailService(IOptions<ApplicationConfiguration> appSettings) : base(appSettings) { }
 
-    public async Task<bool> SendEmailWelcome(UserInfoResponse user, InvoicesSpResponse spResponse, int brandId)
+    public async Task<bool> SendEmailWelcome(UserInfoResponse user, InvoicesSpResponse spResponse, long brandId)
     {
         var dictionary = new Dictionary<string, string>();
 
@@ -34,7 +34,7 @@ public class BrevoEmailService : BaseEmailService, IBrevoEmailService
         return await SendEmail(user.Email!, Constants.SubjectConfirmAffiliation, body, brandId);
     }
 
-    public async Task<bool> SendBonusConfirmation(UserInfoResponse user, string userName, int brandId)
+    public async Task<bool> SendBonusConfirmation(UserInfoResponse user, string userName, long brandId)
     {
         var dictionary = new Dictionary<string, string>();
 
@@ -53,7 +53,7 @@ public class BrevoEmailService : BaseEmailService, IBrevoEmailService
     }
 
     public async Task<bool> SendEmailPurchaseConfirm(UserInfoResponse user, Dictionary<string, byte[]> pdfDataDict,
-        InvoicesSpResponse spResponse, int brandId)
+        InvoicesSpResponse spResponse, long brandId)
     {
         var dictionary = new Dictionary<string, string>();
 
@@ -76,7 +76,7 @@ public class BrevoEmailService : BaseEmailService, IBrevoEmailService
     }
 
     public async Task<bool> SendEmailConfirmationEmailToThirdParty(UserInfoResponse user, string nameOfPurchaser,
-        List<string> productNames, int brandId)
+        List<string> productNames, long brandId)
     {
         var dictionary = new Dictionary<string, string>();
         StringBuilder productNamesBuilder = new StringBuilder();
@@ -105,7 +105,7 @@ public class BrevoEmailService : BaseEmailService, IBrevoEmailService
     }
 
     public async Task<bool> SendEmailMembershipConfirm(UserInfoResponse user, byte[] pdfData,
-        InvoicesSpResponse spResponse, int brandId)
+        InvoicesSpResponse spResponse, long brandId)
     {
         var dictionary = new Dictionary<string, string>();
 
@@ -129,7 +129,7 @@ public class BrevoEmailService : BaseEmailService, IBrevoEmailService
 
     public async Task<bool> SendEmailPurchaseConfirmForAcademy(UserInfoResponse user,
         Dictionary<string, byte[]> pdfDataDict,
-        InvoicesSpResponse spResponse, int brandId)
+        InvoicesSpResponse spResponse, long brandId)
     {
         var dictionary = new Dictionary<string, string>();
 
@@ -149,7 +149,7 @@ public class BrevoEmailService : BaseEmailService, IBrevoEmailService
     }
 
     public async Task<bool> SendInvitationsForTradingAcademy(UserAffiliateResponse user, string link, string code,
-        int brandId)
+        long brandId)
     {
         var dictionary = new Dictionary<string, string>();
 

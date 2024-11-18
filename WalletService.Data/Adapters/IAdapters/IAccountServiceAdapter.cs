@@ -7,21 +7,21 @@ namespace WalletService.Data.Adapters.IAdapters;
 
 public interface IAccountServiceAdapter
 {
-    Task<IRestResponse> GetAffiliateByUserName(string userName, int brandId);
-    Task<IRestResponse> VerificationCode(string code, string password, int userId, int brandId);
-    Task<IRestResponse> GetAccountsToEcoPool(int[] id, int levels, int brandId);
-    Task<UserInfoResponse?> GetUserInfo(int id, int brandId);
-    Task<IRestResponse> GetPersonalNetwork(int id, int brandId);
-    Task<IRestResponse> UpdateActivationDate(int id, int brandId);
-    Task<IRestResponse> RevertActivationUser(int id, int brandId);
-    Task<IRestResponse> GetAffiliateBtcByAffiliateId(int affiliateId, int brandId);
-    Task<IRestResponse> UpdateGradingByUser(int userId, int gradingId, int brandId);
-    Task<IRestResponse> GetHave2Children(int[] users, int brandId);
-    Task<NetworkDetailsResponse> NetworkDetails(int userId, int brandId);
-    Task<IRestResponse> GetTreeModel4(Dictionary<int, decimal> dictionary, int brandId);
-    Task<IRestResponse> AddTreeModel5(IEnumerable<LeaderBoardModel5> leaderBoard, int brandId);
-    Task<IRestResponse> AddTreeModel6(IEnumerable<LeaderBoardModel6> leaderBoard, int brandId);
-    Task<IRestResponse> DeleteTreeModel5(int brandId);
-    Task<IRestResponse> DeleteTreeModel6(int brandId);
-    Task<IRestResponse> GetTotalActiveMembers(int brandId);
+    Task<IRestResponse> GetAffiliateByUserName(string userName, long brandId);
+    Task<IRestResponse> VerificationCode(string code, string password, int userId, long brandId);
+    Task<IRestResponse> GetAccountsToEcoPool(int[] id, int levels, long brandId);
+    Task<UserInfoResponse?> GetUserInfo(int id, long brandId);
+    Task<IRestResponse> GetPersonalNetwork(int id, long brandId);
+    Task<IRestResponse> UpdateActivationDate(int id, long brandId);
+    Task<IRestResponse> RevertActivationUser(int id, long brandId);
+    Task<IRestResponse> GetAffiliateBtcByAffiliateId(int affiliateId, long brandId);
+    Task<IRestResponse> UpdateGradingByUser(int userId, int gradingId, long brandId);
+    Task<IRestResponse> GetHave2Children(int[] users, long brandId);
+    Task<NetworkDetailsResponse> NetworkDetails(int userId, long brandId);
+    Task<IRestResponse> GetTreeModel4(Dictionary<int, decimal> dictionary, long brandId);
+    Task<IRestResponse> AddTreeModel5(IEnumerable<LeaderBoardModel5> leaderBoard, long brandId);
+    Task<IRestResponse> AddTreeModel6(IEnumerable<LeaderBoardModel6> leaderBoard, long brandId);
+    Task<IRestResponse> DeleteTreeModel5(long brandId);
+    Task<IRestResponse> DeleteTreeModel6(long brandId);
+    Task<IRestResponse> GetTotalActiveMembers(long brandId);
 }

@@ -34,14 +34,14 @@ public class EcoPoolConfigurationRepository : BaseRepository, IEcoPoolConfigurat
         return poolConfiguration;
     }
 
-    public Task CreateConfigurationLevels(IEnumerable<ModelConfigurationLevels> levels)
+    public Task CreateConfigurationLevels(IEnumerable<ModelConfigurationLevel> levels)
     {
         Context.ModelConfigurationLevels.AddRange(levels);
 
         return Context.SaveChangesAsync();
     }
 
-    public Task UpdateConfigurationLevels(IEnumerable<ModelConfigurationLevels> levels)
+    public Task UpdateConfigurationLevels(IEnumerable<ModelConfigurationLevel> levels)
     {
         Context.ModelConfigurationLevels.UpdateRange(levels);
 
@@ -58,9 +58,9 @@ public class EcoPoolConfigurationRepository : BaseRepository, IEcoPoolConfigurat
         return poolConfiguration;
     }
 
-    public async Task DeleteAllLevelsConfiguration(int configurationId)
+    public async Task DeleteAllLevelsConfiguration(long configurationId)
     {
-        var entities = await Context.ModelConfigurationLevels.Where(x => x.EcoPoolConfigurationId == configurationId).ToListAsync();
+        var entities = await Context.ModelConfigurationLevels.Where(x => x.EcopoolConfigurationId == configurationId).ToListAsync();
         if (entities is { Count: > 0 })
             Context.ModelConfigurationLevels.RemoveRange(entities);
     }

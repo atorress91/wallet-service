@@ -86,7 +86,7 @@ public class CoinPaymentsController : BaseController
     }
     
     [HttpPost("createMassWithdrawal")]
-    public async Task<IActionResult> CreateMassWithdrawal([FromBody] WalletsRequests[] requests)
+    public async Task<IActionResult> CreateMassWithdrawal([FromBody] WalletsRequest[] requests)
     {
         var response = await _conPaymentService.CreateMassWithdrawal(requests);
         return response is null ? Ok(Fail("The withdrawal could not be created correctly")) : Ok(response);

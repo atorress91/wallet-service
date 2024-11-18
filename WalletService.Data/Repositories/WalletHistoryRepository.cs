@@ -8,13 +8,13 @@ namespace WalletService.Data.Repositories;
 public class WalletHistoryRepository : BaseRepository, IWalletHistoryRepository
 {
     public WalletHistoryRepository(WalletServiceDbContext context) : base(context) { }
-    public Task<List<WalletsHistories>> GetAllWalletsHistoriesAsync()
+    public Task<List<WalletsHistory>> GetAllWalletsHistoriesAsync()
         => Context.WalletsHistories.AsNoTracking().ToListAsync();
 
-    public Task<WalletsHistories?> GetWalletHistoriesByIdAsync(int id)
+    public Task<WalletsHistory?> GetWalletHistoriesByIdAsync(int id)
         => Context.WalletsHistories.FirstOrDefaultAsync(x => x.Id == id);
 
-    public async Task<WalletsHistories> CreateWalletHistoriesAsync(WalletsHistories request)
+    public async Task<WalletsHistory> CreateWalletHistoriesAsync(WalletsHistory request)
     {
         var today = DateTime.Now;
         request.CreatedAt = today;
@@ -26,7 +26,7 @@ public class WalletHistoryRepository : BaseRepository, IWalletHistoryRepository
         return request;
     }
 
-    public async Task<WalletsHistories> UpdateWalletHistoriesAsync(WalletsHistories request)
+    public async Task<WalletsHistory> UpdateWalletHistoriesAsync(WalletsHistory request)
     {
         var today = DateTime.Now;
         request.UpdatedAt = today;
@@ -36,7 +36,7 @@ public class WalletHistoryRepository : BaseRepository, IWalletHistoryRepository
         return request;
     }
 
-    public async Task<WalletsHistories> DeleteWalletHistoriesAsync(WalletsHistories request)
+    public async Task<WalletsHistory> DeleteWalletHistoriesAsync(WalletsHistory request)
     {
         request.DeletedAt = DateTime.Now;
 

@@ -10,7 +10,7 @@ public class WalletRequest
     public int PaymentMethod { get; set; }
     public string? SecretKey { get; set; }
     public string? ReceiptNumber { get; set; } 
-    public int BrandId { get; set; }
+    public long BrandId { get; set; }
 
     public ICollection<ProductsRequests> ProductsList { get; set; }
 

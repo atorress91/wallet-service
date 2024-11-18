@@ -4,11 +4,11 @@ namespace WalletService.Data.Repositories.IRepositories;
 
 public interface IInvoiceDetailRepository
 {
-    Task<List<InvoicesDetails>> GetAllInvoiceDetailAsync();
-    Task<InvoicesDetails> CreateInvoiceDetailAsync(InvoicesDetails                 invoice);
-    Task<List<InvoicesDetails>> CreateBulkInvoiceDetailAsync(List<InvoicesDetails> requests);
-    Task<List<InvoicesDetails>> GetInvoiceDetailByInvoiceIdAsync(int               invoiceId);
+    Task<List<InvoicesDetail>> GetAllInvoiceDetailAsync();
+    Task<InvoicesDetail> CreateInvoiceDetailAsync(InvoicesDetail                 invoice);
+    Task<List<InvoicesDetail>> CreateBulkInvoiceDetailAsync(List<InvoicesDetail> requests);
+    Task<List<InvoicesDetail>> GetInvoiceDetailByInvoiceIdAsync(long               invoiceId);
 
-    Task<List<InvoicesDetails>> DeleteBulkInvoiceDetailAsync(List<InvoicesDetails> requests);
+    Task<List<InvoicesDetail>> DeleteBulkInvoiceDetailAsync(List<InvoicesDetail> requests);
 
 }

@@ -102,11 +102,11 @@ public static class IocExtensionApp
         var appConfig = services.BuildServiceProvider().GetRequiredService<IOptions<ApplicationConfiguration>>()
             .Value;
 
-        var connectionString = appConfig.ConnectionStrings?.SqlServerConnection;
+        var connectionString = appConfig.ConnectionStrings?.PostgreSqlConnection;
 
         services.AddDbContext<WalletServiceDbContext>(options =>
         {
-            options.UseSqlServer(connectionString).EnableSensitiveDataLogging().EnableDetailedErrors();
+            options.UseNpgsql(connectionString).EnableSensitiveDataLogging().EnableDetailedErrors();
         });
     }
 

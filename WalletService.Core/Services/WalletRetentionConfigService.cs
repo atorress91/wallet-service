@@ -2,6 +2,7 @@
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories;
+using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.DTO.WalletRetentionConfigDto;
 using WalletService.Models.Requests.WalletRetentionConfigRequest;
 
@@ -45,13 +46,13 @@ public class WalletRetentionConfigService : BaseService, IWalletRetentionConfigS
                 existingPeriodRetention.Status         = periodData.Status;
                 existingPeriodRetention.UpdatedAt      = DateTime.Now;
 
-                await _walletRetentionConfigRepository.UpdateWalletRetentionConfigAsync(new List<WalletsRetentionsConfigs>
+                await _walletRetentionConfigRepository.UpdateWalletRetentionConfigAsync(new List<WalletsRetentionsConfig>
                     { existingPeriodRetention });
                 createdPeriods.Add(Mapper.Map<WalletRetentionConfigDto>(existingPeriodRetention));
             }
             else
             {
-                var newPeriodRetention = new WalletsRetentionsConfigs
+                var newPeriodRetention = new WalletsRetentionsConfig
                 {
                     WithdrawalFrom = periodData.WithdrawalFrom,
                     WithdrawalTo   = periodData.WithdrawalTo,
@@ -63,7 +64,7 @@ public class WalletRetentionConfigService : BaseService, IWalletRetentionConfigS
                     UpdatedAt      = DateTime.Now
                 };
 
-                await _walletRetentionConfigRepository.CreateWalletRetentionConfigAsync(new List<WalletsRetentionsConfigs>
+                await _walletRetentionConfigRepository.CreateWalletRetentionConfigAsync(new List<WalletsRetentionsConfig>
                     { newPeriodRetention });
                 createdPeriods.Add(Mapper.Map<WalletRetentionConfigDto>(newPeriodRetention));
             }

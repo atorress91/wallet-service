@@ -40,7 +40,7 @@ public class WalletRequestController : BaseController
     }
 
     [HttpPost("processOption")]
-    public async Task<IActionResult> ProcessOptionRequest([FromQuery] int option, [FromBody] List<int> ids)
+    public async Task<IActionResult> ProcessOptionRequest([FromQuery] int option, [FromBody] List<long> ids)
     {
         var result = await _walletRequestService.ProcessOption(option, ids);
 
@@ -73,7 +73,7 @@ public class WalletRequestController : BaseController
     }
 
     [HttpPost("administrativePaymentAsync")]
-    public async Task<IActionResult> AdministrativePaymentAsync([FromBody] WalletsRequests[] requests)
+    public async Task<IActionResult> AdministrativePaymentAsync([FromBody] WalletsRequest[] requests)
     {
         var result = await _walletRequestService.AdministrativePaymentAsync(requests);
 

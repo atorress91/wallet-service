@@ -10,13 +10,13 @@ public class WalletWaitRepository:BaseRepository,IWalletWaitRepository
     public WalletWaitRepository(WalletServiceDbContext context) : base(context)
     {
     }
-    public  Task<List<WalletsWaits>> GetAllWalletsWaits()
+    public  Task<List<WalletsWait>> GetAllWalletsWaits()
         =>  Context.WalletsWaits.AsNoTracking().ToListAsync();
     
-    public  Task<WalletsWaits?> GetWalletWaitById(int id)
+    public  Task<WalletsWait?> GetWalletWaitById(int id)
         =>  Context.WalletsWaits.FirstOrDefaultAsync(x => x.Id == id);
 
-    public async Task<WalletsWaits> CreateWalletWaitAsync(WalletsWaits request)
+    public async Task<WalletsWait> CreateWalletWaitAsync(WalletsWait request)
     {
         var today = DateTime.Now;
         request.CreatedAt = today;
@@ -28,7 +28,7 @@ public class WalletWaitRepository:BaseRepository,IWalletWaitRepository
         return request;
     } 
     
-    public async Task<WalletsWaits> UpdateWalletWaitAsync(WalletsWaits request)
+    public async Task<WalletsWait> UpdateWalletWaitAsync(WalletsWait request)
     {
         var today = DateTime.Now;
         request.UpdatedAt = today;
@@ -38,7 +38,7 @@ public class WalletWaitRepository:BaseRepository,IWalletWaitRepository
         return request;
     }
     
-    public async Task<WalletsWaits> DeleteWalletWaitAsync(WalletsWaits request)
+    public async Task<WalletsWait> DeleteWalletWaitAsync(WalletsWait request)
     {
         request.DeletedAt = DateTime.Now;
 

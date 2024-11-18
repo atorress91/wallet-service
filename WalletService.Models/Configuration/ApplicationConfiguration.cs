@@ -23,7 +23,7 @@ public class ApplicationConfiguration
 
 public class ConnectionStrings
 {
-    public string? SqlServerConnection { get; set; }
+    public string? PostgreSqlConnection { get; set; }
     public string? RedisConnection { get; set; }
 }
 

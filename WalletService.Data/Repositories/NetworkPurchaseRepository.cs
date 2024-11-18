@@ -13,7 +13,7 @@ public class NetworkPurchaseRepository : BaseRepository, INetworkPurchaseReposit
 {
     public NetworkPurchaseRepository(WalletServiceDbContext context) : base(context) { }
 
-    public Task<List<NetworkPurchases>> GetNetworkPurchasesEcoPool(DateTime from, DateTime to)
+    public Task<List<NetworkPurchase>> GetNetworkPurchasesEcoPool(DateTime from, DateTime to)
         => Context.NetworkPurchases
             .Where(x => x.CreatedAt >= from && x.CreatedAt <= to
                                             && x.Origin == Constants.OriginEcoPoolPurchase).ToListAsync();

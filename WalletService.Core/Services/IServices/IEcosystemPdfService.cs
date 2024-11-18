@@ -8,5 +8,5 @@ namespace WalletService.Core.Services.IServices;
 public interface IEcosystemPdfService
 {
     Task<byte[]> GenerateInvoice(UserInfoResponse userInfo, DebitTransactionRequest invoice, InvoicesSpResponse spResponse);
-    Task<byte[]> RegenerateInvoice(UserInfoResponse userInfo, Invoices invoice);
+    Task<byte[]> RegenerateInvoice(UserInfoResponse userInfo, Invoice invoice);
 }

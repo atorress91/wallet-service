@@ -1,11 +1,17 @@
-﻿namespace WalletService.Data.Database.Models;
+﻿
+namespace WalletService.Data.Database.Models;
 
-public class ApiClient
+public partial class ApiClient
 {
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string Token { get; set; }
+    public long Id { get; set; }
+
+    public string Name { get; set; } = null!;
+
+    public string Token { get; set; } = null!;
+
     public DateTime CreatedAt { get; set; }
+
     public DateTime? UpdatedAt { get; set; }
+
     public DateTime? DeletedAt { get; set; }
 }

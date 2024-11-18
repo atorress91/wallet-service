@@ -122,7 +122,7 @@ public class PagaditoService : BaseService, IPagaditoService
         }
     }
 
-    private async Task ProcessPaymentTransaction(PaymentTransaction transactionResult)
+    private async Task ProcessPaymentTransaction(CoinpaymentTransaction transactionResult)
     {
         _logger.LogInformation(
             $"[PagaditoService] | ProcessPaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
@@ -214,7 +214,7 @@ public class PagaditoService : BaseService, IPagaditoService
 
         var productsJson = JsonSerializer.Serialize(productDetails);
 
-        var paymentTransaction = new PaymentTransaction
+        var paymentTransaction = new CoinpaymentTransaction
         {
             IdTransaction = pagaditoTransaction.Ern,
             AffiliateId = request.AffiliateId,

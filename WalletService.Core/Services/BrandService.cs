@@ -12,5 +12,5 @@ public class BrandService : BaseService, IBrandService
         => _httpContextAccessor = httpContextAccessor;
 
 
-    public int BrandId => (int)(_httpContextAccessor.HttpContext?.Items["brandId"] ?? 0);
+    public long BrandId => (long)(_httpContextAccessor.HttpContext?.Items["brandId"] ?? 0);
 }

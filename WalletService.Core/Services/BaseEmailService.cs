@@ -19,7 +19,7 @@ public abstract class BaseEmailService
         Configuration.Default.AddApiKey("api-key", _appSettings.SendingBlue!.ApiKey);
     }
 
-    private string GetSenderName(int brandId)
+    private string GetSenderName(long brandId)
     {
         return brandId switch
         {
@@ -29,7 +29,7 @@ public abstract class BaseEmailService
         };
     }
 
-    private string GetBrandFolderName(int brandId)
+    private string GetBrandFolderName(long brandId)
     {
         return brandId switch
         {
@@ -39,7 +39,7 @@ public abstract class BaseEmailService
         };
     }
 
-    protected async Task<string> GetEmailTemplate(string templateName, int brandId)
+    protected async Task<string> GetEmailTemplate(string templateName, long brandId)
     {
         var brandFolder = GetBrandFolderName(brandId);
         var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -49,7 +49,7 @@ public abstract class BaseEmailService
         return await File.ReadAllTextAsync(pathFile, Encoding.UTF8);
     }
 
-    protected async Task<bool> SendEmail(string toEmail, string subject, string body, int brandId)
+    protected async Task<bool> SendEmail(string toEmail, string subject, string body, long brandId)
     {
         var apiInstance = new TransactionalEmailsApi();
         var nameSender = GetSenderName(brandId);
@@ -76,7 +76,7 @@ public abstract class BaseEmailService
     }
 
     protected async Task<bool> SendEmailWithInvoice(string toEmail, string subject, string body,
-        Dictionary<string, byte[]> pdfDataDict, int brandId)
+        Dictionary<string, byte[]> pdfDataDict, long brandId)
     {
         var apiInstance = new TransactionalEmailsApi();
         var nameSender = GetSenderName(brandId);
@@ -110,7 +110,7 @@ public abstract class BaseEmailService
     }
 
     protected async Task<bool> SendEmailForMembership(string toEmail, string subject, string body, byte[] pdfData,
-        int brandId)
+        long brandId)
     {
         var apiInstance = new TransactionalEmailsApi();
         var senderName = GetSenderName(brandId);

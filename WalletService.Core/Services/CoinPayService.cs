@@ -107,7 +107,7 @@ public class CoinPayService : BaseService, ICoinPayService
         await _coinPayPaymentStrategy.ExecuteCoursePayment(walletRequest);
     }
 
-    private async Task<ProductType> GetProductType(List<ProductRequest> request,int brandId)
+    private async Task<ProductType> GetProductType(List<ProductRequest> request,long brandId)
     {
         if (request == null || !request.Any())
         {
@@ -145,7 +145,7 @@ public class CoinPayService : BaseService, ICoinPayService
         }
     }
 
-    private async Task ProcessPaymentTransaction(PaymentTransaction transactionResult)
+    private async Task ProcessPaymentTransaction(CoinpaymentTransaction transactionResult)
     {
         _logger.LogInformation(
             $"[CoinPayService] | ProcessPaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
@@ -234,7 +234,7 @@ public class CoinPayService : BaseService, ICoinPayService
         var result = response.Content!.ToJsonObject<CreateTransactionResponse>() ??
                      new CreateTransactionResponse();
 
-        var paymentTransaction = new PaymentTransaction
+        var paymentTransaction = new CoinpaymentTransaction
         {
             IdTransaction = result.Data!.IdTransaction.ToString(),
             AffiliateId = request.AffiliateId,
@@ -259,7 +259,7 @@ public class CoinPayService : BaseService, ICoinPayService
         _logger.LogInformation("Starting to create a channel: {RequestDetails}", request.ToJsonString());
 
         var today = DateTime.Now;
-        PaymentTransaction? transactionResponse;
+        CoinpaymentTransaction? transactionResponse;
 
         var channelRequest = new CreateChannelRequest
         {
@@ -294,7 +294,7 @@ public class CoinPayService : BaseService, ICoinPayService
                 _brandService.BrandId);
         _logger.LogInformation("Checking for existing transaction with ID: {TransactionId}", channel.Data!.Id);
 
-        var paymentTransaction = new PaymentTransaction
+        var paymentTransaction = new CoinpaymentTransaction
         {
             IdTransaction = channel.Data.Id.ToString(),
             AffiliateId = request.AffiliateId,
@@ -485,7 +485,7 @@ public class CoinPayService : BaseService, ICoinPayService
         }
 
         var response = new SendFundsDto();
-        var successfulIds = new List<int>();
+        var successfulIds = new List<long>();
 
         foreach (var request in requests)
         {
@@ -634,7 +634,7 @@ public class CoinPayService : BaseService, ICoinPayService
         };
     }
 
-    private async Task UpdateSuccessfulWithdrawals(List<int> successfulWithdrawalIds)
+    private async Task UpdateSuccessfulWithdrawals(List<long> successfulWithdrawalIds)
     {
         _logger.LogInformation(
             $"[WalletService] | UpdateSuccessfulWithdrawals | Starting update for {successfulWithdrawalIds.ToJsonString()} successful withdrawals.");

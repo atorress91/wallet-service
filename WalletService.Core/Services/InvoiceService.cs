@@ -63,7 +63,7 @@ public class InvoiceService : BaseService, IInvoiceService
 
     public async Task<InvoiceDto> CreateInvoiceAsync(InvoiceRequest request)
     {
-        var invoice = Mapper.Map<Invoices>(request);
+        var invoice = Mapper.Map<Invoice>(request);
         invoice = await _invoiceRepository.CreateInvoiceAsync(invoice);
         return Mapper.Map<InvoiceDto>(invoice);
     }
@@ -229,10 +229,10 @@ public class InvoiceService : BaseService, IInvoiceService
         };
     }
 
-    private async Task<(List<int>, int, decimal)> ProcessInvoices(int[] invoiceIds)
+    private async Task<(List<long>, int, decimal)> ProcessInvoices(long[] invoiceIds)
     {
         var totalInvoices   = 0m;
-        var validInvoiceIds = new HashSet<int>();
+        var validInvoiceIds = new HashSet<long>();
         int affiliateId     = 0;
 
         foreach (var invoiceId in invoiceIds)
@@ -247,7 +247,7 @@ public class InvoiceService : BaseService, IInvoiceService
                         affiliateId = invoice.AffiliateId;
                     else if (affiliateId != invoice.AffiliateId)
                     {
-                        return (new List<int>(), 0, 0m);
+                        return (new List<long>(), 0, 0m);
                     }
 
                     totalInvoices += invoice.TotalInvoice ?? 0;

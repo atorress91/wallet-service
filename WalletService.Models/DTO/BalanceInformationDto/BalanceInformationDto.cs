@@ -8,7 +8,7 @@ public class BalanceInformationDto
 
     public decimal? AvailableBalance { get; set; }
 
-    public double? TotalCommissionsPaid { get; set; }
+    public decimal? TotalCommissionsPaid { get; set; }
     public decimal? ServiceBalance { get; set; }
     public decimal BonusAmount { get; set; }
 }

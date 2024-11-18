@@ -3,5 +3,5 @@
 public class InvoiceResultDto
 {
     public byte[]? PdfContent { get; set; }
-    public int BrandId { get; set; }
+    public long BrandId { get; set; }
 }

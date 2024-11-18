@@ -9,16 +9,16 @@ namespace WalletService.Data.Repositories;
 public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
 {
     public WalletRequestRepository(WalletServiceDbContext context) : base(context) { }
-    public Task<List<WalletsRequests>> GetAllWalletsRequests()
+    public Task<List<WalletsRequest>> GetAllWalletsRequests()
         => Context.WalletsRequests.Where(x => x.Type == WalletRequestType.withdrawal_request.ToString() && x.Status == 0).AsNoTracking().ToListAsync();
 
-    public Task<List<WalletsRequests>> GetAllWalletRequestRevertTransaction()
+    public Task<List<WalletsRequest>> GetAllWalletRequestRevertTransaction()
         => Context.WalletsRequests.Where(x => x.Type == WalletRequestType.revert_invoice_request.ToString()).AsNoTracking().ToListAsync();
 
-    public Task<List<WalletsRequests>> GetAllWalletRequestByAffiliateId(int id)
+    public Task<List<WalletsRequest>> GetAllWalletRequestByAffiliateId(int id)
         => Context.WalletsRequests.Where(x => x.AffiliateId == id).AsNoTracking().ToListAsync();
 
-    public async Task<decimal> GetTotalWalletRequestAmountByAffiliateId(int id,int brandId)
+    public async Task<decimal> GetTotalWalletRequestAmountByAffiliateId(int id,long brandId)
     {
         var walletRequests = await Context.WalletsRequests
             .Where(x => x.AffiliateId == id && x.Status == 0 && x.Type == WalletRequestType.withdrawal_request.ToString() && x.BrandId == brandId)
@@ -28,7 +28,7 @@ public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
         return totalAmount;
     }
 
-	public async Task<decimal> GetTotalWalletRequestAmount(int brandId)
+	public async Task<decimal> GetTotalWalletRequestAmount(long brandId)
 	{
 		var walletRequests = await Context.WalletsRequests
 			.Where(x => x.Status == 0 && x.Type == WalletRequestType.withdrawal_request.ToString() && x.BrandId == brandId)
@@ -38,13 +38,13 @@ public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
 		return totalAmount;
 	}
     
-	public Task<List<WalletsRequests>> GetWalletRequestsByIds(List<int> ids)
+	public Task<List<WalletsRequest>> GetWalletRequestsByIds(List<long> ids)
         => Context.WalletsRequests.Where(x => ids.Contains(x.Id)).ToListAsync();
 
-    public Task<WalletsRequests?> GetWalletRequestsByInvoiceNumber(int id)
+    public Task<WalletsRequest?> GetWalletRequestsByInvoiceNumber(int id)
         => Context.WalletsRequests.FirstOrDefaultAsync(x => x.InvoiceNumber == id);
 
-    public async Task<WalletsRequests?> CreateWalletRequestAsync(WalletsRequests request)
+    public async Task<WalletsRequest?> CreateWalletRequestAsync(WalletsRequest request)
     {
         var today = DateTime.Now;
         request.CreatedAt = today;
@@ -56,7 +56,7 @@ public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
         return request;
     }
 
-    public async Task UpdateBulkWalletRequestsAsync(List<WalletsRequests> requests)
+    public async Task UpdateBulkWalletRequestsAsync(List<WalletsRequest> requests)
     {
         const int take         = 1000;
         var       packageCount = requests.Count / take;
@@ -70,7 +70,7 @@ public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
         await Context.SaveChangesAsync();
     }
 
-    public async Task<WalletsRequests> UpdateWalletRequestsAsync(WalletsRequests requests)
+    public async Task<WalletsRequest> UpdateWalletRequestsAsync(WalletsRequest requests)
     {
         var today = DateTime.Now;
         requests.UpdatedAt = today;
@@ -81,7 +81,7 @@ public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
     }
 
 
-    public async Task<WalletsRequests> DeleteWalletRequestAsync(WalletsRequests request)
+    public async Task<WalletsRequest> DeleteWalletRequestAsync(WalletsRequest request)
     {
         request.DeletedAt = DateTime.Now;
 

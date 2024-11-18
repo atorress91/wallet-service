@@ -4,9 +4,9 @@ namespace WalletService.Data.Repositories.IRepositories;
 
 public interface IWalletPeriodRepository
 {
-    Task<List<WalletsPeriods>> GetAllWalletsPeriods();
-    Task<WalletsPeriods?> GetWalletPeriodById(int                                          id);
-    Task<IEnumerable<WalletsPeriods>> CreateWalletPeriodAsync(IEnumerable<WalletsPeriods>  request);
-    Task<IEnumerable<WalletsPeriods>> UpdateWalletPeriodsAsync(IEnumerable<WalletsPeriods> request);
-    Task<WalletsPeriods> DeleteWalletPeriodAsync(WalletsPeriods                            request);
+    Task<List<WalletsPeriod>> GetAllWalletsPeriods();
+    Task<WalletsPeriod?> GetWalletPeriodById(int                                          id);
+    Task<IEnumerable<WalletsPeriod>> CreateWalletPeriodAsync(IEnumerable<WalletsPeriod>  request);
+    Task<IEnumerable<WalletsPeriod>> UpdateWalletPeriodsAsync(IEnumerable<WalletsPeriod> request);
+    Task<WalletsPeriod> DeleteWalletPeriodAsync(WalletsPeriod                            request);
 }

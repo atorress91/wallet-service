@@ -98,7 +98,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         List<LeaderBoardModel5>         leaderBoardModel5,
         IAccountServiceAdapter?         accountServiceAdapter,
         IWalletRepository               walletRepository,
-        ICollection<GradingDto> gradings,int brandId)
+        ICollection<GradingDto> gradings,long brandId)
     {
 
         leaderBoardModel5 = leaderBoardModel5.OrderModel5();
@@ -128,7 +128,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         List<LeaderBoardModel6> leaderBoardModel6,
         IAccountServiceAdapter? accountServiceAdapter,
         IWalletRepository       walletRepository,
-        ICollection<GradingDto> gradings,int brandId)
+        ICollection<GradingDto> gradings,long brandId)
     {
         leaderBoardModel6 = leaderBoardModel6.OrderModel6();
         await accountServiceAdapter!.DeleteTreeModel6(brandId);
@@ -155,7 +155,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
 
     private static async Task<ICollection<UserBinaryInformation>> LeaderBoardModelFourProcess(
         IAccountServiceAdapter? accountServiceAdapter, 
-        Dictionary<int, decimal> dictionary, int brandId)
+        Dictionary<int, decimal> dictionary, long brandId)
     {
         var result = new List<UserBinaryInformation>();
 
@@ -172,7 +172,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         ModelFourFiveSixMessage         model,
         List<UserGradingRequest> listUsersGraded,
         IWalletRepository?       walletRepository,
-        IAccountServiceAdapter?  accountServiceAdapter, int brandId)
+        IAccountServiceAdapter?  accountServiceAdapter, long brandId)
     {
         var userDictionary = listUsersGraded.ToDictionary(x => x.AffiliateId, _ => 0m);
         foreach (var item in listUsersGraded)
@@ -231,11 +231,11 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         Dictionary<int, decimal>           userDictionary,
         ICollection<LeaderBoardModel5>     leaderBoardModel5,
         ICollection<LeaderBoardModel6>     leaderBoardModel6,
-        ICollection<UserBinaryInformation> resultPoints,int brandId)
+        ICollection<UserBinaryInformation> resultPoints,long brandId)
     {
-        var resultOldPoints   = await walletRepository!.GetUserModelFour(userDictionary.Select(x => x.Key).ToArray());
+        var resultOldPoints   = await walletRepository.GetUserModelFour(userDictionary.Select(x => x.Key).ToArray());
         
-        var userIds           = listUsersGraded!.Select(x => x.AffiliateId).ToArray();
+        var userIds           = listUsersGraded.Select(x => x.AffiliateId).ToArray();
         var responseCondition = await accountServiceAdapter!.GetHave2Children(userIds, brandId);
         
         if (string.IsNullOrEmpty(responseCondition.Content))
@@ -251,13 +251,13 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             decimal payment;
             var     leftPoints            = 0m;
             var     rightPoints           = 0m;
-            var     userPointsInformation = resultPoints.Where(x => x.AffiliateId == user.Key)!.FirstOrDefault();
+            var     userPointsInformation = resultPoints.FirstOrDefault(x => x.AffiliateId == user.Key);
             var     userInformation       = listUsersGraded.First(x => x.AffiliateId == user.Key);
 
             if (userPointsInformation is not null)
             {
-                leftPoints  = oldLeftPoints + userPointsInformation.LeftVolume;
-                rightPoints = oldRightPoints + userPointsInformation.RightVolume;
+                leftPoints  = (decimal)oldLeftPoints! + userPointsInformation.LeftVolume;
+                rightPoints = (decimal)oldRightPoints! + userPointsInformation.RightVolume;
             }
 
             if (leftPoints == rightPoints && leftPoints > 0)
@@ -397,7 +397,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
         IWalletRepository          walletRepository,
         decimal                    payment,
         UserGradingRequest         userInformation,
-        KeyValuePair<int, decimal> user,int brandId)
+        KeyValuePair<int, decimal> user,long brandId)
     {
         var pointsModel = payment + (decimal)userInformation.Commissions;
 
@@ -415,7 +415,7 @@ public class ProcessModelsFourFiveSixConsumer : BaseKafkaConsumer
             walletRepository,
             user.Key,
             userInformation.UserName,
-            grading!.PersonalPurchases,
+            grading.PersonalPurchases,
             string.Format(Constants.ConceptCommissionModelSixPayment, grading.PersonalPurchases, grading.Name),
             WalletConceptType.model_six_payment.ToString());
         await accountServiceAdapter!.UpdateGradingByUser(user.Key, grading.Id, brandId);

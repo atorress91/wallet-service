@@ -9,17 +9,17 @@ public class WalletPeriodRepository : BaseRepository, IWalletPeriodRepository
 {
     public WalletPeriodRepository(WalletServiceDbContext context) : base(context) { }
 
-    public Task<List<WalletsPeriods>> GetAllWalletsPeriods()
+    public Task<List<WalletsPeriod>> GetAllWalletsPeriods()
         => Context.WalletsPeriods.AsNoTracking().ToListAsync();
 
-    public Task<WalletsPeriods?> GetWalletPeriodById(int id)
+    public Task<WalletsPeriod?> GetWalletPeriodById(int id)
         => Context.WalletsPeriods.FirstOrDefaultAsync(x => x.Id == id);
 
 
-    public async Task<IEnumerable<WalletsPeriods>> CreateWalletPeriodAsync(IEnumerable<WalletsPeriods> request)
+    public async Task<IEnumerable<WalletsPeriod>> CreateWalletPeriodAsync(IEnumerable<WalletsPeriod> request)
     {
         var today          = DateTime.Now;
-        var createdPeriods = new List<WalletsPeriods>();
+        var createdPeriods = new List<WalletsPeriod>();
 
         foreach (var period in request)
         {
@@ -35,10 +35,10 @@ public class WalletPeriodRepository : BaseRepository, IWalletPeriodRepository
         return createdPeriods;
     }
 
-    public async Task<IEnumerable<WalletsPeriods>> UpdateWalletPeriodsAsync(IEnumerable<WalletsPeriods> request)
+    public async Task<IEnumerable<WalletsPeriod>> UpdateWalletPeriodsAsync(IEnumerable<WalletsPeriod> request)
     {
         var today          = DateTime.Now;
-        var updatedPeriods = new List<WalletsPeriods>();
+        var updatedPeriods = new List<WalletsPeriod>();
 
         foreach (var period in request)
         {
@@ -55,7 +55,7 @@ public class WalletPeriodRepository : BaseRepository, IWalletPeriodRepository
     }
 
 
-    public async Task<WalletsPeriods> DeleteWalletPeriodAsync(WalletsPeriods request)
+    public async Task<WalletsPeriod> DeleteWalletPeriodAsync(WalletsPeriod request)
     {
         request.DeletedAt = DateTime.Now;
 

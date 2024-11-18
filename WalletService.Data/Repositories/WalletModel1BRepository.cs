@@ -26,7 +26,7 @@ public class WalletModel1BRepository : BaseRepository, IWalletModel1BRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.CreditTransactionSpModel1B, sql);
 
             CreateCreditListParameters(request, cmd);
@@ -49,7 +49,7 @@ public class WalletModel1BRepository : BaseRepository, IWalletModel1BRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.DebitEcoPoolTransactionSpModel1B, sql);
 
             CreateDebitEcoPoolListParameters(request, cmd);
@@ -76,7 +76,7 @@ public class WalletModel1BRepository : BaseRepository, IWalletModel1BRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.DebitTransactionSpModel1B, sql);
 
             var invoicesDetails = CommonExtensions.ConvertToDataTable(request.invoices);
@@ -385,7 +385,7 @@ public class WalletModel1BRepository : BaseRepository, IWalletModel1BRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.DebitEcoPoolTransactionServiceSpModel1B, sql);
 
             var invoicesDetails = CommonExtensions.ConvertToDataTable(request.invoices);
@@ -507,7 +507,7 @@ public class WalletModel1BRepository : BaseRepository, IWalletModel1BRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.CreditEcoPoolTransactionServiceSpModel1B, sql);
 
             CreateCreditListParameters(request, cmd);

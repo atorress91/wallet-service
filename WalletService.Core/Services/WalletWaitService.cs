@@ -28,7 +28,7 @@ public class WalletWaitService : BaseService, IWalletWaitService
 
     public async Task<WalletWaitDto?> CreateWalletWaitAsync(WalletWaitRequest request)
     {
-        var wallet = Mapper.Map<WalletsWaits>(request);
+        var wallet = Mapper.Map<WalletsWait>(request);
         wallet = await _walletWaitRepository.CreateWalletWaitAsync(wallet);
         return Mapper.Map<WalletWaitDto>(wallet);
     }
@@ -41,7 +41,7 @@ public class WalletWaitService : BaseService, IWalletWaitService
             return null;
         wallet.AffiliateId   = request.AffiliateId;
         wallet.Credit        = request.Credit;
-        wallet.PaymentMethod = request.PaymentMethod;
+        wallet.PaymentMethod = request.PaymentMethod!;
         wallet.Bank          = request.Bank;
         wallet.Support       = request.Support;
         wallet.DepositDate   = request.DepositDate;

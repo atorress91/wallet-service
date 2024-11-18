@@ -167,7 +167,7 @@ public class RecyCoinPdfService : IRecyCoinPdfService
                                     tabla.Cell().BorderBottom(0.5f).BorderColor("#FFFFFF").Padding(2)
                                         .Text(quantity.ToString()).FontColor("#FFFFFF").FontSize(10);
                                     tabla.Cell().BorderBottom(0.5f).BorderColor("#FFFFFF").Padding(2)
-                                        .Text($"$ {price.ToString("0.##")}").FontColor("#FFFFFF").FontSize(10);
+                                        .Text($"$ {price:0.##}").FontColor("#FFFFFF").FontSize(10);
                                     tabla.Cell().BorderBottom(0.5f).BorderColor("#FFFFFF").Padding(2)
                                         .Text($"$ {discount.ToString("0.##")}").FontColor("#FFFFFF").FontSize(10);
                                     tabla.Cell().BorderBottom(0.5f).BorderColor("#FFFFFF").Padding(2)
@@ -214,12 +214,12 @@ public class RecyCoinPdfService : IRecyCoinPdfService
         });
     }
     
-    public async Task<byte[]> RegenerateInvoice(UserInfoResponse userInfo, Invoices invoice)
+    public async Task<byte[]> RegenerateInvoice(UserInfoResponse userInfo, Invoice invoice)
     {
         var date = DateTime.Now.ToString("MM/dd/yyyy");
         var totalTax = 0m;
         var subTotal = 0m;
-        var totalDiscount = 0m;
+        decimal? totalDiscount = 0m;
         var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         var separator = Path.DirectorySeparatorChar;
         var pathFile = $"{workingDirectory}{separator}Assets{separator}logo-recy.png";
@@ -356,7 +356,7 @@ public class RecyCoinPdfService : IRecyCoinPdfService
                                         .FontColor("#39FF14");
                                 });
 
-                                foreach (var item in invoice.InvoiceDetail)
+                                foreach (var item in invoice.InvoicesDetails)
                                 {
                                     var conceptName = item.ProductName;
                                     var quantity = item.ProductQuantity;
@@ -372,7 +372,7 @@ public class RecyCoinPdfService : IRecyCoinPdfService
                                     tabla.Cell().BorderBottom(0.5f).BorderColor("#FFFFFF").Padding(2)
                                         .Text($"$ {price.ToString("0.##")}").FontColor("#FFFFFF").FontSize(10);
                                     tabla.Cell().BorderBottom(0.5f).BorderColor("#FFFFFF").Padding(2)
-                                        .Text($"$ {discount.ToString("0.##")}").FontColor("#FFFFFF").FontSize(10);
+                                        .Text($"$ {discount.ToString()}").FontColor("#FFFFFF").FontSize(10);
                                     tabla.Cell().BorderBottom(0.5f).BorderColor("#FFFFFF").Padding(2)
                                         .Text($"$ {total.ToString("0.##")}").FontColor("#FFFFFF").FontSize(10);
 

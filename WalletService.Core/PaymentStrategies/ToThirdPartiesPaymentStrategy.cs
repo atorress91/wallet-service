@@ -174,8 +174,8 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             BrandId = request.BrandId
         };
 
-        var debitWallet = Mapper.Map<Wallets>(debitTransaction);
-        var creditWallet = Mapper.Map<Wallets>(creditTransaction);
+        var debitWallet = Mapper.Map<Wallet>(debitTransaction);
+        var creditWallet = Mapper.Map<Wallet>(creditTransaction);
 
         var success = await _walletRepository.CreateTransferBalance(debitWallet, creditWallet);
 
@@ -264,7 +264,7 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         return true;
     }
 
-    private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId, int brandId)
+    private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId, long brandId)
     {
         var amountRequests =
             await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId, brandId);

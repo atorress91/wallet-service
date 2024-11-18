@@ -10,10 +10,10 @@ public interface IWalletRequestService
     Task<IEnumerable<WalletRequestDto>> GetAllWalletsRequests();
     Task<IEnumerable<WalletRequestDto>?> GetWalletRequestById(int                    id);
     Task<WalletRequestDto?> CreateWalletRequestAsync(WalletRequestRequest            request);
-    Task CancelWalletRequestsAsync(List<int>                                         id);
-    Task<ServicesResponse?> ProcessOption(int                                        option, List<int> ids);
+    Task CancelWalletRequestsAsync(List<long>                                         id);
+    Task<ServicesResponse?> ProcessOption(int                                        option, List<long> ids);
     Task<WalletRequestDto?> CreateWalletRequestRevert(WalletRequestRevertTransaction request);
     Task<IEnumerable<WalletRequestDto>?> GetAllWalletRequestRevertTransaction();
-    Task<bool> AdministrativePaymentAsync(WalletsRequests[] requests);
+    Task<bool> AdministrativePaymentAsync(WalletsRequest[] requests);
 
 }

@@ -16,7 +16,7 @@ public class ConfigurationAdapter : BaseAdapter, IConfigurationAdapter
     protected override string? GetTokenUrl()
         => AppSettings.EndpointTokens!.SystemConfigurationServiceToken;
     
-    protected override string? GetWebToken(int brandId)
+    protected override string? GetWebToken(long brandId)
     {
         return brandId switch
         {
@@ -26,13 +26,13 @@ public class ConfigurationAdapter : BaseAdapter, IConfigurationAdapter
         };
     }
 
-    public Task<IRestResponse> GetGradings(int brandId)
+    public Task<IRestResponse> GetGradings(long brandId)
         => Get($"/grading", new Dictionary<string, string>(), brandId);
 
-    public Task<IRestResponse> GetConfigurationProduct(int brandId)
+    public Task<IRestResponse> GetConfigurationProduct(long brandId)
         => Get($"/configuration/get_product_configuration", new Dictionary<string, string>(),brandId);
 
-    public Task<IRestResponse> GetPointsConfiguration(int brandId)
+    public Task<IRestResponse> GetPointsConfiguration(long brandId)
         => Get($"/configuration/get_points_configuration", new Dictionary<string, string>(),brandId);
     
 }

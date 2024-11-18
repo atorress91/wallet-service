@@ -21,5 +21,5 @@ public class WalletTransactionRequest
     public string? AffiliateUserName { get; set; }
     public string? AdminUserName { get; set; }
     public WalletConceptType? ConceptType { get; set; }
-    public int BrandId { get; set; }
+    public long BrandId { get; set; }
 }

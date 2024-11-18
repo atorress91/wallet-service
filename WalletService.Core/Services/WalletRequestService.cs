@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -102,7 +103,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         if (request.Amount > userAvailableBalance)
             return null;
 
-        var walletRequest = new WalletsRequests
+        var walletRequest = new WalletsRequest
         {
             Amount        = request.Amount,
             Concept       = request.Concept!,
@@ -121,7 +122,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         return Mapper.Map<WalletRequestDto>(walletRequest);
     }
 
-    public async Task<ServicesResponse?> ProcessOption(int pOption, List<int> ids)
+    public async Task<ServicesResponse?> ProcessOption(int pOption, List<long> ids)
     {
         var response = new ServicesResponse();
 
@@ -155,7 +156,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         return response;
     }
 
-    public async Task CancelWalletRequestsAsync(List<int> ids)
+    public async Task CancelWalletRequestsAsync(List<long> ids)
     {
         var idsList = await _walletRequestRepository.GetWalletRequestsByIds(ids);
 
@@ -193,7 +194,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
             ConceptType       = WalletConceptType.revert_pool.ToString()
         };
 
-        var walletRequest = new WalletsRequests
+        var walletRequest = new WalletsRequest
         {
             AffiliateId   = response.AffiliateId,
             AdminUserName = userInfoResponse.UserName,
@@ -275,12 +276,12 @@ public class WalletRequestService : BaseService, IWalletRequestService
             return false;
         }
     }
-    private async Task UpdateWalletRequestAsync(WalletsRequests walletRequest)
+    private async Task UpdateWalletRequestAsync(WalletsRequest walletRequest)
     {
         walletRequest.AttentionDate = DateTime.Now;
         await _walletRequestRepository.UpdateWalletRequestsAsync(walletRequest);
     }
-    public async Task<bool> AdministrativePaymentAsync(WalletsRequests[] requests)
+    public async Task<bool> AdministrativePaymentAsync(WalletsRequest[] requests)
     {
         if (requests.Length is 0)
             return false;
@@ -292,22 +293,22 @@ public class WalletRequestService : BaseService, IWalletRequestService
         var userInfoList  = userInfoArray.Where(u => u != null).ToList();
         var today         = DateTime.Now;
 
-        var walletsList = new List<Wallets>();
-        var idsList     = new List<WalletsRequests>();
+        var walletsList = new List<Wallet>();
+        var idsList     = new List<WalletsRequest>();
 
         foreach (var user in userInfoList)
         {
             var correspondingRequest = requests.FirstOrDefault(r => r.AffiliateId == user!.Id);
             if (correspondingRequest != null)
             {
-                var walletEntry = new Wallets
+                var walletEntry = new Wallet
                 {
                     AffiliateId       = user!.Id,
                     AffiliateUserName = user.UserName,
                     AdminUserName     = Constants.AdminEcosystemUserName,
                     UserId            = Constants.AdminUserId,
                     Credit            = Constants.EmptyValue,
-                    Debit             = Convert.ToDouble(correspondingRequest.Amount),
+                    Debit             = correspondingRequest.Amount,
                     Deferred          = Constants.EmptyValue,
                     Status            = true,
                     Concept           = Constants.WithdrawalBalance,
@@ -358,9 +359,10 @@ public class WalletRequestService : BaseService, IWalletRequestService
 
         var allowedDatesObjects = await _walletPeriodRepository.GetAllWalletsPeriods();
 
-        var allowedDates = allowedDatesObjects.Select(wp => wp.Date.Date).ToList();
+        var allowedDates = allowedDatesObjects.Select(wp => wp.Date).ToList();
 
-        return allowedDates.Contains(localDateTime.Date);
+        var localDateOnly = DateOnly.FromDateTime(localDateTime.Date);
+        return allowedDates.Contains(localDateOnly);
     }
 
     private async Task<bool> HasWalletAddress(int affiliateId)

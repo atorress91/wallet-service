@@ -27,6 +27,7 @@
         <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0-preview.3.23174.8"/>
         <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0-preview.3.23174.8"/>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.1" />
         <PackageReference Include="RestSharp" Version="110.1.0"/>
     </ItemGroup>
 

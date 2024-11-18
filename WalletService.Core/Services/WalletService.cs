@@ -117,10 +117,10 @@ public class WalletService : BaseService, IWalletService
     public async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId)
     {
         var                   key       = string.Format(CacheKeys.BalanceInformationModel2, affiliateId);
-        // var                   existsKey = await _redisCache.KeyExists(key);
+        var                   existsKey = await _redisCache.KeyExists(key);
         BalanceInformationDto response;
-        // if (!existsKey)
-        // {
+        if (!existsKey)
+        {
             var amountRequests       = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId,_brandService.BrandId);
             var availableBalance     = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId, _brandService.BrandId);
             var reverseBalance       = await _walletRepository.GetReverseBalanceByAffiliateId(affiliateId, _brandService.BrandId);
@@ -145,11 +145,11 @@ public class WalletService : BaseService, IWalletService
                 response.AvailableBalance -= response.ReverseBalance;
             }
 
-            // await _redisCache.Set(key, response, TimeSpan.FromHours(1));
-            // return response;
-        // }
+            await _redisCache.Set(key, response, TimeSpan.FromHours(1));
+            return response;
+        }
 
-        // response = await _redisCache.Get<BalanceInformationDto>(key) ?? new BalanceInformationDto();
+        response = await _redisCache.Get<BalanceInformationDto>(key) ?? new BalanceInformationDto();
         return response;
     }
 
@@ -322,8 +322,8 @@ public class WalletService : BaseService, IWalletService
             ConceptType       = WalletConceptType.balance_transfer
         };
 
-        var debitWallet  = Mapper.Map<Wallets>(debitTransaction);
-        var creditWallet = Mapper.Map<Wallets>(creditTransaction);
+        var debitWallet  = Mapper.Map<Wallet>(debitTransaction);
+        var creditWallet = Mapper.Map<Wallet>(creditTransaction);
 
         var success = await _walletRepository.CreateTransferBalance(debitWallet, creditWallet);
 
@@ -419,8 +419,8 @@ public class WalletService : BaseService, IWalletService
             BrandId           = _brandService.BrandId,  
         };
 
-        var debitWallet  = Mapper.Map<Wallets>(debitTransaction);
-        var creditWallet = Mapper.Map<Wallets>(creditTransaction);
+        var debitWallet  = Mapper.Map<Wallet>(debitTransaction);
+        var creditWallet = Mapper.Map<Wallet>(creditTransaction);
 
         var success = await _walletRepository.CreateTransferBalance(debitWallet, creditWallet);
 
@@ -456,7 +456,7 @@ public class WalletService : BaseService, IWalletService
 
                 break;
             case 1:
-                if (!await DeleteInvoiceAndDetails(walletRequest.InvoiceNumber ?? 0))
+                if (!await DeleteInvoiceAndDetails(walletRequest.InvoiceNumber))
                     return false;
 
                 if (!await _walletRepository.CreditTransaction(creditRequest))
@@ -475,7 +475,7 @@ public class WalletService : BaseService, IWalletService
         return true;
     }
 
-    private CreditTransactionRequest CreateCreditTransactionRequest(WalletsRequests walletRequest)
+    private CreditTransactionRequest CreateCreditTransactionRequest(WalletsRequest walletRequest)
     {
         return new CreditTransactionRequest
         {
@@ -489,7 +489,7 @@ public class WalletService : BaseService, IWalletService
         };
     }
 
-    private async Task<bool> DeleteInvoiceAndDetails(int invoiceNumber)
+    private async Task<bool> DeleteInvoiceAndDetails(long invoiceNumber)
     {
         try
         {
@@ -510,7 +510,7 @@ public class WalletService : BaseService, IWalletService
         }
     }
 
-    private async Task UpdateWalletRequestAsync(WalletsRequests walletRequest)
+    private async Task UpdateWalletRequestAsync(WalletsRequest walletRequest)
     {
         walletRequest.AttentionDate = DateTime.Now;
         await _walletRequestRepository.UpdateWalletRequestsAsync(walletRequest);

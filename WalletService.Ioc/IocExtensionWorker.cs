@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using NLog.Extensions.Logging;
 using StackExchange.Redis;
 using WalletService.Core.Caching;
-using WalletService.Core.Caching.Interface;
 using WalletService.Core.Kafka.Producer;
 using WalletService.Core.Kafka.Topics;
 using WalletService.Core.Lock;
@@ -92,11 +91,11 @@ public static class IocExtensionWorker
         var appConfig = services.BuildServiceProvider()
             .GetRequiredService<IOptions<ApplicationConfiguration>>().Value;
 
-        var connectionString = appConfig.ConnectionStrings?.SqlServerConnection;
+        var connectionString = appConfig.ConnectionStrings?.PostgreSqlConnection;
 
         services.AddDbContext<WalletServiceDbContext>(options =>
         {
-            options.UseSqlServer(connectionString).EnableSensitiveDataLogging().EnableDetailedErrors();
+            options.UseNpgsql(connectionString).EnableSensitiveDataLogging().EnableDetailedErrors();
         });
     }
     

@@ -39,74 +39,74 @@ public class MapperProfile : Profile
 
     private void MapDto()
     {
-        CreateMap<Wallets, WalletDto>();
-        CreateMap<WalletsHistories, WalletHistoryDto>();
-        CreateMap<WalletsPeriods, WalletPeriodDto>();
-        CreateMap<WalletsRetentionsConfigs, WalletRetentionConfigDto>();
-        CreateMap<WalletsWaits, WalletWaitDto>();
-        CreateMap<WalletsWithdrawals, WalletWithDrawalDto>();
-        CreateMap<WalletsRequests, WalletRequestDto>();
-        CreateMap<Invoices, InvoiceDto>();
-        CreateMap<Invoices, InvoiceDTO>();
-        CreateMap<InvoicesDetails, InvoiceDetailDto>();
+        CreateMap<Wallet, WalletDto>();
+        CreateMap<WalletsHistory, WalletHistoryDto>();
+        CreateMap<WalletsPeriod, WalletPeriodDto>();
+        CreateMap<WalletsRetentionsConfig, WalletRetentionConfigDto>();
+        CreateMap<WalletsWait, WalletWaitDto>();
+        CreateMap<WalletsWithdrawal, WalletWithDrawalDto>();
+        CreateMap<WalletsRequest, WalletRequestDto>();
+        CreateMap<Invoice, InvoiceDto>();
+        CreateMap<Invoice, InvoiceDTO>();
+        CreateMap<InvoicesDetail, InvoiceDetailDto>();
         CreateMap<ModelConfiguration, ModelConfigurationDto>();
-        CreateMap<ModelConfigurationLevels, EcoPoolLevelDto>();
-        CreateMap<WalletTransactionRequest, Wallets>();
+        CreateMap<ModelConfigurationLevel, EcoPoolLevelDto>();
+        CreateMap<WalletTransactionRequest, Wallet>();
         CreateMap<ResultsModel2, ResultsEcoPoolDto>();
-        CreateMap<ResultsModel2Levels, ResultEcoPoolLevelsDto>();
-        CreateMap<PaymentTransaction, PaymentTransactionDto>();
+        CreateMap<ResultsModel2Level, ResultEcoPoolLevelsDto>();
+        CreateMap<CoinpaymentTransaction, PaymentTransactionDto>();
         CreateMap<InvoicesTradingAcademyResponse, InvoiceTradingAcademyDto>();
         CreateMap<InvoiceModelOneAndTwoResponse, InvoiceModelOneAndTwoDto>();
 
 
-        CreateMap<WalletRequestRequest, WalletsRequests>()
+        CreateMap<WalletRequestRequest, WalletsRequest>()
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());
 
-        CreateMap<WalletRequest, Wallets>()
+        CreateMap<WalletRequest, Wallet>()
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());
 
-        CreateMap<WalletHistoryRequest, WalletsHistories>()
+        CreateMap<WalletHistoryRequest, WalletsHistory>()
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());
 
-        CreateMap<WalletPeriodRequest, WalletsPeriods>()
+        CreateMap<WalletPeriodRequest, WalletsPeriod>()
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());
 
-        CreateMap<WalletRetentionConfigRequest, WalletsRetentionsConfigs>()
+        CreateMap<WalletRetentionConfigRequest, WalletsRetentionsConfig>()
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());
 
-        CreateMap<WalletWaitRequest, WalletsWaits>()
+        CreateMap<WalletWaitRequest, WalletsWait>()
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());
 
-        CreateMap<WalletWithDrawalRequest, WalletsWithdrawals>()
+        CreateMap<WalletWithDrawalRequest, WalletsWithdrawal>()
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());
 
-        CreateMap<InvoiceRequest, Invoices>()
+        CreateMap<InvoiceRequest, Invoice>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-            .ForMember(dest => dest.InvoiceDetail, opt => opt.Ignore());
+            .ForMember(dest => dest.InvoicesDetails, opt => opt.Ignore());
 
-        CreateMap<Invoices, InvoiceDto>()
-            .ForMember(dest => dest.InvoiceDetail, opt => opt.MapFrom(src => src.InvoiceDetail));
+        CreateMap<Invoice, InvoiceDto>()
+            .ForMember(dest => dest.InvoiceDetail, opt => opt.MapFrom(src => src.InvoicesDetails));
 
-        CreateMap<InvoiceDetailRequest, InvoicesDetails>()
+        CreateMap<InvoiceDetailRequest, InvoicesDetail>()
             .ForMember(dest => dest.Invoice, opt => opt.Ignore());
 
-        CreateMap<WalletTransactionRequest, Wallets>()
+        CreateMap<WalletTransactionRequest, Wallet>()
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());
@@ -115,15 +115,15 @@ public class MapperProfile : Profile
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(dest => dest.ResultsModel2Levels, opt => opt.MapFrom(src => src.ResultEcoPoolLevels));
 
-        CreateMap<ResultEcoPoolLevelsDto, ResultsModel2Levels>()
+        CreateMap<ResultEcoPoolLevelsDto, ResultsModel2Level>()
             .ForMember(d => d.Id, map => map.Ignore());
 
-        CreateMap<CoinPaymentTransactionRequest, PaymentTransaction>()
+        CreateMap<CoinPaymentTransactionRequest, CoinpaymentTransaction>()
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());
 
-        CreateMap<PaymentTransactionRequest, PaymentTransaction>()
+        CreateMap<PaymentTransactionRequest, CoinpaymentTransaction>()
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());

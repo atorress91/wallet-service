@@ -201,7 +201,7 @@ public class ConPaymentService : BaseService, IConPaymentService
     {
         var result = JsonConvert.DeserializeObject<CreateConPaymentsTransactionResponse>(restResponse.Content!);
 
-        var paymentTransaction = new PaymentTransaction
+        var paymentTransaction = new CoinpaymentTransaction
         {
             IdTransaction = result!.Result!.Txn_Id!,
             AffiliateId = Convert.ToInt32(request.ItemNumber),
@@ -282,7 +282,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         return "IPN OK";
     }
 
-    private async Task HandleCancelledTransaction(PaymentTransaction transactionResult, IpnRequest ipnRequest,
+    private async Task HandleCancelledTransaction(CoinpaymentTransaction transactionResult, IpnRequest ipnRequest,
         string products)
     {
         _logger.LogInformation(
@@ -292,7 +292,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         await RevertUnconfirmedOrUnpaidTransactions(ipnRequest.txn_id, products);
     }
 
-    private async Task HandlePaymentTransaction(PaymentTransaction transactionResult, IpnRequest ipnRequest)
+    private async Task HandlePaymentTransaction(CoinpaymentTransaction transactionResult, IpnRequest ipnRequest)
     {
         _logger.LogInformation($"[ConPaymentService] | HandlePaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
         var walletRequest = BuildWalletRequest(ipnRequest,transactionResult);
@@ -331,7 +331,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         }
     }
 
-    private async Task<ProductType> GetProductType(List<ProductRequest> request,int brandId)
+    private async Task<ProductType> GetProductType(List<ProductRequest> request,long brandId)
     {
         if (request == null || !request.Any())
         {
@@ -389,7 +389,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         return true;
     }
 
-    private WalletRequest BuildWalletRequest(IpnRequest ipnRequest,PaymentTransaction transaction)
+    private WalletRequest BuildWalletRequest(IpnRequest ipnRequest,CoinpaymentTransaction transaction)
     {
         return new WalletRequest
         {
@@ -515,7 +515,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         return true;
     }
 
-    public async Task<CoinPaymentWithdrawalResponse?> CreateMassWithdrawal(WalletsRequests[] requests)
+    public async Task<CoinPaymentWithdrawalResponse?> CreateMassWithdrawal(WalletsRequest[] requests)
     {
         _logger.LogInformation(
             $"[CoinPaymentService] | CreateMassWithdrawal | Start | requests: {requests.ToJsonString()}");
@@ -553,7 +553,7 @@ public class ConPaymentService : BaseService, IConPaymentService
 
         if (withdrawalResults?.Result != null)
         {
-            var successfulRequests = new List<WalletsRequests>();
+            var successfulRequests = new List<WalletsRequest>();
 
             int index = 0;
             foreach (var key in withdrawalResults.Result.Keys)
@@ -575,7 +575,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         return withdrawalResults;
     }
 
-    private async Task<List<CoinPaymentMassWithdrawalRequest>> GetAddressesByAffiliateId(WalletsRequests[] requests)
+    private async Task<List<CoinPaymentMassWithdrawalRequest>> GetAddressesByAffiliateId(WalletsRequest[] requests)
     {
         List<CoinPaymentMassWithdrawalRequest> withdrawals = new List<CoinPaymentMassWithdrawalRequest>();
 
@@ -610,24 +610,24 @@ public class ConPaymentService : BaseService, IConPaymentService
         return withdrawals;
     }
 
-    private async Task<bool> CreateDebitTransaction(WalletsRequests[] requests)
+    private async Task<bool> CreateDebitTransaction(WalletsRequest[] requests)
     {
         if (requests.Length is 0)
             return false;
 
-        List<Wallets> walletsList = new List<Wallets>();
+        List<Wallet> walletsList = new List<Wallet>();
         var today = DateTime.Now;
 
         foreach (var request in requests)
         {
-            var walletEntry = new Wallets
+            var walletEntry = new Wallet
             {
                 AffiliateId = request.AffiliateId,
                 AffiliateUserName = request.AdminUserName,
                 AdminUserName = Constants.AdminEcosystemUserName,
                 UserId = Constants.AdminUserId,
                 Credit = Constants.EmptyValue,
-                Debit = Convert.ToDouble(request.Amount),
+                Debit = request.Amount,
                 Deferred = Constants.EmptyValue,
                 Status = true,
                 Concept = Constants.WithdrawalBalance,
@@ -652,9 +652,9 @@ public class ConPaymentService : BaseService, IConPaymentService
         return result;
     }
 
-    private async Task UpdateWithdrawals(WalletsRequests[] requests)
+    private async Task UpdateWithdrawals(WalletsRequest[] requests)
     {
-        List<WalletsRequests> withdrawalList = requests.ToList();
+        List<WalletsRequest> withdrawalList = requests.ToList();
 
         DateTime today = DateTime.Now;
 

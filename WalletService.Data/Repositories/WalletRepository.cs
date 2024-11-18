@@ -23,10 +23,10 @@ public class WalletRepository : BaseRepository, IWalletRepository
         base(context)
         => _appSettings = appSettings.Value;
 
-    public Task<List<Wallets>> GetWalletByAffiliateId(int affiliateId, int brandId)
+    public Task<List<Wallet>> GetWalletByAffiliateId(int affiliateId, long brandId)
         => Context.Wallets.Where(x => x.AffiliateId == affiliateId && x.BrandId == brandId).ToListAsync();
 
-    public async Task<decimal> GetAvailableBalanceByAffiliateId(int affiliateId, int brandId)
+    public async Task<decimal> GetAvailableBalanceByAffiliateId(int affiliateId, long brandId)
     {
         var list = await Context.Wallets
             .Where(x => x.AffiliateId == affiliateId && x.Status == true && x.BrandId == brandId).ToListAsync();
@@ -35,7 +35,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return result.ToDecimal();
     }
 
-    public async Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance(int brandId)
+    public async Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance(long brandId)
     {
         var list = await Context.Wallets
             .Where(x => x.Status == true && x.BrandId == brandId)
@@ -52,16 +52,16 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return list;
     }
 
-    public async Task<decimal> GetAvailableBalanceAdmin(int brandId)
+    public async Task<decimal> GetAvailableBalanceAdmin(long brandId)
     {
         var result = await Context.Wallets
             .Where(x => x.Status == true && x.BrandId == brandId)
             .Select(x => x.Credit - x.Debit).SumAsync();
 
-        return (decimal)result;
+        return (decimal)result!;
     }
 
-    public async Task<decimal?> GetReverseBalanceByAffiliateId(int affiliateId, int brandId)
+    public async Task<decimal?> GetReverseBalanceByAffiliateId(int affiliateId, long brandId)
     {
         var totalCredits = await Context.Wallets
             .Where(x => x.AffiliateId == affiliateId && x.ConceptType == WalletConceptType.revert_pool.ToString() && x.BrandId == brandId)
@@ -78,7 +78,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return Convert.ToDecimal(reverseBalance);
     }
     
-    public async Task<decimal> GetTotalReverseBalance(int brandId)
+    public async Task<decimal> GetTotalReverseBalance(long brandId)
     {
         var totalCredits = await Context.Wallets
             .Where(x=> x.ConceptType == WalletConceptType.revert_pool.ToString() && x.BrandId == brandId)
@@ -95,14 +95,14 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return Convert.ToDecimal(reverseBalance);
     }
 
-    public Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId, int brandId)
+    public Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId, long brandId)
         => Context.InvoicesDetails.Include(x => x.Invoice).AsNoTracking()
             .Where(x 
                 => x.Invoice.AffiliateId == affiliateId && (x.PaymentGroupId == 2 || x.PaymentGroupId == 11) 
                                                         && x.ProductPack && !x.Invoice.CancellationDate.HasValue && x.BrandId == brandId)
             .SumAsync(s => s.BaseAmount);
     
-    public async Task<double?> GetTotalCommissionsPaid(int affiliateId, int brandId)
+    public async Task<decimal?> GetTotalCommissionsPaid(int affiliateId, long brandId)
     {
         var status = new HashSet<string>
         {
@@ -125,7 +125,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.DebitTransactionSp, sql);
 
             var invoicesDetails = ConvertToDataTable(request.invoices);
@@ -153,7 +153,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.CoursesDebitTransactionSp, sql);
 
             var invoicesDetails = ConvertToDataTable(request.invoices);
@@ -181,7 +181,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.DebitEcoPoolTransactionSp, sql);
 
             CreateDebitEcoPoolListParameters(request, cmd);
@@ -207,7 +207,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.AdminDebitTransactionSp, sql);
 
             var invoicesDetails = ConvertToDataTable(request.invoices);
@@ -236,7 +236,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.CreditTransactionSp, sql);
 
             CreateCreditListParameters(request, cmd);
@@ -258,7 +258,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.CreditTransactionSpModel1A, sql);
 
             CreateCreditListParameters(request, cmd);
@@ -280,7 +280,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.CreditTransactionSpModel1B, sql);
 
             CreateCreditListParameters(request, cmd);
@@ -302,7 +302,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
 
             await using var cmd = new SqlCommand(Constants.Model2RequestSp, sqlConnection);
 
@@ -329,7 +329,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
 
             await using var cmd = new SqlCommand(Constants.Model1ARequestSp, sqlConnection);
 
@@ -356,7 +356,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
 
             await using var cmd = new SqlCommand(Constants.Model1BRequestSp, sqlConnection);
 
@@ -384,7 +384,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
 
             await using var cmd = new SqlCommand(Constants.Model3RequestSp, sqlConnection);
 
@@ -848,27 +848,27 @@ public class WalletRepository : BaseRepository, IWalletRepository
         });
     }
 
-    public Task<List<Wallets>> GetWalletByUserId(int userId , int brandId)
+    public Task<List<Wallet>> GetWalletByUserId(int userId , long brandId)
         => Context.Wallets.Where(x => x.UserId == userId && x.BrandId == brandId).ToListAsync();
 
-    public Task<List<Wallets>> GetWalletsRequest(int userId, int brandId)
+    public Task<List<Wallet>> GetWalletsRequest(int userId, long brandId)
         => Context.Wallets.AsNoTracking().Where(x
             => x.ConceptType == WalletConceptType.wallet_withdrawal_request.ToString()
                && x.AffiliateId == userId && x.BrandId == brandId).ToListAsync();
 
-    public Task<List<Wallets>> GetAllWallets(int brandId)
-        => Context.Wallets.Where(x=>x.BrandId == brandId).AsNoTracking().ToListAsync();
+    public Task<List<Wallet>> GetAllWallets(long brandId)
+        => Context.Wallets.Where(x=> x.BrandId == brandId).AsNoTracking().ToListAsync();
 
-    public Task<List<ModelFourStatistics>> GetUserModelFour(int[] affiliateIds)
+    public Task<List<ModelFourStatistic>> GetUserModelFour(int[] affiliateIds)
     {
         return Context.ModelFourStatistics.AsNoTracking().Where(x
             => affiliateIds.Contains(x.AffiliateId)).ToListAsync();
     }
 
-    public Task<Wallets?> GetWalletById(int id, int brandId)
+    public Task<Wallet?> GetWalletById(int id, long brandId)
         => Context.Wallets.FirstOrDefaultAsync(x => x.Id == id && x.BrandId == brandId);
 
-    public async Task<Wallets> CreateWalletAsync(Wallets request)
+    public async Task<Wallet> CreateWalletAsync(Wallet request)
     {
         var today = DateTime.Now;
         request.CreatedAt = today;
@@ -880,7 +880,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return request;
     }
 
-    public async Task<Wallets> UpdateWalletAsync(Wallets request)
+    public async Task<Wallet> UpdateWalletAsync(Wallet request)
     {
         var today = DateTime.Now;
         request.UpdatedAt = today;
@@ -890,7 +890,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return request;
     }
 
-    public async Task<Wallets> DeleteWalletAsync(Wallets request)
+    public async Task<Wallet> DeleteWalletAsync(Wallet request)
     {
         request.DeletedAt = DateTime.Now;
 
@@ -900,36 +900,36 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return request;
     }
 
-    public Task<List<InvoicesDetails>> GetDebitsModel2WithinMonth(DateTime from, DateTime to)
+    public Task<List<InvoicesDetail>> GetDebitsModel2WithinMonth(DateTime from, DateTime to)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
             .Where(x => x.ProductPack && x.PaymentGroupId == 2 && x.Invoice.Status == true && x.Invoice.CancellationDate == null &&
                         x.Date >= from && x.Date <= to).ToListAsync();   
     
-    public Task<List<InvoicesDetails>> GetDebitsModel1AWithinMonth(DateTime from, DateTime to)
+    public Task<List<InvoicesDetail>> GetDebitsModel1AWithinMonth(DateTime from, DateTime to)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
             .Where(x => x.PaymentGroupId == 7 && x.Invoice.Status == true && x.Invoice.CancellationDate == null &&
                         x.Date >= from && x.Date <= to).ToListAsync();
     
-    public Task<List<InvoicesDetails>> GetDebitsModel1BWithinMonth(DateTime from, DateTime to)
+    public Task<List<InvoicesDetail>> GetDebitsModel1BWithinMonth(DateTime from, DateTime to)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
             .Where(x => x.PaymentGroupId == 8 && x.Invoice.Status == true && x.Invoice.CancellationDate == null &&
                         x.Date >= from && x.Date <= to).ToListAsync();
 
-    public Task<List<InvoicesDetails>> GetDebitsModel2OutsideMonth(DateTime date)
+    public Task<List<InvoicesDetail>> GetDebitsModel2OutsideMonth(DateTime date)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
             .Where(x => x.Date.Year >= 2024 && x.ProductPack && x.PaymentGroupId == 2 && x.Date < date && x.Invoice.Status == true && 
                         x.Invoice.CancellationDate == null).ToListAsync();
-    public Task<List<InvoicesDetails>> GetDebitsModel1AOutsideMonth(DateTime date)
+    public Task<List<InvoicesDetail>> GetDebitsModel1AOutsideMonth(DateTime date)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
             .Where(x => x.PaymentGroupId == 7 && x.Date < date && x.Invoice.Status == true && 
                         x.Invoice.CancellationDate == null).ToListAsync();
-    public Task<List<InvoicesDetails>> GetDebitsModel1BOutsideMonth(DateTime date)
+    public Task<List<InvoicesDetail>> GetDebitsModel1BOutsideMonth(DateTime date)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
             .Where(x => x.PaymentGroupId == 8 && x.Date < date && x.Invoice.Status == true && 
                         x.Invoice.CancellationDate == null).ToListAsync();
 
     
-    public Task<List<InvoicesDetails>> GetInvoicesDetailsItemsForModel3(DateTime from, DateTime to)
+    public Task<List<InvoicesDetail>> GetInvoicesDetailsItemsForModel3(DateTime from, DateTime to)
     {
         return Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
             .Where(x 
@@ -937,7 +937,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
                x.Date >= from && x.Date <= to && x.Invoice.Status && x.Invoice.CancellationDate == null).ToListAsync();
     }
 
-    public async Task<bool> CreateTransferBalance(Wallets debitTransaction, Wallets creditTransaction)
+    public async Task<bool> CreateTransferBalance(Wallet debitTransaction, Wallet creditTransaction)
     {
         await using var transaction = await Context.Database.BeginTransactionAsync();
         var today = DateTime.Now;
@@ -964,7 +964,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
     public async Task RevertDebitTransactionAsync(int id)
     {
-        await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+        await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
         await using var cmd = new SqlCommand(Constants.RevertDebitTransaction, sql);
 
         cmd.CommandType = CommandType.StoredProcedure;
@@ -978,7 +978,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         await sql.CloseAsync();
     }
 
-    public async Task<bool> IsActivePoolGreaterThanOrEqualTo25(int affiliateId, int brandId)
+    public async Task<bool> IsActivePoolGreaterThanOrEqualTo25(int affiliateId, long brandId)
     {
         var result = await Context.InvoicesDetails.Include(x => x.Invoice)
             .Where(x => x.ProductPack && x.Invoice.AffiliateId == affiliateId && x.Invoice.Status == true &&
@@ -994,7 +994,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.HandleMembershipTransactions, sql);
 
             var invoicesDetails = ConvertToDataTable(request.invoices);
@@ -1023,7 +1023,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.MembershipDebitTransactions, sql);
 
             var invoicesDetails = ConvertToDataTable(request.invoices);
@@ -1048,7 +1048,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         }
     }
 
-    private DataTable ConvertToWalletsDataTable(Wallets[] requests)
+    private DataTable ConvertToWalletsDataTable(Wallet[] requests)
     {
         var today = DateTime.Now;
         var dataTable = new DataTable();
@@ -1081,11 +1081,11 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return dataTable;
     }
 
-    public async Task<bool> BulkAdministrativeDebitTransaction(Wallets[] requests)
+    public async Task<bool> BulkAdministrativeDebitTransaction(Wallet[] requests)
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.BulkAdministrativeDebitSp, sql);
 
             var walletsDataTable = ConvertToWalletsDataTable(requests);
@@ -1122,7 +1122,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     public Task TransactionPoints(int affiliateId, decimal debitLeft, decimal debitRight, decimal creditLeft, decimal creditRight) 
     {
         // return Task.CompletedTask;
-        var debit = new ModelFourStatistics()
+        var debit = new ModelFourStatistic()
         {
             AffiliateId = affiliateId,
             Concept = string.Empty,
@@ -1139,7 +1139,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return Context.SaveChangesAsync();
     }
     
-    public Task<decimal?> GetTotalServiceBalance(int affiliateId, int brandId)
+    public Task<decimal?> GetTotalServiceBalance(int affiliateId, long brandId)
     {
         return Context.WalletsServiceModel2
             .Where(x => x.AffiliateId == affiliateId && x.BrandId == brandId)
@@ -1152,7 +1152,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await using var cmd = new SqlCommand(Constants.DebitEcoPoolTransactionServiceSpModel1B, sql);
 
             var invoicesDetails = CommonExtensions.ConvertToDataTable(request.invoices);
@@ -1267,7 +1267,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.SqlServerConnection);
+            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
 
             await using var cmd = new SqlCommand(Constants.DistributeCommissionsPerPurchase, sqlConnection);
             cmd.CommandType = CommandType.StoredProcedure;
@@ -1299,8 +1299,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
             return false;
         }
     }
-    public async Task<decimal> GetTotalCommissionsPaid(int brandId)
+    public async Task<decimal> GetTotalCommissionsPaid(long brandId)
     => await Context.Wallets
             .Where(x => x.BrandId == brandId && x.ConceptType == WalletConceptType.commission_passed_wallet.ToString() && x.Status == true)
-            .SumAsync(x => (decimal)x.Credit);
+            .SumAsync(x => (decimal)x.Credit!);
 }
