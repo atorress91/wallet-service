@@ -21,6 +21,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors();
 app.UseSwagger();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
 app.UseSwaggerUI(s => { s.SwaggerEndpoint("/swagger/v1/swagger.json", "WalletService API"); });
 app.UseHttpsRedirection();
 app.UseMiddleware<TokenValidationMiddleware>();

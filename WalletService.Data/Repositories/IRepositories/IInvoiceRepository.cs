@@ -18,7 +18,6 @@ public interface IInvoiceRepository
     Task<List<Invoice>>                        GetInvoicesByReceiptNumber(ICollection<string>          transactionIds);
     Task                                        RevertCoinPaymentTransactions(List<InvoiceNumber>       invoiceNumbers);
     Task<bool>                                  InvoiceExistsByReceiptNumber(string                     idTransaction, long brandId);
-    Task<InvoicesSpResponse?>                   HandleDebitTransactionForCourse(DebitTransactionRequest request);
     Task<bool>                                  GetInvoicesForTradingAcademyPurchases(int               affiliateId);
     Task<List<Invoice>>                        DeleteMultipleInvoicesAndDetailsAsync(long[]             invoiceIds, long brandId);
     Task<List<InvoicesTradingAcademyResponse>?> GetAllInvoicesForTradingAcademyPurchases();

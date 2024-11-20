@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using NLog.Extensions.Logging;
+using Npgsql;
 using StackExchange.Redis;
 using WalletService.Core.Caching;
 using WalletService.Core.Kafka.Producer;
@@ -31,6 +32,7 @@ using WalletService.Data.Database;
 using WalletService.Data.Repositories;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Configuration;
+using WalletService.Models.Requests.WalletRequest;
 
 namespace WalletService.Ioc;
 
@@ -103,10 +105,16 @@ public static class IocExtensionApp
             .Value;
 
         var connectionString = appConfig.ConnectionStrings?.PostgreSqlConnection;
+        
+        var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+        dataSourceBuilder.MapComposite<InvoiceDetailsTransactionRequest>("wallet_service.invoices_details_type_with_brand");
+        var dataSource = dataSourceBuilder.Build();
 
         services.AddDbContext<WalletServiceDbContext>(options =>
         {
-            options.UseNpgsql(connectionString).EnableSensitiveDataLogging().EnableDetailedErrors();
+            options.UseNpgsql(dataSource)
+                .EnableSensitiveDataLogging()
+                .EnableDetailedErrors();
         });
     }
 

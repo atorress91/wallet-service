@@ -1,5 +1,7 @@
+using WalletService.Data.Database.CustomModels;
 using WalletService.Models.DTO.InvoiceDto;
 using WalletService.Models.Requests.InvoiceRequest;
+using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
 
 namespace WalletService.Core.Services.IServices;
@@ -19,5 +21,5 @@ public interface IInvoiceService
 
     Task<byte[]> CreateInvoice(int invoiceId);
     Task<InvoiceResultDto?> CreateInvoiceByReference(string reference);
-
+    Task<InvoicesSpResponse?> HandleDebitTransaction(DebitTransactionRequest request);
 }

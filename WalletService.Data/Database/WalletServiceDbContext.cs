@@ -1,5 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using WalletService.Data.Database.CustomModels;
 using WalletService.Data.Database.Models;
+using WalletService.Models.Requests.WalletRequest;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 
 namespace WalletService.Data.Database;
 
@@ -91,15 +95,28 @@ public partial class WalletServiceDbContext : DbContext
     public virtual DbSet<WalletsServiceModel2> WalletsServiceModel2 { get; set; }
 
     public virtual DbSet<WalletsWait> WalletsWaits { get; set; }
-
     public virtual DbSet<WalletsWithdrawal> WalletsWithdrawals { get; set; }
 
+    public DbSet<InvoicesSpResponse> InvoicesSpResponses { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseNpgsql("Host=db-postgresql-ocx-group-do-user-18180112-0.f.db.ondigitalocean.com;Port=25060;Database=ocx_group;Username=doadmin;Password=AVNS_7TLhIWGxiwih3WMI61E;SSL Mode=Require;Trust Server Certificate=true;Search Path=wallet_service");
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseNpgsql(
+                "Host=db-postgresql-ocx-group-do-user-18180112-0.f.db.ondigitalocean.com;Port=25060;Database=ocx_group;Username=doadmin;Password=AVNS_7TLhIWGxiwih3WMI61E;SSL Mode=Require;Trust Server Certificate=true;Search Path=wallet_service",
+                npgsqlOptionsAction: pgOptions =>
+                {
+                    pgOptions.EnableRetryOnFailure();
+                    pgOptions.SetPostgresVersion(new Version(9, 6));
+                });
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(WalletServiceDbContext).Assembly);
+
         modelBuilder.Entity<ApiClient>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("idx_17275_pk__apiclien__3214ec077cd5fa1f");
@@ -114,7 +131,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.Name).HasColumnName("name");
             entity.Property(e => e.Token).HasColumnName("token");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -148,7 +165,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.HasOne(d => d.TransactionType).WithMany(p => p.BonusTransactionHistories)
                 .HasForeignKey(d => d.TransactionTypeId)
                 .HasConstraintName("fk__bonustran__trans__056ecc6a");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -167,7 +184,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -197,7 +214,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.Name).HasColumnName("name");
             entity.Property(e => e.SecretKey).HasColumnName("secret_key");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -232,7 +249,7 @@ public partial class WalletServiceDbContext : DbContext
                 .HasForeignKey(d => d.BrandId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_coinpaymenttransactions_brand");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -265,7 +282,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.SubtractBinary).HasColumnName("subtract_binary");
             entity.Property(e => e.Tax).HasColumnName("tax");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -300,7 +317,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.HasOne(d => d.Invoice).WithMany(p => p.Credits)
                 .HasForeignKey(d => d.InvoiceId)
                 .HasConstraintName("fk_credits_invoices");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -361,7 +378,7 @@ public partial class WalletServiceDbContext : DbContext
                 .HasForeignKey(d => d.BrandId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_invoices_brand");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -390,7 +407,7 @@ public partial class WalletServiceDbContext : DbContext
                 .HasForeignKey(d => d.InvoiceId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_invoicepacks_invoices");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -414,7 +431,7 @@ public partial class WalletServiceDbContext : DbContext
                 .HasForeignKey(d => d.InvoicePackId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_invoicepacksdetails_invoicepacks");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -476,7 +493,7 @@ public partial class WalletServiceDbContext : DbContext
                 .HasForeignKey(d => d.InvoiceId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_invoicesdetails_invoices");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -496,7 +513,6 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.GradingPosition).HasColumnName("grading_position");
             entity.Property(e => e.MatrixPosition).HasColumnName("matrix_position");
             entity.Property(e => e.UserName).HasColumnName("user_name");
-            
         });
 
         modelBuilder.Entity<LeaderBoardModel6>(entity =>
@@ -515,7 +531,6 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.GradingPosition).HasColumnName("grading_position");
             entity.Property(e => e.MatrixPosition).HasColumnName("matrix_position");
             entity.Property(e => e.UserName).HasColumnName("user_name");
-            
         });
 
         modelBuilder.Entity<ModelConfiguration>(entity =>
@@ -543,7 +558,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.Processed).HasColumnName("processed");
             entity.Property(e => e.Totals).HasColumnName("totals");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -566,7 +581,6 @@ public partial class WalletServiceDbContext : DbContext
                 .HasForeignKey(d => d.EcopoolConfigurationId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_ecopoollevels_ecopoolconfiguration");
-            
         });
 
         modelBuilder.Entity<ModelFourStatistic>(entity =>
@@ -602,7 +616,6 @@ public partial class WalletServiceDbContext : DbContext
                 .HasDefaultValueSql("0.00")
                 .HasColumnName("debit_right");
             entity.Property(e => e.InvoiceId).HasColumnName("invoice_id");
-            
         });
 
         modelBuilder.Entity<NetworkPurchase>(entity =>
@@ -625,7 +638,7 @@ public partial class WalletServiceDbContext : DbContext
                 .HasColumnName("origin");
             entity.Property(e => e.Points).HasColumnName("points");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -650,7 +663,6 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.ProfitDistributedLevels).HasColumnName("profit_distributed_levels");
             entity.Property(e => e.TotalPercentage).HasColumnName("total_percentage");
             entity.Property(e => e.UserCreatedAt).HasColumnName("user_created_at");
-            
         });
 
         modelBuilder.Entity<ResultsModel1aLevel>(entity =>
@@ -677,7 +689,6 @@ public partial class WalletServiceDbContext : DbContext
                 .HasForeignKey(d => d.ResultsModel1aId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_resultsmodel1alevels_resultsmodel1a");
-            
         });
 
         modelBuilder.Entity<ResultsModel1b>(entity =>
@@ -907,7 +918,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
             entity.Property(e => e.InvoiceId).HasColumnName("invoice_id");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -950,7 +961,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.HasOne(d => d.Brand).WithMany(p => p.Wallets)
                 .HasForeignKey(d => d.BrandId)
                 .HasConstraintName("fk_wallets_brand");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -980,7 +991,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.Support).HasColumnName("support");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.UserId).HasColumnName("user_id");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -1010,7 +1021,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.Support).HasColumnName("support");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.UserId).HasColumnName("user_id");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -1040,7 +1051,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.Support).HasColumnName("support");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.UserId).HasColumnName("user_id");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -1058,7 +1069,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -1090,7 +1101,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.HasOne(d => d.Brand).WithMany(p => p.WalletsRequests)
                 .HasForeignKey(d => d.BrandId)
                 .HasConstraintName("fk_walletsrequests_brand");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -1112,7 +1123,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.WithdrawalFrom).HasColumnName("withdrawal_from");
             entity.Property(e => e.WithdrawalTo).HasColumnName("withdrawal_to");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -1135,7 +1146,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.UserId).HasColumnName("user_id");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -1158,7 +1169,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.UserId).HasColumnName("user_id");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -1186,7 +1197,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.HasOne(d => d.Brand).WithMany(p => p.WalletsServiceModel2s)
                 .HasForeignKey(d => d.BrandId)
                 .HasConstraintName("fk_walletsservicemodel2_brand");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -1216,7 +1227,7 @@ public partial class WalletServiceDbContext : DbContext
                 .HasColumnName("status");
             entity.Property(e => e.Support).HasColumnName("support");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -1242,10 +1253,15 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.RetentionPercentage).HasColumnName("retention_percentage");
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
+        modelBuilder.Entity<InvoicesSpResponse>(entity =>
+        {
+            entity.HasNoKey();
+            entity.ToTable("handle_debit_transaction", "wallet_service");
+        });
         OnModelCreatingPartial(modelBuilder);
     }
 

@@ -41,7 +41,7 @@ public static class Constants
     public const string DebitEcoPoolTransactionSpModel1A      = "dbo.Debit_Transaction_EcoPool_SP_Model1A";
     public const string DebitEcoPoolTransactionSpModel1B      = "dbo.Debit_Transaction_EcoPool_SP_Model1B";
     public const string AdminDebitTransactionSp               = "dbo.Admin_Debit_Transation_SP";
-    public const string HandleDebitTransactionSp              = "dbo.HandleDebit_Transation_SP";
+    public const string HandleDebitTransactionSp              = "wallet_service.handle_debit_transation";
     public const string CreditTransactionSp                   = "dbo.Credit_Transation_SP";
     public const string CreditTransactionSpModel1A            = "dbo.Credit_Transaction_SP_Model1A";
     public const string CreditTransactionSpModel1B            = "dbo.Credit_Transaction_SP_Model1B";

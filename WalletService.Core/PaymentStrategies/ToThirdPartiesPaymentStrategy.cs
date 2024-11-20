@@ -104,7 +104,7 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             {
                 ProductId = item.Id,
                 PaymentGroupId = item.PaymentGroup,
-                AccumMinPurchase = Convert.ToByte(item.AcumCompMin),
+                AccumMinPurchase = item.AcumCompMin,
                 ProductName = item.Name!,
                 ProductPrice = item.SalePrice,
                 ProductPriceBtc = Constants.EmptyValue,
@@ -115,12 +115,12 @@ public class ToThirdPartiesPaymentStrategy : BaseService
                 ProductPoints = item.ValuePoints,
                 ProductDiscount = Constants.EmptyValue,
                 CombinationId = Constants.EmptyValue,
-                ProductPack = Convert.ToByte(item.ProductPacks),
+                ProductPack = item.ProductPacks,
                 BaseAmount = item.BaseAmount,
                 DailyPercentage = item.DailyPercentage,
                 WaitingDays = item.DaysWait,
                 DaysToPayQuantity = Constants.DaysToPayQuantity,
-                ProductStart = Constants.EmptyValue,
+                ProductStart = false,
                 BrandId = request.BrandId
             };
 
@@ -198,7 +198,7 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             AffiliateUserName = purchaseFor.UserName!,
             AdminUserName = request.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
             ReceiptNumber = request.ReceiptNumber,
-            Type = Constants.EmptyValue,
+            Type = true,
             SecretKey = request.SecretKey,
             invoices = invoiceDetails,
             Reason = string.Empty,

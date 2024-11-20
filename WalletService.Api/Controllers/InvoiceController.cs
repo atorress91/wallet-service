@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using WalletService.Core.Services.IServices;
 using WalletService.Models.Requests.InvoiceRequest;
+using WalletService.Models.Requests.WalletRequest;
 
 namespace WalletService.Api.Controllers;
 
@@ -99,5 +100,23 @@ public class InvoiceController : BaseController
         Response.Headers.Add("X-Brand-Id", result.BrandId.ToString());
 
         return File(result.PdfContent ?? throw new InvalidOperationException(), "application/pdf");
+    }
+    
+    [HttpPost("HandleDebitTransaction")]
+    public async Task<IActionResult> HandleDebitTransaction([FromBody] DebitTransactionRequest debitRequest)
+    {
+        try 
+        {
+            var result = await _invoiceService.HandleDebitTransaction(debitRequest);
+        
+            if (result == null)
+                return BadRequest("La transacción no pudo ser procesada");
+            
+            return Ok(Success(result));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"Error al procesar la transacción: {ex.Message}");
+        }
     }
 }
