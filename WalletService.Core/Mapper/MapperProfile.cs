@@ -35,6 +35,12 @@ public class MapperProfile : Profile
     public MapperProfile()
     {
         MapDto();
+        
+        CreateMap<DateOnly, DateTime>()
+            .ConvertUsing(src => new DateTime(src.Year, src.Month, src.Day));
+        
+        CreateMap<DateTime, DateOnly>()
+            .ConvertUsing(src => new DateOnly(src.Year, src.Month, src.Day));
     }
 
     private void MapDto()
@@ -48,7 +54,8 @@ public class MapperProfile : Profile
         CreateMap<WalletsRequest, WalletRequestDto>();
         CreateMap<Invoice, InvoiceDto>();
         CreateMap<Invoice, InvoiceDTO>();
-        CreateMap<InvoicesDetail, InvoiceDetailDto>();
+        CreateMap<InvoicesDetail, InvoiceDetailDto>()
+            .ForMember(dest => dest.Invoice, opt => opt.Ignore()); 
         CreateMap<ModelConfiguration, ModelConfigurationDto>();
         CreateMap<ModelConfigurationLevel, EcoPoolLevelDto>();
         CreateMap<WalletTransactionRequest, Wallet>();
@@ -101,8 +108,13 @@ public class MapperProfile : Profile
             .ForMember(dest => dest.InvoicesDetails, opt => opt.Ignore());
 
         CreateMap<Invoice, InvoiceDto>()
-            .ForMember(dest => dest.InvoiceDetail, opt => opt.MapFrom(src => src.InvoicesDetails));
-
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => (int)src.Id))
+            .ForMember(dest => dest.DepositDate, opt => opt.MapFrom(src => 
+                src.DepositDate.HasValue ? 
+                    new DateTime(src.DepositDate.Value.Year, src.DepositDate.Value.Month, src.DepositDate.Value.Day) : 
+                    (DateTime?)null))
+            .ForMember(dest => dest.InvoicesDetails, opt => opt.MapFrom(src => src.InvoicesDetails));
+        
         CreateMap<InvoiceDetailRequest, InvoicesDetail>()
             .ForMember(dest => dest.Invoice, opt => opt.Ignore());
 

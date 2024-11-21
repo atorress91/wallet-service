@@ -30,5 +30,5 @@ public class InvoiceDto
     public DateTime? UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
 
-    public ICollection<InvoiceDetailDto.InvoiceDetailDto> InvoiceDetail { get; set; }
+    public ICollection<InvoiceDetailDto.InvoiceDetailDto> InvoicesDetails { get; set; }
 }
