@@ -136,7 +136,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             )";
 
             return await Context.InvoicesSpResponses
-                .FromSqlRaw(sql, parameters)
+                .FromSqlRaw(sql, parameters.ToArray())
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
         }

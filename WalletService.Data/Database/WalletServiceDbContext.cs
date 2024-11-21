@@ -98,21 +98,7 @@ public partial class WalletServiceDbContext : DbContext
     public virtual DbSet<WalletsWithdrawal> WalletsWithdrawals { get; set; }
 
     public DbSet<InvoicesSpResponse> InvoicesSpResponses { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseNpgsql(
-                "Host=db-postgresql-ocx-group-do-user-18180112-0.f.db.ondigitalocean.com;Port=25060;Database=ocx_group;Username=doadmin;Password=AVNS_7TLhIWGxiwih3WMI61E;SSL Mode=Require;Trust Server Certificate=true;Search Path=wallet_service",
-                npgsqlOptionsAction: pgOptions =>
-                {
-                    pgOptions.EnableRetryOnFailure();
-                    pgOptions.SetPostgresVersion(new Version(9, 6));
-                });
-        }
-    }
-
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(WalletServiceDbContext).Assembly);
