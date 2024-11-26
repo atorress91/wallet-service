@@ -2,6 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Data;
+using Newtonsoft.Json;
+using Npgsql;
+using NpgsqlTypes;
 using WalletService.Data.Database;
 using WalletService.Data.Database.CustomModels;
 using WalletService.Data.Database.Models;
@@ -64,30 +67,32 @@ public class WalletRepository : BaseRepository, IWalletRepository
     public async Task<decimal?> GetReverseBalanceByAffiliateId(int affiliateId, long brandId)
     {
         var totalCredits = await Context.Wallets
-            .Where(x => x.AffiliateId == affiliateId && x.ConceptType == WalletConceptType.revert_pool.ToString() && x.BrandId == brandId)
+            .Where(x => x.AffiliateId == affiliateId && x.ConceptType == WalletConceptType.revert_pool.ToString() &&
+                        x.BrandId == brandId)
             .Select(x => x.Credit)
             .SumAsync();
 
         var totalDebits = await Context.Wallets
             .Where(x => x.AffiliateId == affiliateId &&
-                        x.ConceptType == WalletConceptType.purchase_with_reverse_balance.ToString() && x.BrandId == brandId)
+                        x.ConceptType == WalletConceptType.purchase_with_reverse_balance.ToString() &&
+                        x.BrandId == brandId)
             .Select(x => x.Debit)
             .SumAsync();
 
         var reverseBalance = totalCredits - totalDebits;
         return Convert.ToDecimal(reverseBalance);
     }
-    
+
     public async Task<decimal> GetTotalReverseBalance(long brandId)
     {
         var totalCredits = await Context.Wallets
-            .Where(x=> x.ConceptType == WalletConceptType.revert_pool.ToString() && x.BrandId == brandId)
+            .Where(x => x.ConceptType == WalletConceptType.revert_pool.ToString() && x.BrandId == brandId)
             .Select(x => x.Credit)
             .SumAsync();
 
         var totalDebits = await Context.Wallets
             .Where(x =>
-                        x.ConceptType == WalletConceptType.purchase_with_reverse_balance.ToString() && x.BrandId == brandId)
+                x.ConceptType == WalletConceptType.purchase_with_reverse_balance.ToString() && x.BrandId == brandId)
             .Select(x => x.Debit)
             .SumAsync();
 
@@ -97,11 +102,12 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
     public Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId, long brandId)
         => Context.InvoicesDetails.Include(x => x.Invoice).AsNoTracking()
-            .Where(x 
-                => x.Invoice.AffiliateId == affiliateId && (x.PaymentGroupId == 2 || x.PaymentGroupId == 11) 
-                                                        && x.ProductPack && !x.Invoice.CancellationDate.HasValue && x.BrandId == brandId)
+            .Where(x
+                => x.Invoice.AffiliateId == affiliateId && (x.PaymentGroupId == 2 || x.PaymentGroupId == 11)
+                                                        && x.ProductPack && !x.Invoice.CancellationDate.HasValue &&
+                                                        x.BrandId == brandId)
             .SumAsync(s => s.BaseAmount);
-    
+
     public async Task<decimal?> GetTotalCommissionsPaid(int affiliateId, long brandId)
     {
         var status = new HashSet<string>
@@ -115,7 +121,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
             "membership_bonus"
         };
         var total = await Context.Wallets
-            .Where(x => x.AffiliateId == affiliateId && x.ConceptType != null && status.Contains(x.ConceptType) && x.Status == true && x.BrandId == brandId)
+            .Where(x => x.AffiliateId == affiliateId && x.ConceptType != null && status.Contains(x.ConceptType) &&
+                        x.Status == true && x.BrandId == brandId)
             .SumAsync(x => x.Credit);
 
         return total;
@@ -123,57 +130,27 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
     public async Task<InvoicesSpResponse?> DebitTransaction(DebitTransactionRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request, nameof(request));
+
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
-            await using var cmd = new SqlCommand(Constants.DebitTransactionSp, sql);
+            var parameters = CreateDebitListParameters(request);
+            const string sql = @"
+            SELECT * FROM wallet_service.debit_transaction(
+                @p_affiliate_id, @p_user_id, @p_concept, @p_points, @p_commissionable,
+                @p_payment_method, @p_origin, @p_level, @p_debit, @p_affiliate_user_name,
+                @p_admin_user_name, @p_concept_type, @p_invoices_details, @p_brand_id,
+                @p_bank, @p_receipt_number, @p_type, @p_secret_key, @p_reason
+            )";
 
-            var invoicesDetails = ConvertToDataTable(request.invoices);
-
-            CreateDebitListParameters(request, invoicesDetails, cmd);
-
-            await sql.OpenAsync();
-            await using var oReader = await cmd.ExecuteReaderAsync();
-            var dd = oReader.ToDynamicList();
-            var jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var response = jsonString.ToJsonObject<InvoicesSpResponse>();
-
-            await sql.CloseAsync();
-
-            return response;
+            return await Context.InvoicesSpResponses
+                .FromSqlRaw(sql, parameters.ToArray())
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
-    public async Task<InvoicesSpResponse?> CoursesDebitTransaction(DebitTransactionRequest request)
-    {
-        try
-        {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
-            await using var cmd = new SqlCommand(Constants.CoursesDebitTransactionSp, sql);
-
-            var invoicesDetails = ConvertToDataTable(request.invoices);
-
-            CreateDebitListParameters(request, invoicesDetails, cmd);
-
-            await sql.OpenAsync();
-            await using var oReader = await cmd.ExecuteReaderAsync();
-            var dd = oReader.ToDynamicList();
-            var jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var response = jsonString.ToJsonObject<InvoicesSpResponse>();
-            
-            await sql.CloseAsync();
-
-            return response;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
+            throw new Exception("Error processing debit transaction", ex);
         }
     }
 
@@ -187,11 +164,11 @@ public class WalletRepository : BaseRepository, IWalletRepository
             CreateDebitEcoPoolListParameters(request, cmd);
 
             await sql.OpenAsync();
-            await using var oReader    = await cmd.ExecuteReaderAsync();
-            var             dd         = oReader.ToDynamicList();
-            var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = jsonString.ToJsonObject<InvoicesSpResponse>();
-            
+            await using var oReader = await cmd.ExecuteReaderAsync();
+            var dd = oReader.ToDynamicList();
+            var jsonString = dd.FirstOrDefault()!.ToJsonString();
+            var response = jsonString.ToJsonObject<InvoicesSpResponse>();
+
             await sql.CloseAsync();
 
             return response;
@@ -205,30 +182,27 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
     public async Task<InvoicesSpResponse?> AdminDebitTransaction(DebitTransactionRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request, nameof(request));
+
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
-            await using var cmd = new SqlCommand(Constants.AdminDebitTransactionSp, sql);
+            var parameters = CreateDebitListParameters(request);
+            const string sql = @"
+            SELECT * FROM wallet_service.admin_debit_transaction_sp(
+                @p_affiliate_id, @p_user_id, @p_concept, @p_points, @p_commissionable,
+                @p_payment_method, @p_origin, @p_level, @p_debit, @p_affiliate_user_name,
+                @p_admin_user_name, @p_concept_type, @p_invoices_details, @p_brand_id,
+                @p_bank, @p_receipt_number, @p_type, @p_secret_key, @p_reason
+            )";
 
-            var invoicesDetails = ConvertToDataTable(request.invoices);
-
-            CreateDebitListParameters(request, invoicesDetails, cmd);
-
-            await sql.OpenAsync();
-            await using var oReader = await cmd.ExecuteReaderAsync();
-            var dd = oReader.ToDynamicList();
-            var jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var response = jsonString.ToJsonObject<InvoicesSpResponse>();
-
-
-            await sql.CloseAsync();
-
-            return response;
+            return await Context.InvoicesSpResponses
+                .FromSqlRaw(sql, parameters.ToArray())
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine(e);
-            throw;
+            throw new Exception("Error processing admin debit transaction", ex);
         }
     }
 
@@ -253,7 +227,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             return false;
         }
     }
-    
+
     public async Task<bool> CreditModel1ATransaction(CreditTransactionRequest request)
     {
         try
@@ -275,7 +249,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             return false;
         }
     }
-    
+
     public async Task<bool> CreditModel1BTransaction(CreditTransactionRequest request)
     {
         try
@@ -297,7 +271,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             return false;
         }
     }
-    
+
     public async Task<bool> CreateModel2Sp(Model2TransactionRequest request)
     {
         try
@@ -324,7 +298,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             throw;
         }
     }
-    
+
     public async Task<bool> CreateModel1ASp(Model1ATransactionRequest request)
     {
         try
@@ -333,7 +307,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
             await using var cmd = new SqlCommand(Constants.Model1ARequestSp, sqlConnection);
 
-            var levelTypeDataTable   = ConvertToDataTable(request.LevelsType);
+            var levelTypeDataTable = ConvertToDataTable(request.LevelsType);
             var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
 
             CreateModel1AParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
@@ -351,7 +325,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             throw;
         }
     }
-    
+
     public async Task<bool> CreateModel1BSp(Model1BTransactionRequest request)
     {
         try
@@ -360,7 +334,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
             await using var cmd = new SqlCommand(Constants.Model1BRequestSp, sqlConnection);
 
-            var levelTypeDataTable   = ConvertToDataTable(request.LevelsType);
+            var levelTypeDataTable = ConvertToDataTable(request.LevelsType);
             var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
 
             CreateModel1BParameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
@@ -388,7 +362,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
             await using var cmd = new SqlCommand(Constants.Model3RequestSp, sqlConnection);
 
-            var levelTypeDataTable   = ConvertToDataTable(request.LevelsType);
+            var levelTypeDataTable = ConvertToDataTable(request.LevelsType);
             var ecoPoolTypeDataTable = ConvertToDataTable(request.EcoPoolsType);
 
             CreateModel3Parameters(request, levelTypeDataTable, ecoPoolTypeDataTable, cmd);
@@ -502,120 +476,36 @@ public class WalletRepository : BaseRepository, IWalletRepository
         });
     }
 
-    private void CreateDebitListParameters(DebitTransactionRequest request, DataTable dataTableDetails, SqlCommand cmd)
+    private static List<NpgsqlParameter> CreateDebitListParameters(DebitTransactionRequest request)
     {
-        cmd.CommandType = CommandType.StoredProcedure;
-        cmd.Parameters.Add(new SqlParameter("@AffiliateId", SqlDbType.Int)
-        {
-            Value = request.AffiliateId
-        });
+        var invoicesDetailsJson = JsonConvert.SerializeObject(request.invoices);
 
-        cmd.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int)
+        return new List<NpgsqlParameter>
         {
-            Value = request.UserId
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@Concept", SqlDbType.VarChar)
-        {
-            Value = request.Concept,
-            Size = 255
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@Points", SqlDbType.Decimal)
-        {
-            Value = request.Points
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@Commissionable", SqlDbType.Decimal)
-        {
-            Value = request.Commissionable
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@Bank", SqlDbType.VarChar)
-        {
-            Value = string.IsNullOrEmpty(request.Bank) ? null : request.Bank,
-            IsNullable = true,
-            Size = 250
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@PaymentMethod", SqlDbType.VarChar)
-        {
-            Value = request.PaymentMethod,
-            Size = 50
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@Origin", SqlDbType.TinyInt)
-        {
-            Value = request.Origin
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@Level", SqlDbType.Int)
-        {
-            Value = request.Level
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@Debit", SqlDbType.Decimal)
-        {
-            Value = request.Debit
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@AffiliateUserName", SqlDbType.VarChar)
-        {
-            Value = request.AffiliateUserName,
-            Size = 50
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@AdminUserName", SqlDbType.VarChar)
-        {
-            Value = request.AdminUserName,
-            Size = 50
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@ReceiptNumber", SqlDbType.VarChar)
-        {
-            Value = string.IsNullOrEmpty(request.ReceiptNumber) ? null : request.ReceiptNumber,
-            IsNullable = true,
-            Size = 100
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@Type", SqlDbType.Bit)
-        {
-            Value = request.Type
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@SecretKey", SqlDbType.VarChar)
-        {
-            Value = string.IsNullOrEmpty(request.SecretKey) ? null : request.SecretKey,
-            IsNullable = true,
-            Size = 40
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@ConceptType", SqlDbType.VarChar)
-        {
-            Value = request.ConceptType,
-            Size = 50
-        });
-
-        cmd.Parameters.Add(new SqlParameter("@InvoicesDetails", SqlDbType.Structured)
-        {
-            Value = dataTableDetails,
-            TypeName = "dbo.InvoicesDetailsTypeWithBrand"
-        });
-        
-        cmd.Parameters.Add(new SqlParameter("@Reason", SqlDbType.VarChar)
-        {
-            Value = string.IsNullOrEmpty(request.Reason) ? null : request.Reason,
-            IsNullable = true,
-            Size = 250
-        });
-        
-        cmd.Parameters.Add(new SqlParameter("@BrandId", SqlDbType.Int)
-        {
-            Value = request.BrandId
-        });
+            new("p_affiliate_id", NpgsqlDbType.Integer) { Value = request.AffiliateId },
+            new("p_user_id", NpgsqlDbType.Integer) { Value = request.UserId },
+            new("p_concept", NpgsqlDbType.Varchar) { Value = request.Concept },
+            new("p_points", NpgsqlDbType.Numeric) { Value = request.Points },
+            new("p_commissionable", NpgsqlDbType.Numeric) { Value = request.Commissionable },
+            new("p_payment_method", NpgsqlDbType.Varchar) { Value = request.PaymentMethod },
+            new("p_origin", NpgsqlDbType.Smallint) { Value = request.Origin },
+            new("p_level", NpgsqlDbType.Integer) { Value = request.Level },
+            new("p_debit", NpgsqlDbType.Numeric) { Value = request.Debit },
+            new("p_affiliate_user_name", NpgsqlDbType.Varchar) { Value = request.AffiliateUserName },
+            new("p_admin_user_name", NpgsqlDbType.Varchar) { Value = request.AdminUserName },
+            new("p_concept_type", NpgsqlDbType.Varchar) { Value = request.ConceptType },
+            new("p_invoices_details", NpgsqlDbType.Jsonb) { Value = invoicesDetailsJson },
+            new("p_brand_id", NpgsqlDbType.Integer) { Value = request.BrandId },
+            new("p_bank", NpgsqlDbType.Varchar) { Value = request.Bank ?? string.Empty },
+            new("p_receipt_number", NpgsqlDbType.Varchar) { Value = request.ReceiptNumber ?? string.Empty },
+            new("p_type", NpgsqlDbType.Boolean) { Value = request.Type },
+            new("p_secret_key", NpgsqlDbType.Varchar) { Value = request.SecretKey ?? string.Empty },
+            new("p_reason", NpgsqlDbType.Varchar) { Value = request.Reason ?? string.Empty }
+        };
     }
 
-    private void CreateModel2Parameters(Model2TransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
+    private void CreateModel2Parameters(Model2TransactionRequest request, DataTable levels, DataTable ecoPools,
+        SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -666,7 +556,9 @@ public class WalletRepository : BaseRepository, IWalletRepository
             TypeName = "dbo.EcoPoolType"
         });
     }
-    private void CreateModel1AParameters(Model1ATransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
+
+    private void CreateModel1AParameters(Model1ATransactionRequest request, DataTable levels, DataTable ecoPools,
+        SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -717,7 +609,9 @@ public class WalletRepository : BaseRepository, IWalletRepository
             TypeName = "dbo.EcoPoolType"
         });
     }
-    private void CreateModel1BParameters(Model1BTransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
+
+    private void CreateModel1BParameters(Model1BTransactionRequest request, DataTable levels, DataTable ecoPools,
+        SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -768,8 +662,9 @@ public class WalletRepository : BaseRepository, IWalletRepository
             TypeName = "dbo.EcoPoolType"
         });
     }
-    
-    private void CreateModel3Parameters(Model3TransactionRequest request, DataTable levels, DataTable ecoPools, SqlCommand cmd)
+
+    private void CreateModel3Parameters(Model3TransactionRequest request, DataTable levels, DataTable ecoPools,
+        SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -777,7 +672,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         {
             Value = request.Percentage
         });
-        
+
         cmd.Parameters.Add(new SqlParameter("@EcoPoolConfigurationId", SqlDbType.Int)
         {
             Value = request.EcoPoolConfigurationId
@@ -787,19 +682,20 @@ public class WalletRepository : BaseRepository, IWalletRepository
         {
             Value = request.TotalPercentageLevels
         });
-        
+
         cmd.Parameters.Add(new SqlParameter("@Levels", SqlDbType.Structured)
         {
-            Value    = levels,
+            Value = levels,
             TypeName = "dbo.LevelsType"
         });
 
         cmd.Parameters.Add(new SqlParameter("@ItemsModelTwo", SqlDbType.Structured)
         {
-            Value    = ecoPools,
+            Value = ecoPools,
             TypeName = "dbo.EcoPoolType"
         });
     }
+
     private void CreateCreditListParameters(CreditTransactionRequest request, SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
@@ -844,11 +740,11 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         cmd.Parameters.Add(new SqlParameter("@BrandId", SqlDbType.Int)
         {
-          Value = request.BrandId
+            Value = request.BrandId
         });
     }
 
-    public Task<List<Wallet>> GetWalletByUserId(int userId , long brandId)
+    public Task<List<Wallet>> GetWalletByUserId(int userId, long brandId)
         => Context.Wallets.Where(x => x.UserId == userId && x.BrandId == brandId).ToListAsync();
 
     public Task<List<Wallet>> GetWalletsRequest(int userId, long brandId)
@@ -857,7 +753,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
                && x.AffiliateId == userId && x.BrandId == brandId).ToListAsync();
 
     public Task<List<Wallet>> GetAllWallets(long brandId)
-        => Context.Wallets.Where(x=> x.BrandId == brandId).AsNoTracking().ToListAsync();
+        => Context.Wallets.Where(x => x.BrandId == brandId).AsNoTracking().ToListAsync();
 
     public Task<List<ModelFourStatistic>> GetUserModelFour(int[] affiliateIds)
     {
@@ -902,14 +798,15 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
     public Task<List<InvoicesDetail>> GetDebitsModel2WithinMonth(DateTime from, DateTime to)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
-            .Where(x => x.ProductPack && x.PaymentGroupId == 2 && x.Invoice.Status == true && x.Invoice.CancellationDate == null &&
-                        x.Date >= from && x.Date <= to).ToListAsync();   
-    
+            .Where(x => x.ProductPack && x.PaymentGroupId == 2 && x.Invoice.Status == true &&
+                        x.Invoice.CancellationDate == null &&
+                        x.Date >= from && x.Date <= to).ToListAsync();
+
     public Task<List<InvoicesDetail>> GetDebitsModel1AWithinMonth(DateTime from, DateTime to)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
             .Where(x => x.PaymentGroupId == 7 && x.Invoice.Status == true && x.Invoice.CancellationDate == null &&
                         x.Date >= from && x.Date <= to).ToListAsync();
-    
+
     public Task<List<InvoicesDetail>> GetDebitsModel1BWithinMonth(DateTime from, DateTime to)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
             .Where(x => x.PaymentGroupId == 8 && x.Invoice.Status == true && x.Invoice.CancellationDate == null &&
@@ -917,24 +814,28 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
     public Task<List<InvoicesDetail>> GetDebitsModel2OutsideMonth(DateTime date)
         => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
-            .Where(x => x.Date.Year >= 2024 && x.ProductPack && x.PaymentGroupId == 2 && x.Date < date && x.Invoice.Status == true && 
-                        x.Invoice.CancellationDate == null).ToListAsync();
-    public Task<List<InvoicesDetail>> GetDebitsModel1AOutsideMonth(DateTime date)
-        => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
-            .Where(x => x.PaymentGroupId == 7 && x.Date < date && x.Invoice.Status == true && 
-                        x.Invoice.CancellationDate == null).ToListAsync();
-    public Task<List<InvoicesDetail>> GetDebitsModel1BOutsideMonth(DateTime date)
-        => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
-            .Where(x => x.PaymentGroupId == 8 && x.Date < date && x.Invoice.Status == true && 
+            .Where(x => x.Date.Year >= 2024 && x.ProductPack && x.PaymentGroupId == 2 && x.Date < date &&
+                        x.Invoice.Status == true &&
                         x.Invoice.CancellationDate == null).ToListAsync();
 
-    
+    public Task<List<InvoicesDetail>> GetDebitsModel1AOutsideMonth(DateTime date)
+        => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
+            .Where(x => x.PaymentGroupId == 7 && x.Date < date && x.Invoice.Status == true &&
+                        x.Invoice.CancellationDate == null).ToListAsync();
+
+    public Task<List<InvoicesDetail>> GetDebitsModel1BOutsideMonth(DateTime date)
+        => Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
+            .Where(x => x.PaymentGroupId == 8 && x.Date < date && x.Invoice.Status == true &&
+                        x.Invoice.CancellationDate == null).ToListAsync();
+
+
     public Task<List<InvoicesDetail>> GetInvoicesDetailsItemsForModel3(DateTime from, DateTime to)
     {
         return Context.InvoicesDetails.Include(i => i.Invoice).AsNoTracking()
-            .Where(x 
+            .Where(x
                 => (x.PaymentGroupId == 6 || x.PaymentGroupId == 5) &&
-               x.Date >= from && x.Date <= to && x.Invoice.Status && x.Invoice.CancellationDate == null).ToListAsync();
+                   x.Date >= from && x.Date <= to && x.Invoice.Status && x.Invoice.CancellationDate == null)
+            .ToListAsync();
     }
 
     public async Task<bool> CreateTransferBalance(Wallet debitTransaction, Wallet creditTransaction)
@@ -982,7 +883,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         var result = await Context.InvoicesDetails.Include(x => x.Invoice)
             .Where(x => x.ProductPack && x.Invoice.AffiliateId == affiliateId && x.Invoice.Status == true &&
-                        x.Invoice.CancellationDate == null && x.PaymentGroupId == 2 && x.BrandId == brandId).ToListAsync();
+                        x.Invoice.CancellationDate == null && x.PaymentGroupId == 2 && x.BrandId == brandId)
+            .ToListAsync();
 
         if (result is { Count: 0 })
             return false;
@@ -992,59 +894,53 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
     public async Task<InvoicesSpResponse?> HandleMembershipTransaction(DebitTransactionRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request, nameof(request));
+
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
-            await using var cmd = new SqlCommand(Constants.HandleMembershipTransactions, sql);
+            var parameters = CreateDebitListParameters(request);
+            const string sql = @"
+            SELECT * FROM wallet_service.handle_membership_transaction(
+                @p_affiliate_id, @p_user_id, @p_concept, @p_points, @p_commissionable,
+                @p_payment_method, @p_origin, @p_level, @p_debit, @p_affiliate_user_name,
+                @p_admin_user_name, @p_concept_type, @p_invoices_details, @p_brand_id,
+                @p_bank, @p_receipt_number, @p_type, @p_secret_key, @p_reason
+            )";
 
-            var invoicesDetails = ConvertToDataTable(request.invoices);
-
-            CreateDebitListParameters(request, invoicesDetails, cmd);
-
-            await sql.OpenAsync();
-            await using var oReader    = await cmd.ExecuteReaderAsync();
-            var             dd         = oReader.ToDynamicList();
-            var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = jsonString.ToJsonObject<InvoicesSpResponse>();
-
-
-            await sql.CloseAsync();
-
-            return response;
+            return await Context.InvoicesSpResponses
+                .FromSqlRaw(sql, parameters.ToArray())
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine(e);
-            throw;
+            throw new Exception("Error processing membership transaction", ex);
         }
     }
 
     public async Task<InvoicesSpResponse?> MembershipDebitTransaction(DebitTransactionRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request, nameof(request));
+
         try
         {
-            await using var sql = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
-            await using var cmd = new SqlCommand(Constants.MembershipDebitTransactions, sql);
+            var parameters = CreateDebitListParameters(request);
+            const string sql = @"
+            SELECT * FROM wallet_service.pay_membership_with_internal_balance(
+                @p_affiliate_id, @p_user_id, @p_concept, @p_points, @p_commissionable,
+                @p_payment_method, @p_origin, @p_level, @p_debit, @p_affiliate_user_name,
+                @p_admin_user_name, @p_concept_type, @p_invoices_details, @p_brand_id,
+                @p_bank, @p_receipt_number, @p_type, @p_secret_key, @p_reason
+            )";
 
-            var invoicesDetails = ConvertToDataTable(request.invoices);
-
-            CreateDebitListParameters(request, invoicesDetails, cmd);
-
-            await sql.OpenAsync();
-            await using var oReader = await cmd.ExecuteReaderAsync();
-            var dd = oReader.ToDynamicList();
-            var jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var response = jsonString.ToJsonObject<InvoicesSpResponse>();
-
-
-            await sql.CloseAsync();
-
-            return response;
+            return await Context.InvoicesSpResponses
+                .FromSqlRaw(sql, parameters.ToArray())
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine(e);
-            throw;
+            throw new Exception("Error processing pay membership with internal balance", ex);
         }
     }
 
@@ -1106,8 +1002,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
             await sql.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
 
-            var isSuccess = (bool)successParameter.Value;  
-        
+            var isSuccess = (bool)successParameter.Value;
+
             await sql.CloseAsync();
 
             return isSuccess;
@@ -1119,7 +1015,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
         }
     }
 
-    public Task TransactionPoints(int affiliateId, decimal debitLeft, decimal debitRight, decimal creditLeft, decimal creditRight) 
+    public Task TransactionPoints(int affiliateId, decimal debitLeft, decimal debitRight, decimal creditLeft,
+        decimal creditRight)
     {
         // return Task.CompletedTask;
         var debit = new ModelFourStatistic()
@@ -1138,7 +1035,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         Context.ModelFourStatistics.Add(debit);
         return Context.SaveChangesAsync();
     }
-    
+
     public Task<decimal?> GetTotalServiceBalance(int affiliateId, long brandId)
     {
         return Context.WalletsServiceModel2
@@ -1146,8 +1043,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
             .Select(s => s.Credit - s.Debit)
             .SumAsync();
     }
-    
-    
+
+
     public async Task<InvoicesSpResponse?> DebitServiceBalanceTransaction(DebitTransactionRequest request)
     {
         try
@@ -1160,10 +1057,10 @@ public class WalletRepository : BaseRepository, IWalletRepository
             CreateDebitServiceBalanceListParameters(request, invoicesDetails, cmd);
 
             await sql.OpenAsync();
-            await using var oReader    = await cmd.ExecuteReaderAsync();
-            var             dd         = oReader.ToDynamicList();
-            var             jsonString = dd.FirstOrDefault()!.ToJsonString();
-            var             response   = jsonString.ToJsonObject<InvoicesSpResponse>();
+            await using var oReader = await cmd.ExecuteReaderAsync();
+            var dd = oReader.ToDynamicList();
+            var jsonString = dd.FirstOrDefault()!.ToJsonString();
+            var response = jsonString.ToJsonObject<InvoicesSpResponse>();
 
 
             await sql.CloseAsync();
@@ -1186,9 +1083,10 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         throw new NotImplementedException();
     }
-    
-    
-    private void CreateDebitServiceBalanceListParameters(DebitTransactionRequest request, DataTable dataTableDetails, SqlCommand cmd)
+
+
+    private void CreateDebitServiceBalanceListParameters(DebitTransactionRequest request, DataTable dataTableDetails,
+        SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
         cmd.Parameters.Add(new SqlParameter("@AffiliateId", SqlDbType.Int)
@@ -1204,7 +1102,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
         cmd.Parameters.Add(new SqlParameter("@Concept", SqlDbType.VarChar)
         {
             Value = request.Concept,
-            Size  = 255
+            Size = 255
         });
 
         cmd.Parameters.Add(new SqlParameter("@Commissionable", SqlDbType.Decimal)
@@ -1214,15 +1112,15 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         cmd.Parameters.Add(new SqlParameter("@Bank", SqlDbType.VarChar)
         {
-            Value      = string.IsNullOrEmpty(request.Bank) ? null : request.Bank,
+            Value = string.IsNullOrEmpty(request.Bank) ? null : request.Bank,
             IsNullable = true,
-            Size       = 250
+            Size = 250
         });
 
         cmd.Parameters.Add(new SqlParameter("@PaymentMethod", SqlDbType.VarChar)
         {
             Value = request.PaymentMethod,
-            Size  = 50
+            Size = 50
         });
 
         cmd.Parameters.Add(new SqlParameter("@Debit", SqlDbType.Decimal)
@@ -1233,15 +1131,15 @@ public class WalletRepository : BaseRepository, IWalletRepository
         cmd.Parameters.Add(new SqlParameter("@AffiliateUserName", SqlDbType.VarChar)
         {
             Value = request.AffiliateUserName,
-            Size  = 50
+            Size = 50
         });
-        
+
 
         cmd.Parameters.Add(new SqlParameter("@ReceiptNumber", SqlDbType.VarChar)
         {
-            Value      = string.IsNullOrEmpty(request.ReceiptNumber) ? null : request.ReceiptNumber,
+            Value = string.IsNullOrEmpty(request.ReceiptNumber) ? null : request.ReceiptNumber,
             IsNullable = true,
-            Size       = 100
+            Size = 100
         });
 
         cmd.Parameters.Add(new SqlParameter("@Type", SqlDbType.Bit)
@@ -1251,18 +1149,18 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         cmd.Parameters.Add(new SqlParameter("@SecretKey", SqlDbType.VarChar)
         {
-            Value      = string.IsNullOrEmpty(request.SecretKey) ? null : request.SecretKey,
+            Value = string.IsNullOrEmpty(request.SecretKey) ? null : request.SecretKey,
             IsNullable = true,
-            Size       = 40
+            Size = 40
         });
-        
+
         cmd.Parameters.Add(new SqlParameter("@InvoicesDetails", SqlDbType.Structured)
         {
-            Value    = dataTableDetails,
+            Value = dataTableDetails,
             TypeName = "dbo.InvoicesDetailsType"
         });
     }
-        
+
     public async Task<bool> DistributeCommissionsPerPurchaseAsync(DistributeCommissionsRequest request)
     {
         try
@@ -1299,8 +1197,10 @@ public class WalletRepository : BaseRepository, IWalletRepository
             return false;
         }
     }
+
     public async Task<decimal> GetTotalCommissionsPaid(long brandId)
-    => await Context.Wallets
-            .Where(x => x.BrandId == brandId && x.ConceptType == WalletConceptType.commission_passed_wallet.ToString() && x.Status == true)
+        => await Context.Wallets
+            .Where(x => x.BrandId == brandId &&
+                        x.ConceptType == WalletConceptType.commission_passed_wallet.ToString() && x.Status == true)
             .SumAsync(x => (decimal)x.Credit!);
 }

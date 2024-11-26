@@ -476,7 +476,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             BrandId           = request.BrandId,
         };
 
-        var spResponse = await _walletRepository.CoursesDebitTransaction(debitTransactionRequest);
+        var spResponse = await _walletRepository.DebitTransaction(debitTransactionRequest);
 
         if (spResponse is null)
             return false;

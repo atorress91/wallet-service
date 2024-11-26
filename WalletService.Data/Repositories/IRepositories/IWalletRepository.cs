@@ -46,7 +46,6 @@ public interface IWalletRepository
         decimal creditRight);
 
     Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance(long brandId);
-    Task<InvoicesSpResponse?> CoursesDebitTransaction(DebitTransactionRequest request);
     Task<decimal> GetTotalReverseBalance(long brandId);
 
     Task<InvoicesSpResponse?> DebitServiceBalanceTransaction(DebitTransactionRequest request);

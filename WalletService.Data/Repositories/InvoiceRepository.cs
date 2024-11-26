@@ -12,8 +12,6 @@ using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Configuration;
 using WalletService.Models.Constants;
 using WalletService.Models.Requests.WalletRequest;
-using WalletService.Utility.Extensions;
-using static WalletService.Utility.Extensions.CommonExtensions;
 
 namespace WalletService.Data.Repositories;
 
