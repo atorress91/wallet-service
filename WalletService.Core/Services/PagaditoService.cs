@@ -77,6 +77,16 @@ public class PagaditoService : BaseService, IPagaditoService
         await _pagaditoPaymentStrategy.ExecuteEcoPoolPayment(walletRequest);
     }
 
+    private async Task ExecuteRecyCoinPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
+    {
+        walletRequest.ProductsList = products.Select(product => new ProductsRequests
+        {
+            IdProduct = product.ProductId,
+            Count = product.Quantity
+        }).ToList();
+
+        await _pagaditoPaymentStrategy.ExecuteRecyCoinPayment(walletRequest);
+    }
     private async Task ExecuteCoursePayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
     {
         walletRequest.ProductsList = products.Select(product => new ProductsRequests
@@ -88,7 +98,7 @@ public class PagaditoService : BaseService, IPagaditoService
         await _pagaditoPaymentStrategy.ExecuteCoursePayment(walletRequest);
     }
 
-    private async Task<ProductType> GetProductType(List<ProductRequest> request)
+    private async Task<ProductType> GetProductType(List<ProductRequest> request, long brandId)
     {
         if (request == null || !request.Any())
         {
@@ -96,7 +106,7 @@ public class PagaditoService : BaseService, IPagaditoService
         }
 
         var productIds = request.Select(p => p.ProductId).ToArray();
-        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds,_brandService.BrandId);
+        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds,brandId);
 
         var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content!);
 
@@ -116,7 +126,11 @@ public class PagaditoService : BaseService, IPagaditoService
         switch (firstProductCategory)
         {
             case 1: return ProductType.Membership;
-            case 2: return ProductType.EcoPool;
+            case 2:
+            case 7:
+            case 8:
+                return ProductType.EcoPool;
+            case 11: return ProductType.RecyCoin;
             default:
                 return ProductType.Course;
         }
@@ -127,7 +141,7 @@ public class PagaditoService : BaseService, IPagaditoService
         _logger.LogInformation(
             $"[PagaditoService] | ProcessPaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
 
-        var userInfo = await _accountServiceAdapter.GetUserInfo(transactionResult.AffiliateId,_brandService.BrandId);
+        var userInfo = await _accountServiceAdapter.GetUserInfo(transactionResult.AffiliateId,transactionResult.BrandId);
 
         if (userInfo == null || userInfo.UserName == null)
             return;
@@ -153,7 +167,8 @@ public class PagaditoService : BaseService, IPagaditoService
             Bank = transactionResult.Reference,
             PaymentMethod = 4,
             ReceiptNumber = transactionResult.IdTransaction,
-            ProductsList = productsList
+            ProductsList = productsList,
+            BrandId = transactionResult.BrandId
         };
 
         var products = JsonSerializer.Deserialize<List<ProductRequest>>(transactionResult.Products);
@@ -166,7 +181,7 @@ public class PagaditoService : BaseService, IPagaditoService
         if (isExists)
             return;
 
-        var productType = await GetProductType(products);
+        var productType = await GetProductType(products,transactionResult.BrandId);
 
         switch (productType)
         {
@@ -177,6 +192,10 @@ public class PagaditoService : BaseService, IPagaditoService
             case ProductType.EcoPool:
                 await ExecuteEcoPoolPayment(walletRequest, products);
                 _logger.LogInformation($"[PagaditoService] | ProcessPaymentTransaction | EcoPool Payment executed");
+                break;
+            case ProductType.RecyCoin:
+                await ExecuteRecyCoinPayment(walletRequest, products);
+                _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | RecyCoin Payment executed");
                 break;
             case ProductType.Course:
                 await ExecuteCoursePayment(walletRequest, products);
@@ -298,9 +317,10 @@ public class PagaditoService : BaseService, IPagaditoService
             _logger.LogWarning($"[PagaditoService] | UpdateTransactionStatus | purchaseRequest is null");
             return false;
         }
-
+        
+        long brandId = (long)_brandService.BrandId;
         var existingTransaction =
-            await _transactionRepository.GetCoinPaymentTransactionByIdTransaction(purchaseRequest.Resource!.Ern!,_brandService.BrandId);
+            await _transactionRepository.GetCoinPaymentTransactionByIdTransaction(purchaseRequest.Resource!.Ern!,brandId);
 
         if (existingTransaction is null)
         {

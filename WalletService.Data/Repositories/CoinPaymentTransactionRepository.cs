@@ -20,7 +20,7 @@ public class CoinPaymentTransactionRepository : BaseRepository, ICoinPaymentTran
 
     public Task<CoinpaymentTransaction?> GetCoinPaymentTransactionByIdTransaction(string idTransaction, long brandId)
         => Context.PaymentTransaction.FirstOrDefaultAsync(e =>
-            e.IdTransaction == idTransaction && e.BrandId == brandId);
+            e.IdTransaction == idTransaction && (brandId == 0 || e.BrandId == brandId));
 
     public Task<CoinpaymentTransaction?> GetTransactionByTxnId(string idTransaction)
         => Context.PaymentTransaction.FirstOrDefaultAsync(e =>
