@@ -19,12 +19,12 @@ public class UserInfoResponse
     [JsonProperty("affiliate_type")] public string? AffiliateType { get; set; }
 
     [JsonProperty("card_id_authorization")] public bool? CardIdAuthorization { get; set; }
-    [JsonProperty("country_information")] public CountryInformation? Country { get; set; }
+    [JsonProperty("country_navigation")] public CountryNavigation? Country { get; set; }
     [JsonProperty("father")] public int Father { get; set; }
     [JsonProperty("verification_code")] public string? VerificationCode { get; set; }
 }
 
-public class CountryInformation
+public class CountryNavigation
 {
     [JsonProperty("name")] public string? Name { get; set; }
 }

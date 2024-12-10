@@ -137,11 +137,11 @@ public class WalletRepository : BaseRepository, IWalletRepository
             var parameters = CreateDebitListParameters(request);
             const string sql = @"
             SELECT * FROM wallet_service.debit_transaction(
-                @p_affiliate_id, @p_user_id, @p_concept, @p_points, @p_commissionable,
-                @p_payment_method, @p_origin, @p_level, @p_debit, @p_affiliate_user_name,
-                @p_admin_user_name, @p_concept_type, @p_invoices_details, @p_brand_id,
-                @p_bank, @p_receipt_number, @p_type, @p_secret_key, @p_reason
-            )";
+            @p_user_id, @p_concept, @p_points, @p_commissionable, @p_payment_method,
+            @p_origin, @p_level, @p_debit, @p_affiliate_user_name, @p_admin_user_name,
+            @p_type, @p_concept_type, @p_invoices_details, @p_brand_id,
+            @p_affiliate_id, @p_bank, @p_receipt_number, @p_secret_key, @p_reason
+        )";
 
             return await Context.InvoicesSpResponses
                 .FromSqlRaw(sql, parameters.ToArray())
@@ -482,25 +482,25 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         return new List<NpgsqlParameter>
         {
-            new("p_affiliate_id", NpgsqlDbType.Integer) { Value = request.AffiliateId },
             new("p_user_id", NpgsqlDbType.Integer) { Value = request.UserId },
-            new("p_concept", NpgsqlDbType.Varchar) { Value = request.Concept },
+            new("p_concept", NpgsqlDbType.Text) { Value = request.Concept },
             new("p_points", NpgsqlDbType.Numeric) { Value = request.Points },
             new("p_commissionable", NpgsqlDbType.Numeric) { Value = request.Commissionable },
-            new("p_payment_method", NpgsqlDbType.Varchar) { Value = request.PaymentMethod },
+            new("p_payment_method", NpgsqlDbType.Text) { Value = request.PaymentMethod },
             new("p_origin", NpgsqlDbType.Smallint) { Value = request.Origin },
             new("p_level", NpgsqlDbType.Integer) { Value = request.Level },
             new("p_debit", NpgsqlDbType.Numeric) { Value = request.Debit },
-            new("p_affiliate_user_name", NpgsqlDbType.Varchar) { Value = request.AffiliateUserName },
-            new("p_admin_user_name", NpgsqlDbType.Varchar) { Value = request.AdminUserName },
-            new("p_concept_type", NpgsqlDbType.Varchar) { Value = request.ConceptType },
+            new("p_affiliate_user_name", NpgsqlDbType.Text) { Value = request.AffiliateUserName },
+            new("p_admin_user_name", NpgsqlDbType.Text) { Value = request.AdminUserName },
+            new("p_type", NpgsqlDbType.Boolean) { Value = request.Type },
+            new("p_concept_type", NpgsqlDbType.Text) { Value = request.ConceptType },
             new("p_invoices_details", NpgsqlDbType.Jsonb) { Value = invoicesDetailsJson },
             new("p_brand_id", NpgsqlDbType.Integer) { Value = request.BrandId },
-            new("p_bank", NpgsqlDbType.Varchar) { Value = request.Bank ?? string.Empty },
-            new("p_receipt_number", NpgsqlDbType.Varchar) { Value = request.ReceiptNumber ?? string.Empty },
-            new("p_type", NpgsqlDbType.Boolean) { Value = request.Type },
-            new("p_secret_key", NpgsqlDbType.Varchar) { Value = request.SecretKey ?? string.Empty },
-            new("p_reason", NpgsqlDbType.Varchar) { Value = request.Reason ?? string.Empty }
+            new("p_affiliate_id", NpgsqlDbType.Integer) { Value = request.AffiliateId },
+            new("p_bank", NpgsqlDbType.Text) { Value = request.Bank ?? string.Empty },
+            new("p_receipt_number", NpgsqlDbType.Text) { Value = request.ReceiptNumber ?? string.Empty },
+            new("p_secret_key", NpgsqlDbType.Text) { Value = request.SecretKey ?? string.Empty },
+            new("p_reason", NpgsqlDbType.Text) { Value = request.Reason ?? string.Empty }
         };
     }
 
@@ -1165,22 +1165,23 @@ public class WalletRepository : BaseRepository, IWalletRepository
     {
         try
         {
-            await using var sqlConnection = new SqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
+            await using var sqlConnection = new NpgsqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
 
-            await using var cmd = new SqlCommand(Constants.DistributeCommissionsPerPurchase, sqlConnection);
-            cmd.CommandType = CommandType.StoredProcedure;
+            await using var cmd =
+                new NpgsqlCommand("SELECT wallet_service.distribute_commissions_per_purchase(@AffiliateId, @InvoiceAmount, @BrandId)",
+                    sqlConnection);
 
-            cmd.Parameters.Add(new SqlParameter("@AffiliateId", SqlDbType.Int)
+            cmd.Parameters.Add(new NpgsqlParameter("@AffiliateId", NpgsqlDbType.Integer)
             {
                 Value = request.AffiliateId
             });
 
-            cmd.Parameters.Add(new SqlParameter("@InvoiceAmount", SqlDbType.Decimal)
+            cmd.Parameters.Add(new NpgsqlParameter("@InvoiceAmount", NpgsqlDbType.Numeric)
             {
                 Value = request.InvoiceAmount
             });
 
-            cmd.Parameters.Add(new SqlParameter("@BrandId", SqlDbType.Int)
+            cmd.Parameters.Add(new NpgsqlParameter("@BrandId", NpgsqlDbType.Integer)
             {
                 Value = request.BrandId
             });

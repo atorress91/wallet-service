@@ -9,7 +9,7 @@ public class InvoiceDetailsTransactionRequest
     [JsonProperty("payment_group_id")]
     public int PaymentGroupId { get; init; }
     
-    [JsonProperty("accumin_purchase")]
+    [JsonProperty("accummin_purchase")]
     public bool AccumMinPurchase { get; init; }
     
     [JsonProperty("product_name")]

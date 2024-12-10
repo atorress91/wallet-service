@@ -1,34 +1,35 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>latestmajor</LangVersion>
     </PropertyGroup>
 
 
     <ItemGroup>
-        <ProjectReference Include="..\WalletService.Models\WalletService.Models.csproj"/>
-        <ProjectReference Include="..\WalletService.Utility\WalletService.Utility.csproj"/>
+        <ProjectReference Include="..\WalletService.Models\WalletService.Models.csproj" />
+        <ProjectReference Include="..\WalletService.Utility\WalletService.Utility.csproj" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Crc32.NET" Version="1.2.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.2"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.2">
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.2"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.2">
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0-preview.3.23174.8"/>
-        <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0-preview.3.23174.8"/>
+        <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.1" />
-        <PackageReference Include="RestSharp" Version="110.1.0"/>
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
+        <PackageReference Include="RestSharp" Version="110.2.0" />
     </ItemGroup>
 
 </Project>
