@@ -95,6 +95,17 @@ public class CoinPayService : BaseService, ICoinPayService
 
         await _coinPayPaymentStrategy.ExecuteRecyCoinPayment(walletRequest);
     }
+    
+    private async Task ExecuteHouseCoinPlanPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
+    {
+        walletRequest.ProductsList = products.Select(product => new ProductsRequests
+        {
+            IdProduct = product.ProductId,
+            Count = product.Quantity
+        }).ToList();
+
+        await _coinPayPaymentStrategy.ExecuteHouseCoinPayment(walletRequest);
+    }
 
     private async Task ExecuteCoursePayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
     {
@@ -140,6 +151,7 @@ public class CoinPayService : BaseService, ICoinPayService
             case 8:
                 return ProductType.EcoPool;
             case 11: return ProductType.RecyCoin;
+            case 12: return ProductType.HouseCoinPlan;
             default:
                 return ProductType.Course;
         }
@@ -209,6 +221,10 @@ public class CoinPayService : BaseService, ICoinPayService
                 await ExecuteRecyCoinPayment(walletRequest, products);
                 _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | RecyCoin Payment executed");
                 break;
+            case ProductType.HouseCoinPlan:
+                await ExecuteHouseCoinPlanPayment(walletRequest, products);
+                _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | HouseCoinPlan Payment executed");
+                break;
             case ProductType.Course:
                 await ExecuteCoursePayment(walletRequest, products);
                 _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | Course Payment executed");
@@ -265,7 +281,7 @@ public class CoinPayService : BaseService, ICoinPayService
         {
             IdCurrency = Constants.UsdtIdCurrency,
             IdExternalIdentification = CommonExtensions.GenerateUniqueId(request.AffiliateId),
-            IdNetwork = Constants.UsdtIdNetwork,
+            IdNetwork = request.NetworkId,
             TagName = request.UserName,
         };
 

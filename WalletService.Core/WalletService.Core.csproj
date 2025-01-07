@@ -122,6 +122,9 @@
     <None Update="Assets\logo-recy.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="EmailTemplates\HouseCoin\confirm-purchase.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
 
 
 

@@ -10,6 +10,7 @@ public static class Constants
     public const string RevertEcoPoolConcept                  = "Devolucion Pool Adquisitivo";
     public const string AdminEcosystemUserName                = "adminecosystem";
     public const string RecycoinAdmin                         = "adminrecycoin";
+    public const string HouseCoinAdmin                         = "adminhousecoin";
     public const int    AdminUserId                           = 1;
     public const string AdminCredit                           = "Crédito Administrativo";
     public const string HandleDebitTransactionCourse          = "dbo.HandleDebit_Transation_For_Courses_SP";
@@ -93,6 +94,7 @@ public static class Constants
     public const int RecyCoinPaymentGroup           = 11;
     public const string EcosystemSenderName         = "Ecosystem Sharing Evolution";
     public const string RecyCoinSenderName          = "RecyCoin";
+    public const string HouseCoinSenderName         = "House Coin";
     public const string SubjectInvitationForAcademy = "Invitación al curso de trading";
     public const string PurchasingPoolRevertBalance = "Pool Adquisitivo con saldo revertido";
     public const string WireTransfer                = "Transferencia bancaria";

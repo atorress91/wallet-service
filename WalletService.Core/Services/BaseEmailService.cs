@@ -25,6 +25,7 @@ public abstract class BaseEmailService
         {
             1 => Constants.EcosystemSenderName,
             2 => Constants.RecyCoinSenderName,
+            3 => Constants.HouseCoinSenderName,
             _ => throw new ArgumentException("Invalid brandId", nameof(brandId))
         };
     }
@@ -35,6 +36,7 @@ public abstract class BaseEmailService
         {
             1 => "Ecosystem",
             2 => "RecyCoin",
+            3 => "HouseCoin",
             _ => throw new ArgumentException("Invalid brandId", nameof(brandId))
         };
     }
