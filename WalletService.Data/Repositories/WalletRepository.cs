@@ -101,12 +101,18 @@ public class WalletRepository : BaseRepository, IWalletRepository
     }
 
     public Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId, long brandId)
-        => Context.InvoicesDetails.Include(x => x.Invoice).AsNoTracking()
-            .Where(x
-                => x.Invoice.AffiliateId == affiliateId && (x.PaymentGroupId == 2 || x.PaymentGroupId == 11)
-                                                        && x.ProductPack && !x.Invoice.CancellationDate.HasValue &&
-                                                        x.BrandId == brandId)
+    {
+        var allowedPaymentGroups = new[] { 2, 11, 12 };
+    
+        return Context.InvoicesDetails.Include(x => x.Invoice).AsNoTracking()
+            .Where(x 
+                => x.Invoice.AffiliateId == affiliateId 
+                   && allowedPaymentGroups.Contains(x.PaymentGroupId)
+                   && x.ProductPack 
+                   && !x.Invoice.CancellationDate.HasValue
+                   && x.BrandId == brandId)
             .SumAsync(s => s.BaseAmount);
+    }
 
     public async Task<decimal?> GetTotalCommissionsPaid(int affiliateId, long brandId)
     {

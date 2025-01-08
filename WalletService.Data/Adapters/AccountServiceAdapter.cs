@@ -27,6 +27,7 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
         {
             1 => AppSettings.WebTokens!.EcosystemToken,
             2 => AppSettings.WebTokens!.RecyCoinToken,
+            3 => AppSettings.WebTokens!.HouseCoinToken,
             _ => null
         };
     }

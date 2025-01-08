@@ -238,6 +238,7 @@ public static class IocExtensionApp
         services.AddScoped<IUserStatisticsService, UserStatisticsService>();
         services.AddScoped<IBrandService, BrandService>();
         services.AddScoped<IRecyCoinPdfService, RecyCoinPdfService>();
+        services.AddScoped<IHouseCoinPdfService, HouseCoinPdfService>();
         services.AddScoped<IRedisCacheCleanupService, RedisCacheCleanupService>();
     }
 

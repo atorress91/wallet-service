@@ -125,6 +125,9 @@
     <None Update="EmailTemplates\HouseCoin\confirm-purchase.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\house-coin-logo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
 
 
 

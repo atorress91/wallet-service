@@ -46,9 +46,9 @@ public class HouseCoinPdfService : IHouseCoinPdfService
                                     .Text($"Recibo #{spResponse.Id}")
                                     .FontColor("#0A192F");
 
-                                col.Item().AlignRight().Text("Razón Social: SMART INTERNATIONAL INVESTMENTS LLC")
+                                col.Item().AlignRight().Text("SMART INTERNATIONAL INVESTMENTS LLC")
                                     .FontColor("#CCD6F6").FontSize(10);
-                                col.Item().AlignRight().Text("C.I.F: 3-101-865783").FontColor("#8892B0").FontSize(10);
+                                col.Item().AlignRight().Text("L24000157429").FontColor("#8892B0").FontSize(10);
                                 col.Item().AlignRight()
                                     .Text("Domicilio: España")
                                     .FontColor("#8892B0").FontSize(10);
@@ -222,7 +222,7 @@ public class HouseCoinPdfService : IHouseCoinPdfService
         decimal? totalDiscount = 0m;
         var workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         var separator = Path.DirectorySeparatorChar;
-        var pathFile = $"{workingDirectory}{separator}Assets{separator}logo-recy.png";
+        var pathFile = $"{workingDirectory}{separator}Assets{separator}house-coin-logo.png";
 
         return await Task.Run(() =>
         {
@@ -248,9 +248,9 @@ public class HouseCoinPdfService : IHouseCoinPdfService
                                     .Text($"Recibo #{invoice.Id}")
                                     .FontColor("#0A192F");
 
-                                col.Item().AlignRight().Text("Razón Social: SMART INTERNATIONAL INVESTMENTS LLC")
+                                col.Item().AlignRight().Text("SMART INTERNATIONAL INVESTMENTS LLC")
                                     .FontColor("#CCD6F6").FontSize(10);
-                                col.Item().AlignRight().Text("C.I.F: 3-101-865783").FontColor("#8892B0").FontSize(10);
+                                col.Item().AlignRight().Text("L24000157429").FontColor("#8892B0").FontSize(10);
                                 col.Item().AlignRight()
                                     .Text("Domicilio: España")
                                     .FontColor("#8892B0").FontSize(10);

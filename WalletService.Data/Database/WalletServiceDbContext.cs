@@ -98,6 +98,7 @@ public partial class WalletServiceDbContext : DbContext
     public virtual DbSet<WalletsWithdrawal> WalletsWithdrawals { get; set; }
 
     public DbSet<InvoicesSpResponse> InvoicesSpResponses { get; set; }
+    public DbSet<PurchasesPerMonth> PurchasesPerMonth { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1248,6 +1249,8 @@ public partial class WalletServiceDbContext : DbContext
             entity.HasNoKey();
             entity.ToTable("handle_debit_transaction", "wallet_service");
         });
+        
+        modelBuilder.Entity<PurchasesPerMonth>().HasNoKey();
         OnModelCreatingPartial(modelBuilder);
     }
 
