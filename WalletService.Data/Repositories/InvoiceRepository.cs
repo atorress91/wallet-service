@@ -43,10 +43,25 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
         => Context.Invoices.Include(x => x.InvoicesDetails).Where(x => x.AffiliateId == id && x.BrandId == brandId)
             .AsNoTracking().ToListAsync();
 
-    public Task<List<Invoice>> GetAllInvoices(long brandId)
-        => Context.Invoices.Where(x => x.BrandId == brandId).Include(x => x.InvoicesDetails).AsNoTracking()
-            .ToListAsync();
+    public Task<List<Invoice>> GetAllInvoices(long brandId, DateTime? startDate = null, DateTime? endDate = null)
+    {
+        var query = Context.Invoices
+            .Include(x => x.InvoicesDetails)
+            .Where(x => x.BrandId == brandId);
+        
+        if (startDate.HasValue)
+        {
+            query = query.Where(x => x.CreatedAt >= startDate.Value);
+        }
 
+        if (endDate.HasValue)
+        {
+            query = query.Where(x => x.CreatedAt <= endDate.Value.AddDays(1).AddTicks(-1));
+        }
+
+        return query.AsNoTracking().ToListAsync();
+    }
+    
     public Task<Invoice?> GetInvoiceById(long id, long brandId)
         => Context.Invoices.Include(e => e.InvoicesDetails)
             .FirstOrDefaultAsync(x => x.Id == id && x.BrandId == brandId);
@@ -367,9 +382,11 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
         return invoiceDetailsList;
     }
 
-    public async Task<decimal> GetTotalRecyCoinSold()
-        => await Context.InvoicesDetails.Where(x
-                => !x.Invoice.CancellationDate.HasValue && x.Invoice.Status &&
-                   x.PaymentGroupId == Constants.RecyCoinPaymentGroup)
+    public async Task<decimal> GetTotalAdquisitionsAdmin(long brandId, int paymentGroupId)
+        => await Context.InvoicesDetails.Where(x =>
+                !x.Invoice.CancellationDate.HasValue && 
+                x.Invoice.Status &&
+                x.Invoice.BrandId == brandId &&
+                x.PaymentGroupId == paymentGroupId)
             .SumAsync(x => x.BaseAmount ?? 0);
 }

@@ -26,11 +26,17 @@ public class InvoiceController : BaseController
     }
 
     [HttpGet("GetAllInvoices")]
-    public async Task<IActionResult> GetAllInvoices()
+    public async Task<IActionResult> GetAllInvoices([FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null)
     {
-        var result = await _invoiceService.GetAllInvoices();
-
-        return Ok(result);
+        try
+        {
+            var result = await _invoiceService.GetAllInvoices(startDate, endDate);
+            return Ok(Success(result));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("RevertCoinPaymentTransactions")]

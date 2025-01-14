@@ -10,7 +10,7 @@ public interface IInvoiceService
 {
     Task<IEnumerable<InvoiceDto>>                GetAllInvoiceUserAsync(int        id);
     Task<InvoiceDto>                             CreateInvoiceAsync(InvoiceRequest request);
-    Task<IEnumerable<InvoiceDto>>                GetAllInvoices();
+    Task<IEnumerable<InvoiceDto>>                GetAllInvoices(DateTime? startDate = null, DateTime? endDate = null);
     Task<bool>                                   RevertUnconfirmedOrUnpaidTransactions();
     Task<IEnumerable<InvoiceTradingAcademyDto?>> GetAllInvoicesForTradingAcademyPurchases();
     Task<IEnumerable<UserAffiliateResponse>>     SendInvitationsForUpcomingCourses(string link, string code);

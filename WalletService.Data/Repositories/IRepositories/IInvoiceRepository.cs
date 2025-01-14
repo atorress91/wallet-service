@@ -6,7 +6,7 @@ namespace WalletService.Data.Repositories.IRepositories;
 
 public interface IInvoiceRepository
 {
-    Task<List<Invoice>>                        GetAllInvoices(long brandId);
+    Task<List<Invoice>> GetAllInvoices(long brandId, DateTime? startDate = null, DateTime? endDate = null);
     Task<int>                                   CountDetailsByPaymentGroup(int                          paymentGroupId,int userId,long brandId);
     Task<List<ModelFourStatistic>>             Model4StatisticsByUser(int                              userId);
     Task<List<Invoice>>                        GetAllInvoicesUser(int                                  id, long brandId);
@@ -23,5 +23,5 @@ public interface IInvoiceRepository
     Task<List<InvoicesTradingAcademyResponse>?> GetAllInvoicesForTradingAcademyPurchases();
     Task<List<InvoiceModelOneAndTwoResponse>?>  GetAllInvoicesModelOneAndTwo();
     Task<int> CountDetailsModel3ByPaymentGroup(int userId, long brandId);
-    Task<decimal> GetTotalRecyCoinSold();
+    Task<decimal>  GetTotalAdquisitionsAdmin(long brandId, int paymentGroupId);
 }

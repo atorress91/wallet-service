@@ -70,12 +70,41 @@ public class InvoiceService : BaseService, IInvoiceService
         return Mapper.Map<InvoiceDto>(invoice);
     }
 
-    public async Task<IEnumerable<InvoiceDto>> GetAllInvoices()
+    public async Task<IEnumerable<InvoiceDto>> GetAllInvoices(DateTime? startDate = null, DateTime? endDate = null)
     {
-        var response = await _invoiceRepository.GetAllInvoices(_brandService.BrandId);
+        ValidateDateRange(startDate, endDate);
+
+        var response = await _invoiceRepository.GetAllInvoices(_brandService.BrandId, startDate, endDate);
         var mappedList = Mapper.Map<IEnumerable<InvoiceDto>>(response).ToList();
+
+        var userTasks = mappedList.Select(async invoice =>
+        {
+            try
+            {
+                var user = await _accountServiceAdapter.GetUserInfo(invoice.AffiliateId,_brandService.BrandId);
+                invoice.UserName = user?.UserName;
+                invoice.Name     = user?.Name;
+                invoice.LastName = user?.LastName;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Error getting user info for affiliate {invoice.AffiliateId}");
+                throw;
+            }
+        });
+        
+        await Task.WhenAll(userTasks);
+        
         mappedList.Reverse();
         return mappedList;
+    }
+
+    private void ValidateDateRange(DateTime? startDate, DateTime? endDate)
+    {
+        if (startDate.HasValue && endDate.HasValue && startDate > endDate)
+        {
+            throw new ArgumentException("The start date must be before the end date.");
+        }
     }
 
     public async Task<bool> RevertUnconfirmedOrUnpaidTransactions()

@@ -29,6 +29,10 @@ public class InvoiceDto
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
+    
+    public string? UserName { get; set; }
+    public string? Name { get; set; }
+    public string? LastName { get; set; }
 
     public ICollection<InvoiceDetailDto.InvoiceDetailDto> InvoicesDetails { get; set; }
 }
