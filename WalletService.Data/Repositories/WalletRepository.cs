@@ -1174,7 +1174,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             await using var sqlConnection = new NpgsqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
 
             await using var cmd =
-                new NpgsqlCommand("SELECT wallet_service.distribute_commissions_per_purchase(@AffiliateId, @InvoiceAmount, @BrandId)",
+                new NpgsqlCommand("SELECT wallet_service.distribute_commissions_per_purchase(@AffiliateId, @InvoiceAmount, @BrandId, @AdminUserName)",
                     sqlConnection);
 
             cmd.Parameters.Add(new NpgsqlParameter("@AffiliateId", NpgsqlDbType.Integer)
@@ -1192,6 +1192,11 @@ public class WalletRepository : BaseRepository, IWalletRepository
                 Value = request.BrandId
             });
 
+            cmd.Parameters.Add(new NpgsqlParameter("@AdminUserName", NpgsqlDbType.Varchar)
+            {
+                Value = request.AdminUserName
+            });
+            
             await sqlConnection.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
             await sqlConnection.CloseAsync();

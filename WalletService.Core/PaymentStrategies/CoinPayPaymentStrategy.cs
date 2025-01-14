@@ -555,7 +555,13 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         if (request.BrandId == Constants.RecyCoin)
         { 
             await _bonusRepository.CreateBonus(new BonusRequest { AffiliateId = request.AffiliateId, Amount = (debitTransactionRequest.Debit / 2), InvoiceId = spResponse.Id, Comment = "Bonus for Recycoin" });
-            await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest { AffiliateId = request.AffiliateId, InvoiceAmount = debitTransactionRequest.Debit, BrandId = request.BrandId });
+            await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
+            {
+                AffiliateId = request.AffiliateId, 
+                InvoiceAmount = debitTransactionRequest.Debit, 
+                BrandId = request.BrandId,
+                AdminUserName = Constants.RecycoinAdmin,
+            });
         }
         
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
@@ -687,6 +693,13 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
         var invoicePdf = await _houseCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
+        {
+            AffiliateId = request.AffiliateId, 
+            InvoiceAmount = debitTransactionRequest.Debit, 
+            BrandId = request.BrandId,
+            AdminUserName = Constants.HouseCoinAdmin,
+        });
         
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
         {
