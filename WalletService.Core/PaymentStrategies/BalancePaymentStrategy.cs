@@ -26,12 +26,14 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
     private readonly IBrandService            _brandService;
     private readonly IRecyCoinPdfService      _recyCoinPdfService;
     private readonly IBonusRepository         _bonusRepository;
+    private readonly IHouseCoinPdfService     _houseCoinPdfService;
     public BalancePaymentStrategy(IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter                             accountServiceAdapter, IWalletRepository walletRepository,
         IEcosystemPdfService                                ecosystemPdfService,
         IBrevoEmailService                                 brevoEmailService, IWalletRequestRepository walletRequestRepository,
         RedisCache                                         redisCache,IBrandService brandService,
         IRecyCoinPdfService                                recyCoinPdfService,
+        IHouseCoinPdfService                               houseCoinPdfService,
         IBonusRepository bonusRepository)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
@@ -44,6 +46,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         _brandService            = brandService;
         _recyCoinPdfService      = recyCoinPdfService;
         _bonusRepository         = bonusRepository;
+        _houseCoinPdfService     = houseCoinPdfService;
     }
 
     private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId,long brandId)
@@ -216,7 +219,10 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (request.BrandId == Constants.RecyCoin)
         {
             invoicePdf = await _recyCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
-          
+        }
+        else if (request.BrandId == Constants.HouseCoin)  
+        {
+            invoicePdf = await _houseCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
         }
         else
         {
