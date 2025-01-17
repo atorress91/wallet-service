@@ -43,7 +43,4 @@ public class InventoryServiceAdapter : BaseAdapter, IInventoryServiceAdapter
     {
         return Post($"/product/get_product_by_id/", id.ToJsonString(), brandId);
     }
-
-
-
 }
