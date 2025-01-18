@@ -36,6 +36,7 @@ public class CoinPayService : BaseService, ICoinPayService
     private readonly IWalletWithdrawalService _walletWithDrawalService;
     private readonly IBrandService _brandService;
     private readonly RedisCache _redisCache;
+    private readonly IWalletRepository _walletRepository;
     public CoinPayService(IMapper mapper, ICoinPayAdapter coinPayAdapter,
         ICoinPaymentTransactionRepository transactionRepository, ILogger<CoinPayService> logger,
         IAccountServiceAdapter accountServiceAdapter,
@@ -45,7 +46,8 @@ public class CoinPayService : BaseService, ICoinPayService
         IWalletRequestRepository walletRequestRepository,
         IWalletWithdrawalService walletWithDrawalService,
         IBrandService brandService,
-        RedisCache redisCache
+        RedisCache redisCache,
+        IWalletRepository walletRepository
     ) : base(mapper)
     {
         _coinPayAdapter = coinPayAdapter;
@@ -59,6 +61,7 @@ public class CoinPayService : BaseService, ICoinPayService
         _walletWithDrawalService = walletWithDrawalService;
         _brandService = brandService;
         _redisCache = redisCache;
+        _walletRepository = walletRepository;
     }
 
     #region coingPay
@@ -630,15 +633,56 @@ public class CoinPayService : BaseService, ICoinPayService
 
             if (servicesResponse is { StatusCode: 1 })
             {
-                _logger.LogInformation(
-                    $"[CoinPayService] | ProcessWithdrawal | Funds sent successfully for Affiliate ID: {request.AffiliateId}");
-                await _walletWithDrawalService.CreateWalletWithdrawalAsync(walletWithdrawal);
+                _logger.LogInformation($"[CoinPayService] | ProcessWithdrawal | Funds sent successfully for Affiliate ID: {request.AffiliateId}");
+    
+                var debitTransaction = new Wallet
+                {
+                    AffiliateId = request.AffiliateId,
+                    UserId = 1,
+                    Credit = 0,
+                    Debit = request.Amount,
+                    Deferred = 0,
+                    Status = true,
+                    Concept = Constants.SendFundsConcept,
+                    Support = 1,
+                    Date = today,
+                    Compression = true,
+                    Detail = "Retiro de fondos en coinpay",
+                    CreatedAt = today,
+                    UpdatedAt = today,
+                    AffiliateUserName = user.UserName!,
+                    AdminUserName = _brandService.BrandId switch
+                    {
+                        1 => "adminecosystem",
+                        2 => "adminrecycoin",
+                        3 => "adminhousecoin",
+                        _ => "adminecosystem"
+                    },
+                    ConceptType = WalletConceptType.balance_transfer.ToString(),
+                    BrandId = _brandService.BrandId,
+                };
+
+                try 
+                {
+                    await Task.WhenAll(
+                        _walletRepository.CreateWalletAsync(debitTransaction),
+                        _walletWithDrawalService.CreateWalletWithdrawalAsync(walletWithdrawal)
+                    );
+                    await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
+                    
+                    _logger.LogInformation(
+                        $"[CoinPayService] | ProcessWithdrawal | Debit transaction and withdrawal created successfully for Affiliate ID: {request.AffiliateId}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"[CoinPayService] | ProcessWithdrawal | Error creating debit transaction for Affiliate ID: {request.AffiliateId}. Error: {ex}");
+                }
+                
                 return servicesResponse;
             }
             else
             {
-                _logger.LogWarning(
-                    $"[CoinPayService] | ProcessWithdrawal | Successful operation but invalid response format for Affiliate ID: {request.AffiliateId} {response.ToJsonString()}");
+                _logger.LogWarning($"[CoinPayService] | ProcessWithdrawal | Successful operation but invalid response format for Affiliate ID: {request.AffiliateId} {response.ToJsonString()}");
                 return new SendFundsResponse
                 {
                     StatusCode = (int)response.StatusCode,
@@ -647,8 +691,7 @@ public class CoinPayService : BaseService, ICoinPayService
             }
         }
 
-        _logger.LogWarning(
-            $"[CoinPayService] | ProcessWithdrawal | Failed to send funds for Affiliate ID: {request.AffiliateId} {response.ToJsonString()}");
+        _logger.LogWarning($"[CoinPayService] | ProcessWithdrawal | Failed to send funds for Affiliate ID: {request.AffiliateId} {response.ToJsonString()}");
         return new SendFundsResponse
         {
             StatusCode = (int)response.StatusCode,

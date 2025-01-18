@@ -1215,4 +1215,5 @@ public class WalletRepository : BaseRepository, IWalletRepository
             .Where(x => x.BrandId == brandId &&
                         x.ConceptType == WalletConceptType.commission_passed_wallet.ToString() && x.Status == true)
             .SumAsync(x => (decimal)x.Credit!);
+    
 }
