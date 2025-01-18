@@ -591,8 +591,8 @@ public class ConPaymentService : BaseService, IConPaymentService
 
             if (userInfo?.Data is null)
                 continue;
-
-            var btcAddress = userInfo.Data.Address;
+            
+            var btcAddress = userInfo.Data?.FirstOrDefault(x => !string.IsNullOrEmpty(x.Address))?.Address;
 
             if (string.IsNullOrEmpty(btcAddress))
                 continue;

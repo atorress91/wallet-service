@@ -76,6 +76,7 @@ public static class Constants
     public const string SendFundsConcept                      = "Retiro de dinero";
     public const int    UsdtIdCurrency                        = 19;
     public const int    UsdtIdNetwork                         = 99;
+    public const int    BnbIdNetwork                          = 56;
     public const int    CoinPayIdWallet                       = 46616;
     public const int    ChildrenLimitModel4                   = 2;
     public const int    ChildrenLimitModel5                   = 4;

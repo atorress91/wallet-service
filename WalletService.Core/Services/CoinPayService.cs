@@ -562,7 +562,8 @@ public class CoinPayService : BaseService, ICoinPayService
         var deserializeResponse = JsonConvert.DeserializeObject<ServicesResponse>(trcResponse.Content!);
         if (deserializeResponse!.Data != null)
         {
-            userTrcAddress = JsonConvert.DeserializeObject<TrcAddressResponse>(deserializeResponse.Data.ToString()!);
+            var addressArray = JsonConvert.DeserializeObject<TrcAddressResponse[]>(deserializeResponse.Data.ToString()!);
+            userTrcAddress = addressArray?.FirstOrDefault(x => x != null);
             _logger.LogInformation(
                 $"[CoinPayService] | ProcessWithdrawal | TRC address deserialized successfully for Affiliate ID: {request.AffiliateId}");
         }
@@ -585,22 +586,27 @@ public class CoinPayService : BaseService, ICoinPayService
             return new SendFundsResponse
             {
                 StatusCode = (int)HttpStatusCode.BadRequest,
-                Message = "No valid TRC address found"
+                Message = "No valid address found"
             };
         }
 
         var sendFundsRequest = new SendFundRequest
         {
             IdCurrency = Constants.UsdtIdCurrency,
-            IdNetwork = Constants.UsdtIdNetwork,
+            IdNetwork = _brandService.BrandId switch
+            {
+                1 => Constants.UsdtIdNetwork,
+                2 => Constants.UsdtIdNetwork,
+                3 => Constants.BnbIdNetwork,
+                _ => Constants.BnbIdNetwork
+            },
             Address = userTrcAddress.Address,
             Amount = request.Amount,
             Details = Constants.SendFundsConcept,
             AmountPlusFee = false
         };
 
-        _logger.LogInformation(
-            $"[CoinPayService] | ProcessWithdrawal | Sending funds for Affiliate ID: {request.AffiliateId}");
+        _logger.LogInformation($"[CoinPayService] | ProcessWithdrawal | Sending funds for Affiliate ID: {request.AffiliateId}");
 
         var response = await _coinPayAdapter.SendFunds(sendFundsRequest);
         if (response is { IsSuccessful: true, Content: not null })

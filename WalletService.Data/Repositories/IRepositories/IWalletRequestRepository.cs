@@ -4,7 +4,7 @@ namespace WalletService.Data.Repositories.IRepositories;
 
 public interface IWalletRequestRepository
 {
-    Task<List<WalletsRequest>> GetAllWalletsRequests();
+    Task<List<WalletsRequest>> GetAllWalletsRequests(long brandId);
     Task<decimal>               GetTotalWalletRequestAmount(long brandId);
 	Task<List<WalletsRequest>> GetAllWalletRequestByAffiliateId(int id);
     Task<List<WalletsRequest>> GetWalletRequestsByIds(List<long>     ids);
@@ -12,7 +12,7 @@ public interface IWalletRequestRepository
     Task UpdateBulkWalletRequestsAsync(List<WalletsRequest>         request);
     Task<WalletsRequest> DeleteWalletRequestAsync(WalletsRequest   request);
     Task<decimal> GetTotalWalletRequestAmountByAffiliateId(int       id, long brandId);
-    Task<List<WalletsRequest>> GetAllWalletRequestRevertTransaction();
+    Task<List<WalletsRequest>> GetAllWalletRequestRevertTransaction(long brandId);
     Task<WalletsRequest?> GetWalletRequestsByInvoiceNumber(int     invoiceId);
     Task<WalletsRequest> UpdateWalletRequestsAsync(WalletsRequest requests);
 }

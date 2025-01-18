@@ -68,6 +68,7 @@ public class WalletService : BaseService, IWalletService
     public async Task<IEnumerable<WalletDto>> GetAllWallets()
     {
         var response = await _walletRepository.GetAllWallets(_brandService.BrandId);
+        response.Reverse();
 
         return Mapper.Map<IEnumerable<WalletDto>>(response);
     }

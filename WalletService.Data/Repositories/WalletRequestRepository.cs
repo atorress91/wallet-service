@@ -9,11 +9,13 @@ namespace WalletService.Data.Repositories;
 public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
 {
     public WalletRequestRepository(WalletServiceDbContext context) : base(context) { }
-    public Task<List<WalletsRequest>> GetAllWalletsRequests()
-        => Context.WalletsRequests.Where(x => x.Type == WalletRequestType.withdrawal_request.ToString() && x.Status == 0).AsNoTracking().ToListAsync();
+    public Task<List<WalletsRequest>> GetAllWalletsRequests(long brandId)
+        => Context.WalletsRequests.Where(x => x.Type == WalletRequestType.withdrawal_request.ToString() && x.Status == 0 && x.BrandId == brandId)
+            .AsNoTracking().ToListAsync();
 
-    public Task<List<WalletsRequest>> GetAllWalletRequestRevertTransaction()
-        => Context.WalletsRequests.Where(x => x.Type == WalletRequestType.revert_invoice_request.ToString()).AsNoTracking().ToListAsync();
+    public Task<List<WalletsRequest>> GetAllWalletRequestRevertTransaction(long brandId)
+        => Context.WalletsRequests.Where(x => x.Type == WalletRequestType.revert_invoice_request.ToString() && x.BrandId == brandId)
+            .AsNoTracking().ToListAsync();
 
     public Task<List<WalletsRequest>> GetAllWalletRequestByAffiliateId(int id)
         => Context.WalletsRequests.Where(x => x.AffiliateId == id).AsNoTracking().ToListAsync();

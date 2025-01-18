@@ -1,5 +1,6 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -49,14 +50,15 @@ public class WalletRequestService : BaseService, IWalletRequestService
 
     public async Task<IEnumerable<WalletRequestDto>> GetAllWalletsRequests()
     {
-        var response = await _walletRequestRepository.GetAllWalletsRequests();
+        var response = await _walletRequestRepository.GetAllWalletsRequests(_brandService.BrandId);
+        response.Reverse();
 
         return Mapper.Map<IEnumerable<WalletRequestDto>>(response);
     }
 
     public async Task<IEnumerable<WalletRequestDto>?> GetAllWalletRequestRevertTransaction()
     {
-        var response = await _walletRequestRepository.GetAllWalletRequestRevertTransaction();
+        var response = await _walletRequestRepository.GetAllWalletRequestRevertTransaction(_brandService.BrandId);
 
         return Mapper.Map<IEnumerable<WalletRequestDto>>(response);
     }
@@ -70,7 +72,17 @@ public class WalletRequestService : BaseService, IWalletRequestService
 
     public async Task<WalletRequestDto?> CreateWalletRequestAsync(WalletRequestRequest request)
     {
-        var isDateValid  = await IsWithdrawalDateAllowed();
+        bool isDateValid;
+
+        if (_brandService.BrandId is 1 or 2)
+        {
+            isDateValid = await IsWithdrawalDateAllowed();
+        }
+        else 
+        {
+             isDateValid  = IsWithdrawalUtcDateAllowed();
+        }
+        
         var hasWalletBtc = await HasWalletAddress(request.AffiliateId);
 
         if (!isDateValid)
@@ -85,7 +97,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         var userReverseBalance   = await _walletRepository.GetReverseBalanceByAffiliateId(request.AffiliateId,_brandService.BrandId);
         var isActivePool         = await _walletRepository.IsActivePoolGreaterThanOrEqualTo25(request.AffiliateId,_brandService.BrandId);
 
-        if (!isActivePool)
+        if (!isActivePool && _brandService.BrandId is 1 or 2)
             return null;
 
         if (!response.IsSuccessful)
@@ -94,7 +106,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         if (string.IsNullOrEmpty(response.Content))
             return null;
 
-        var result = response.Content.ToJsonObject<ServicesValidCodeAccountResponse>();
+        var result = JsonConvert.DeserializeObject<ServicesValidCodeAccountResponse>(response.Content);
         if (result is { Data: false })
             return null;
 
@@ -114,7 +126,8 @@ public class WalletRequestService : BaseService, IWalletRequestService
             AttentionDate = null,
             OrderNumber   = CommonExtensions.GenerateOrderNumber(request.AffiliateId),
             Type          = WalletRequestType.withdrawal_request.ToString(),
-            InvoiceNumber = Constants.EmptyValue
+            InvoiceNumber = Constants.EmptyValue,
+            BrandId       = _brandService.BrandId,
         };
 
         walletRequest = await _walletRequestRepository.CreateWalletRequestAsync(walletRequest);
@@ -191,7 +204,8 @@ public class WalletRequestService : BaseService, IWalletRequestService
             Credit            = Convert.ToDouble(amountReverted),
             AffiliateUserName = userInfoResponse!.UserName,
             AdminUserName     = Constants.AdminEcosystemUserName,
-            ConceptType       = WalletConceptType.revert_pool.ToString()
+            ConceptType       = WalletConceptType.revert_pool.ToString(),
+            BrandId           = _brandService.BrandId 
         };
 
         var walletRequest = new WalletsRequest
@@ -205,7 +219,8 @@ public class WalletRequestService : BaseService, IWalletRequestService
             Type          = WalletRequestType.revert_invoice_request.ToString(),
             Status        = WalletRequestStatus.pending.ToByte(),
             CreationDate  = DateTime.Now,
-            AttentionDate = null
+            AttentionDate = null,
+            BrandId       = _brandService.BrandId 
         };
 
         walletRequest = await _walletRequestRepository.CreateWalletRequestAsync(walletRequest);
@@ -242,6 +257,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
             PaymentMethod     = 0,
             SecretKey         = null,
             ReceiptNumber     = leftOverBalance.ToString(),
+            BrandId           = _brandService.BrandId,  
             ProductsList = new List<ProductsRequests>
             {
                 new ProductsRequests
@@ -319,7 +335,8 @@ public class WalletRequestService : BaseService, IWalletRequestService
                     Detail            = null,
                     CreatedAt         = today,
                     UpdatedAt         = today,
-                    DeletedAt         = null
+                    DeletedAt         = null,
+                    BrandId           = _brandService.BrandId, 
                 };
 
                 walletsList.Add(walletEntry);
@@ -364,6 +381,21 @@ public class WalletRequestService : BaseService, IWalletRequestService
         var localDateOnly = DateOnly.FromDateTime(localDateTime.Date);
         return allowedDates.Contains(localDateOnly);
     }
+    
+    private bool IsWithdrawalUtcDateAllowed()
+    {
+        var utcNow = DateTime.UtcNow;
+        
+        if (utcNow.DayOfWeek != DayOfWeek.Saturday)
+            return false;
+        
+        var startTime = new TimeSpan(0, 0, 0);
+        var endTime = new TimeSpan(24, 0, 0);
+
+    
+        var currentTime = utcNow.TimeOfDay;
+        return currentTime >= startTime && currentTime <= endTime;
+    }
 
     private async Task<bool> HasWalletAddress(int affiliateId)
     {
@@ -372,12 +404,12 @@ public class WalletRequestService : BaseService, IWalletRequestService
         if (response.Content is null)
             return false;
 
-        var userInfo = response.Content.ToJsonObject<AffiliateBtcResponse>();
+        var userInfo = JsonConvert.DeserializeObject<AffiliateBtcResponse>(response.Content);
 
         if (userInfo?.Data is null)
             return false;
 
-        if (string.IsNullOrEmpty(userInfo.Data.Address))
+        if (userInfo.Data.Length == 0)
             return false;
 
         return true;
