@@ -55,4 +55,5 @@ public interface IWalletRepository
     Task<bool> CreditServiceBalanceTransaction(CreditTransactionRequest request);
     Task<bool> DistributeCommissionsPerPurchaseAsync(DistributeCommissionsRequest request);
     Task<decimal> GetTotalCommissionsPaid(long brandId);
+    Task<decimal> GetCommissionsForAdminAsync(long brandId);
 }

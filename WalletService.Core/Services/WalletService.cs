@@ -167,6 +167,7 @@ public class WalletService : BaseService, IWalletService
         var reverseBalance       = await _walletRepository.GetTotalReverseBalance(_brandService.BrandId);
         var paidCommissions      = await _walletRepository.GetTotalCommissionsPaid(_brandService.BrandId);  
         var calculatedCommissions= await _invoiceRepository.GetTotalAdquisitionsAdmin(_brandService.BrandId,paymentGroupId);
+        var totalCommissionsEarned= await _walletRepository.GetCommissionsForAdminAsync(_brandService.BrandId);
 
         var information = new BalanceInformationAdminDto
         {
@@ -174,7 +175,8 @@ public class WalletService : BaseService, IWalletService
             WalletProfit          = walletProfit,
             CommissionsPaid       = paidCommissions,
             CalculatedCommissions = calculatedCommissions,
-            TotalReverseBalance   = reverseBalance 
+            TotalReverseBalance   = reverseBalance,
+            TotalCommissionsEarned = totalCommissionsEarned
         };
 
         if (amountRequests == 0m && reverseBalance == 0) return information;

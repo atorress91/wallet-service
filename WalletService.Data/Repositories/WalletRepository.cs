@@ -64,6 +64,20 @@ public class WalletRepository : BaseRepository, IWalletRepository
         return (decimal)result!;
     }
 
+    public async Task<decimal> GetCommissionsForAdminAsync(long brandId)
+    {
+        var result = await Context.Wallets
+            .Where(x => x.Status == true &&
+                        x.BrandId == brandId &&
+                        x.AffiliateId == 0 &&
+                        x.ConceptType != null &&
+                        x.ConceptType.Contains("commission_passed_wallet"))
+            .Select(x => (decimal)(x.Credit - x.Debit)!)
+            .SumAsync();
+
+        return result;
+    }
+
     public async Task<decimal?> GetReverseBalanceByAffiliateId(int affiliateId, long brandId)
     {
         var totalCredits = await Context.Wallets
@@ -103,12 +117,12 @@ public class WalletRepository : BaseRepository, IWalletRepository
     public Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId, long brandId)
     {
         var allowedPaymentGroups = new[] { 2, 11, 12 };
-    
+
         return Context.InvoicesDetails.Include(x => x.Invoice).AsNoTracking()
-            .Where(x 
-                => x.Invoice.AffiliateId == affiliateId 
+            .Where(x
+                => x.Invoice.AffiliateId == affiliateId
                    && allowedPaymentGroups.Contains(x.PaymentGroupId)
-                   && x.ProductPack 
+                   && x.ProductPack
                    && !x.Invoice.CancellationDate.HasValue
                    && x.BrandId == brandId)
             .SumAsync(s => s.BaseAmount);
@@ -1174,7 +1188,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
             await using var sqlConnection = new NpgsqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
 
             await using var cmd =
-                new NpgsqlCommand("SELECT wallet_service.distribute_commissions_per_purchase(@AffiliateId, @InvoiceAmount, @BrandId, @AdminUserName)",
+                new NpgsqlCommand(
+                    "SELECT wallet_service.distribute_commissions_per_purchase(@AffiliateId, @InvoiceAmount, @BrandId, @AdminUserName)",
                     sqlConnection);
 
             cmd.Parameters.Add(new NpgsqlParameter("@AffiliateId", NpgsqlDbType.Integer)
@@ -1196,7 +1211,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             {
                 Value = request.AdminUserName
             });
-            
+
             await sqlConnection.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
             await sqlConnection.CloseAsync();
@@ -1215,5 +1230,4 @@ public class WalletRepository : BaseRepository, IWalletRepository
             .Where(x => x.BrandId == brandId &&
                         x.ConceptType == WalletConceptType.commission_passed_wallet.ToString() && x.Status == true)
             .SumAsync(x => (decimal)x.Credit!);
-    
 }

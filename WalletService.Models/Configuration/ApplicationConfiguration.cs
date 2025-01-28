@@ -97,4 +97,6 @@ public class WebTokens
     public string? EcosystemToken { get; set; }
     public string? RecyCoinToken { get; set; }
     public string? HouseCoinToken { get; set; }
+    
+    public string? ExitoJuntosToken { get; set; }
 }

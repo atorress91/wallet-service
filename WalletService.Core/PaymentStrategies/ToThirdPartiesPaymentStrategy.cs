@@ -27,12 +27,14 @@ public class ToThirdPartiesPaymentStrategy : BaseService
     private readonly IBonusRepository _bonusRepository;
     private readonly IRecyCoinPdfService _recyCoinPdfService;
     private readonly RedisCache _redisCache;
+    private readonly IHouseCoinPdfService _houseCoinPdfService;
 
     public ToThirdPartiesPaymentStrategy(IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter accountServiceAdapter, IWalletRepository walletRepository,
         IEcosystemPdfService ecosystemPdfService, RedisCache redisCache,
         IBrevoEmailService brevoEmailService, IWalletRequestRepository walletRequestRepository,
-        IMapper mapper, IBonusRepository bonusRepository, IRecyCoinPdfService recyCoinPdfService) : base(mapper)
+        IMapper mapper, IBonusRepository bonusRepository, IRecyCoinPdfService recyCoinPdfService,
+        IHouseCoinPdfService houseCoinPdfService) : base(mapper)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter = accountServiceAdapter;
@@ -43,6 +45,7 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         _bonusRepository = bonusRepository;
         _recyCoinPdfService = recyCoinPdfService;
         _redisCache = redisCache;
+        _houseCoinPdfService = houseCoinPdfService;
     }
 
     public async Task<bool> ExecutePayment(WalletRequest request)
@@ -142,7 +145,13 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             Deferred = Constants.EmptyValue,
             Detail = null,
             AffiliateId = request.AffiliateId,
-            AdminUserName = request.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
+            AdminUserName = request.BrandId switch
+            {
+                1 => Constants.AdminEcosystemUserName,
+                2 => Constants.RecycoinAdmin,
+                3 => Constants.HouseCoinAdmin,
+                _ => Constants.AdminEcosystemUserName
+            },
             Status = true,
             UserId = Constants.AdminUserId,
             Credit = Constants.EmptyValue,
@@ -230,21 +239,24 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1A);
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
 
-        // var fullName                   = purchaseFor.Name + " " + purchaseFor.LastName;
-
         byte[] invoicePdf;
         if (request.BrandId == Constants.RecyCoin)
         {
-            invoicePdf = await _recyCoinPdfService.GenerateInvoice(purchaseFor, debitTransactionRequest, spResponse);
+            invoicePdf =
+                await _recyCoinPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
+        }
+        else if (request.BrandId == Constants.HouseCoin)
+        {
+            invoicePdf =
+                await _houseCoinPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
         }
         else
         {
-            invoicePdf = await _ecosystemPdfService.GenerateInvoice(purchaseFor, debitTransactionRequest, spResponse);
+            invoicePdf =
+                await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
         }
 
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
-
-        // await _brevoEmailService.SendEmailConfirmationEmailToThirdParty(userInfoResponse, fullName, productNames);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
         {
