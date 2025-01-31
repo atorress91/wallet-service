@@ -9,4 +9,5 @@ public interface ICoinPayPaymentStrategy
     Task<bool> ExecuteMembershipPayment(WalletRequest request);
     Task<bool> ExecuteRecyCoinPayment(WalletRequest request);
     Task<bool> ExecuteHouseCoinPayment(WalletRequest request);
+    Task<bool> ExecuteExitoJuntosPayment(WalletRequest request);
 }

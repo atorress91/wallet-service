@@ -116,7 +116,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
     public Task<decimal?> GetTotalAcquisitionsByAffiliateId(int affiliateId, long brandId)
     {
-        var allowedPaymentGroups = new[] { 2, 11, 12 };
+        var allowedPaymentGroups = new[] { 2, 11, 12, 13 };
 
         return Context.InvoicesDetails.Include(x => x.Invoice).AsNoTracking()
             .Where(x

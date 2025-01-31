@@ -6,5 +6,6 @@ public enum ProductType
     Membership,
     RecyCoin = 11,
     HouseCoinPlan = 12,
+    ExitoJuntosPlan = 13,
     Course,
 }

@@ -252,6 +252,7 @@ public static class IocExtensionApp
         services.AddScoped<IRecyCoinPdfService, RecyCoinPdfService>();
         services.AddScoped<IHouseCoinPdfService, HouseCoinPdfService>();
         services.AddScoped<IRedisCacheCleanupService, RedisCacheCleanupService>();
+        services.AddScoped<IExitoJuntosPdfService, ExitoJuntosPdfService>();
     }
 
     private static void InjectPackages(IServiceCollection services)

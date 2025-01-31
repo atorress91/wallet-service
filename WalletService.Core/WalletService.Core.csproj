@@ -131,6 +131,9 @@
     <None Update="EmailTemplates\ExitoJuntos\confirm-purchase.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\exito_juntos.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
 
 
 

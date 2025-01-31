@@ -313,7 +313,14 @@ public class WalletService : BaseService, IWalletService
             Deferred = Constants.EmptyValue,
             Detail = null,
             AffiliateId = request.FromAffiliateId,
-            AdminUserName = Constants.AdminEcosystemUserName,
+            AdminUserName = _brandService.BrandId switch
+            {
+                1 => Constants.AdminEcosystemUserName,
+                2 => Constants.RecycoinAdmin,
+                3 => Constants.HouseCoinAdmin,
+                4 => Constants.ExitoJuntosAdmin,
+                _ => Constants.AdminEcosystemUserName
+            },
             Status = true,
             UserId = Constants.AdminUserId,
             Credit = Constants.EmptyValue,
@@ -331,7 +338,14 @@ public class WalletService : BaseService, IWalletService
             Deferred = Constants.EmptyValue,
             Detail = null,
             AffiliateId = result.Data!.Id,
-            AdminUserName = Constants.AdminEcosystemUserName,
+            AdminUserName = _brandService.BrandId switch
+            {
+                1 => Constants.AdminEcosystemUserName,
+                2 => Constants.RecycoinAdmin,
+                3 => Constants.HouseCoinAdmin,
+                4 => Constants.ExitoJuntosAdmin,
+                _ => Constants.AdminEcosystemUserName
+            },
             Status = true,
             UserId = Constants.AdminUserId,
             Credit = amount,
@@ -409,7 +423,14 @@ public class WalletService : BaseService, IWalletService
             Deferred = 0,
             Detail = null,
             AffiliateId = data.FromAffiliateId,
-            AdminUserName = _brandService.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
+            AdminUserName = _brandService.BrandId switch
+            {
+                1 => Constants.AdminEcosystemUserName,
+                2 => Constants.RecycoinAdmin,
+                3 => Constants.HouseCoinAdmin,
+                4 => Constants.ExitoJuntosAdmin,
+                _ => Constants.AdminEcosystemUserName
+            },
             Status = true,
             UserId = 1,
             Credit = 0,
@@ -428,7 +449,14 @@ public class WalletService : BaseService, IWalletService
             Deferred = 0,
             Detail = null,
             AffiliateId = result.Data.Id,
-            AdminUserName = _brandService.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
+            AdminUserName = _brandService.BrandId switch
+            {
+                1 => Constants.AdminEcosystemUserName,
+                2 => Constants.RecycoinAdmin,
+                3 => Constants.HouseCoinAdmin,
+                4 => Constants.ExitoJuntosAdmin,
+                _ => Constants.AdminEcosystemUserName
+            },
             Status = true,
             UserId = 1,
             Credit = amount,

@@ -118,7 +118,7 @@ public class CoinPayService : BaseService, ICoinPayService
             Count = product.Quantity
         }).ToList();
 
-        await _coinPayPaymentStrategy.ExecuteHouseCoinPayment(walletRequest);
+        await _coinPayPaymentStrategy.ExecuteExitoJuntosPayment(walletRequest);
     }
 
     private async Task ExecuteCoursePayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
@@ -166,6 +166,7 @@ public class CoinPayService : BaseService, ICoinPayService
                 return ProductType.EcoPool;
             case 11: return ProductType.RecyCoin;
             case 12: return ProductType.HouseCoinPlan;
+            case 13: return ProductType.ExitoJuntosPlan;
             default:
                 return ProductType.Course;
         }
@@ -238,6 +239,10 @@ public class CoinPayService : BaseService, ICoinPayService
             case ProductType.HouseCoinPlan:
                 await ExecuteHouseCoinPlanPayment(walletRequest, products);
                 _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | HouseCoinPlan Payment executed");
+                break;
+            case ProductType.ExitoJuntosPlan:
+                await ExecuteExitoJuntosPlanPayment(walletRequest, products);
+                _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | ExitoJuntosPlan Payment executed");
                 break;
             case ProductType.Course:
                 await ExecuteCoursePayment(walletRequest, products);
