@@ -795,6 +795,17 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         return request;
     }
+    
+    public async Task<Wallet> CreateAsync(Wallet request)
+    {
+        var today = DateTime.Now;
+        request.CreatedAt = today;
+        request.UpdatedAt = today;
+
+        await Context.AddAsync(request);
+
+        return request;
+    }
 
     public async Task<Wallet> UpdateWalletAsync(Wallet request)
     {

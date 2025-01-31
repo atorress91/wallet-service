@@ -23,6 +23,8 @@ using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database;
 using WalletService.Data.Repositories;
 using WalletService.Data.Repositories.IRepositories;
+using WalletService.Data.UnitOfWork;
+using WalletService.Data.UnitOfWork.IUnitOfWork;
 using WalletService.Models.Configuration;
 using WalletService.Models.Requests.WalletRequest;
 
@@ -36,6 +38,7 @@ public static class IocExtensionWorker
         InjectCaching(services);
         InjectDataBases(services);
         InjectPackages(services);
+        InjectUnitOfWork(services);
         InjectRepositories(services);
         InjectServices(services);
         InjectAdapters(services);
@@ -48,9 +51,9 @@ public static class IocExtensionWorker
     private static void InjectCaching(IServiceCollection services)
     {
         var serviceProvider = services.BuildServiceProvider();
-        var settings        = serviceProvider.GetRequiredService<IOptions<ApplicationConfiguration>>().Value;
+        var settings = serviceProvider.GetRequiredService<IOptions<ApplicationConfiguration>>().Value;
         var multiplexer = ConnectionMultiplexer.Connect(settings.ConnectionStrings!.RedisConnection!);
-        
+
         services.AddSingleton<IConnectionMultiplexer>(multiplexer);
         services.AddSingleton<RedisCache>();
         services.AddSingleton<InMemoryCache>();
@@ -59,33 +62,33 @@ public static class IocExtensionWorker
 
     private static void InjectConfiguration(IServiceCollection services)
     {
-        var serviceProvider      = services.BuildServiceProvider();
-        var env                  = serviceProvider.GetRequiredService<IHostEnvironment>();
+        var serviceProvider = services.BuildServiceProvider();
+        var env = serviceProvider.GetRequiredService<IHostEnvironment>();
         var lowercaseEnvironment = env.EnvironmentName.ToLower();
-        var executableLocation   = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
+        var executableLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
         var builder = new ConfigurationBuilder()
             .SetBasePath(executableLocation)
             .AddJsonFile($"appsettings.{lowercaseEnvironment}.json", false, true)
             .AddEnvironmentVariables();
 
-        var configuration      = builder.Build();
+        var configuration = builder.Build();
         var appSettingsSection = configuration.GetSection("AppSettings");
 
         services.Configure<ApplicationConfiguration>(appSettingsSection);
         services.AddSingleton(configuration);
         services.RegisterKafkaTopics(lowercaseEnvironment);
     }
-    
+
     private static void InjectStrategies(IServiceCollection services)
     {
-        services.AddScoped<IBalancePaymentStrategy,BalancePaymentStrategy>();
-        services.AddScoped<IBalancePaymentStrategyModel2,BalancePaymentStrategyModel2>();
+        services.AddScoped<IBalancePaymentStrategy, BalancePaymentStrategy>();
+        services.AddScoped<IBalancePaymentStrategyModel2, BalancePaymentStrategyModel2>();
         services.AddScoped<ToThirdPartiesPaymentStrategy>();
-        services.AddScoped<ICoinPayPaymentStrategy,CoinPayPaymentStrategy>();
-        services.AddScoped<ICoinPaymentsPaymentStrategy,CoinPaymentsPaymentStrategy>();
-        services.AddScoped<IWireTransferStrategy,WireTransferStrategy>();
-        services.AddScoped<IBalancePaymentStrategyModel1A,BalancePaymentStrategy1A>();
-        services.AddScoped<IBalancePaymentStrategyModel1B,BalancePaymentStrategy1B>();
+        services.AddScoped<ICoinPayPaymentStrategy, CoinPayPaymentStrategy>();
+        services.AddScoped<ICoinPaymentsPaymentStrategy, CoinPaymentsPaymentStrategy>();
+        services.AddScoped<IWireTransferStrategy, WireTransferStrategy>();
+        services.AddScoped<IBalancePaymentStrategyModel1A, BalancePaymentStrategy1A>();
+        services.AddScoped<IBalancePaymentStrategyModel1B, BalancePaymentStrategy1B>();
     }
 
     private static void InjectDataBases(IServiceCollection services)
@@ -94,9 +97,10 @@ public static class IocExtensionWorker
             .Value;
 
         var connectionString = appConfig.ConnectionStrings?.PostgreSqlConnection;
-        
+
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-        dataSourceBuilder.MapComposite<InvoiceDetailsTransactionRequest>("wallet_service.invoices_details_type_with_brand");
+        dataSourceBuilder.MapComposite<InvoiceDetailsTransactionRequest>(
+            "wallet_service.invoices_details_type_with_brand");
         var dataSource = dataSourceBuilder.Build();
 
         services.AddDbContext<WalletServiceDbContext>(options =>
@@ -106,12 +110,12 @@ public static class IocExtensionWorker
                 .EnableDetailedErrors();
         });
     }
-    
+
     private static void InjectLogging(IServiceCollection services)
     {
-        var serviceProvider      = services.BuildServiceProvider();
-        var env                  = serviceProvider.GetRequiredService<IHostEnvironment>();
-        var configuration        = serviceProvider.GetRequiredService<IConfiguration>();
+        var serviceProvider = services.BuildServiceProvider();
+        var env = serviceProvider.GetRequiredService<IHostEnvironment>();
+        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
         var lowerCaseEnvironment = env.EnvironmentName.ToLower();
 
         services.AddLogging(config =>
@@ -145,6 +149,14 @@ public static class IocExtensionWorker
         services.AddScoped<IWalletModel1BRepository, WalletModel1BRepository>();
         services.AddScoped<IBrandRepository, BrandRepository>();
         services.AddScoped<IBonusRepository, BonusRepository>();
+        services.AddScoped<ICreditRepository, CreditRepository>();
+    }
+
+    private static void InjectUnitOfWork(IServiceCollection services)
+    {
+        services.AddScoped<DbContext>(provider => 
+            provider.GetService<WalletServiceDbContext>());
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
     }
 
     private static void InjectAdapters(IServiceCollection services)
@@ -193,7 +205,7 @@ public static class IocExtensionWorker
         services.AddSingleton<HttpClient>();
         services.AddSingleton(services.BuildServiceProvider());
     }
-    
+
     private static void InjectSingletonsAndFactories(IServiceCollection services)
     {
         services.AddHttpClient();

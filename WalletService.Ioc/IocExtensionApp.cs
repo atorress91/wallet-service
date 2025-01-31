@@ -31,6 +31,8 @@ using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database;
 using WalletService.Data.Repositories;
 using WalletService.Data.Repositories.IRepositories;
+using WalletService.Data.UnitOfWork;
+using WalletService.Data.UnitOfWork.IUnitOfWork;
 using WalletService.Models.Configuration;
 using WalletService.Models.Requests.WalletRequest;
 
@@ -46,6 +48,7 @@ public static class IocExtensionApp
         InjectControllersAndDocumentation(services);
         InjectCaching(services);
         InjectDataBases(services);
+        InjectUnitOfWork(services);
         InjectRepositories(services);
         InjectAdapters(services);
         InjectServices(services);
@@ -105,9 +108,10 @@ public static class IocExtensionApp
             .Value;
 
         var connectionString = appConfig.ConnectionStrings?.PostgreSqlConnection;
-        
+
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-        dataSourceBuilder.MapComposite<InvoiceDetailsTransactionRequest>("wallet_service.invoices_details_type_with_brand");
+        dataSourceBuilder.MapComposite<InvoiceDetailsTransactionRequest>(
+            "wallet_service.invoices_details_type_with_brand");
         var dataSource = dataSourceBuilder.Build();
 
         services.AddDbContext<WalletServiceDbContext>(options =>
@@ -168,6 +172,13 @@ public static class IocExtensionApp
         });
     }
 
+    private static void InjectUnitOfWork(IServiceCollection services)
+    {
+        services.AddScoped<DbContext>(provider => 
+            provider.GetService<WalletServiceDbContext>());
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+    }
+
     private static void InjectRepositories(IServiceCollection services)
     {
         services.AddScoped<IWalletHistoryRepository, WalletHistoryRepository>();
@@ -189,6 +200,7 @@ public static class IocExtensionApp
         services.AddScoped<ICoinPaymentTransactionRepository, CoinPaymentTransactionRepository>();
         services.AddScoped<IBrandRepository, BrandRepository>();
         services.AddScoped<IBonusRepository, BonusRepository>();
+        services.AddScoped<ICreditRepository, CreditRepository>();
     }
 
     private static void InjectAdapters(IServiceCollection services)

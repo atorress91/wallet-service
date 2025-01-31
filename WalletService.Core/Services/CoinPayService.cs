@@ -109,6 +109,17 @@ public class CoinPayService : BaseService, ICoinPayService
 
         await _coinPayPaymentStrategy.ExecuteHouseCoinPayment(walletRequest);
     }
+    
+    private async Task ExecuteExitoJuntosPlanPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
+    {
+        walletRequest.ProductsList = products.Select(product => new ProductsRequests
+        {
+            IdProduct = product.ProductId,
+            Count = product.Quantity
+        }).ToList();
+
+        await _coinPayPaymentStrategy.ExecuteHouseCoinPayment(walletRequest);
+    }
 
     private async Task ExecuteCoursePayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
     {
@@ -601,6 +612,7 @@ public class CoinPayService : BaseService, ICoinPayService
                 1 => Constants.UsdtIdNetwork,
                 2 => Constants.UsdtIdNetwork,
                 3 => Constants.BnbIdNetwork,
+                4 => Constants.BnbIdNetwork,
                 _ => Constants.BnbIdNetwork
             },
             Address = userTrcAddress.Address,
@@ -656,6 +668,7 @@ public class CoinPayService : BaseService, ICoinPayService
                         1 => "adminecosystem",
                         2 => "adminrecycoin",
                         3 => "adminhousecoin",
+                        4 => "adminexitojuntos",
                         _ => "adminecosystem"
                     },
                     ConceptType = WalletConceptType.balance_transfer.ToString(),
