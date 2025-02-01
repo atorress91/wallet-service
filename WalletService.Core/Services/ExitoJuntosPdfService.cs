@@ -110,8 +110,33 @@ public class ExitoJuntosPdfService : IExitoJuntosPdfService
                                     header.Cell().Background("#DAA520").Padding(2).Text("Total")
                                         .FontColor("#000000");
                                 });
-                            });
 
+                                foreach (var item in invoice.invoices)
+                                {
+                                    var conceptName = item.ProductName;
+                                    var quantity = item.ProductQuantity;
+                                    var price = item.ProductPrice;
+                                    var tax = item.ProductIva;
+                                    var discount = item.ProductDiscount * quantity;
+                                    var total = quantity * price;
+
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#DAA520").Padding(2)
+                                        .Text(conceptName).FontColor("#DAA520").FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#DAA520").Padding(2)
+                                        .Text(quantity.ToString()).FontColor("#DAA520").FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#DAA520").Padding(2)
+                                        .Text($"$ {price:0.##}").FontColor("#DAA520").FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#DAA520").Padding(2)
+                                        .Text($"$ {discount:0.##}").FontColor("#DAA520").FontSize(10);
+                                    tabla.Cell().BorderBottom(0.5f).BorderColor("#DAA520").Padding(2)
+                                        .Text($"$ {total:0.##}").FontColor("#DAA520").FontSize(10);
+
+                                    subTotal += total;
+                                    totalDiscount += discount;
+                                    totalTax = tax;
+                                }
+                            });
+                            
                             col1.Item().PaddingTop(10).Row(row =>
                             {
                                 row.RelativeItem().Column(col2 =>
