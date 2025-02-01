@@ -45,16 +45,10 @@ public class ExitoJuntosPdfService : IExitoJuntosPdfService
                                     .AlignCenter()
                                     .Text($"Recibo #{spResponse.Id}")
                                     .FontColor("#000000");
-
-                                col.Item().AlignRight().Text("SMART INTERNATIONAL INVESTMENTS LLC")
-                                    .FontColor("#DAA520").FontSize(10);
-                                col.Item().AlignRight().Text("L24000157429").FontColor("#DAA520").FontSize(10);
                                 col.Item().AlignRight()
                                     .Text("Domicilio: España")
                                     .FontColor("#DAA520").FontSize(10);
-                                col.Item().AlignRight().Text("Tel/Fax: (561) 694-8107").FontColor("#DAA520")
-                                    .FontSize(10);
-                                col.Item().AlignRight().Text("Correo: support@thehousecoin.net").FontColor("#DAA520")
+                                col.Item().AlignRight().Text("Correo: support@exitojuntos.com").FontColor("#DAA520")
                                     .FontSize(10);
                                 col.Item().AlignRight().Text(date).FontColor("#DAA520").FontSize(10);
                             });

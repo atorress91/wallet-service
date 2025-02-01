@@ -98,6 +98,7 @@ public static class Constants
     public const string EcosystemSenderName         = "Ecosystem Sharing Evolution";
     public const string RecyCoinSenderName          = "RecyCoin";
     public const string HouseCoinSenderName         = "House Coin";
+    public const string ExitoJuntosSenderName       = "Éxito Juntos";
     public const string SubjectInvitationForAcademy = "Invitación al curso de trading";
     public const string PurchasingPoolRevertBalance = "Pool Adquisitivo con saldo revertido";
     public const string WireTransfer                = "Transferencia bancaria";
