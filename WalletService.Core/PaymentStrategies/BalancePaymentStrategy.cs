@@ -216,6 +216,15 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 BrandId = request.BrandId
             });
         }
+
+        if (request.BrandId == Constants.HouseCoin)
+        {
+            await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
+            {
+                AffiliateId = request.AffiliateId, InvoiceAmount = debitTransactionRequest.Debit,
+                BrandId = request.BrandId
+            });
+        }
         
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1A);
