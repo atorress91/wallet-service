@@ -230,8 +230,20 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             });
             await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
             {
+                AffiliateId = request.PurchaseFor,
+                InvoiceAmount = debitTransactionRequest.Debit,
+                BrandId = request.BrandId,
+                AdminUserName = Constants.RecycoinAdmin
+            });
+        }
+
+        if (request.BrandId == Constants.HouseCoin)
+        {
+            await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
+            {
                 AffiliateId = request.PurchaseFor, InvoiceAmount = debitTransactionRequest.Debit,
-                BrandId = request.BrandId
+                BrandId = request.BrandId,
+                AdminUserName = Constants.HouseCoinAdmin
             });
         }
 

@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using WalletService.Core.Services.IServices;
 using WalletService.Models.Requests.InvoiceRequest;
+using WalletService.Models.Requests.PaginationRequest;
 using WalletService.Models.Requests.WalletRequest;
 
 namespace WalletService.Api.Controllers;
@@ -26,11 +27,11 @@ public class InvoiceController : BaseController
     }
 
     [HttpGet("GetAllInvoices")]
-    public async Task<IActionResult> GetAllInvoices([FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null)
+    public async Task<IActionResult> GetAllInvoices([FromQuery] PaginationRequest request)
     {
         try
         {
-            var result = await _invoiceService.GetAllInvoices(startDate, endDate);
+            var result = await _invoiceService.GetAllInvoices(request);
             return Ok(Success(result));
         }
         catch (ArgumentException ex)
@@ -123,6 +124,24 @@ public class InvoiceController : BaseController
         catch (Exception ex)
         {
             return BadRequest($"Error al procesar la transacción: {ex.Message}");
+        }
+    }
+    
+    [HttpGet("ExportToExcel")]
+    public async Task<IActionResult> ExportInvoicesToExcel([FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null)
+    {
+        try
+        {
+            var stream = await _invoiceService.GenerateExcelReport(startDate, endDate);
+            return File(
+                stream,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"Lista_de_compras_{DateTime.Now:yyyy-MM-dd_HH-mm}.xlsx"
+            );
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 }

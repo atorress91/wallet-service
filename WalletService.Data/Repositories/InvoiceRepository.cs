@@ -11,15 +11,17 @@ using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Configuration;
 using WalletService.Models.Constants;
+using WalletService.Models.DTO.PaginationDto;
+using WalletService.Models.Requests.PaginationRequest;
 using WalletService.Models.Requests.WalletRequest;
+using WalletService.Utility.Extensions;
 
 namespace WalletService.Data.Repositories;
 
 public class InvoiceRepository : BaseRepository, IInvoiceRepository
 {
     private readonly ApplicationConfiguration _appSettings;
- 
-
+    
     public InvoiceRepository(IOptions<ApplicationConfiguration> appSettings, WalletServiceDbContext context) :
         base(context)
         => _appSettings = appSettings.Value;
@@ -43,25 +45,40 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
         => Context.Invoices.Include(x => x.InvoicesDetails).Where(x => x.AffiliateId == id && x.BrandId == brandId)
             .AsNoTracking().ToListAsync();
 
-    public Task<List<Invoice>> GetAllInvoices(long brandId, DateTime? startDate = null, DateTime? endDate = null)
+    public async Task<PaginationDto<Invoice>> GetAllInvoices(long brandId, PaginationRequest request)
     {
         var query = Context.Invoices
             .Include(x => x.InvoicesDetails)
             .Where(x => x.BrandId == brandId);
-        
-        if (startDate.HasValue)
+
+        if (request.StartDate.HasValue)
         {
-            query = query.Where(x => x.CreatedAt >= startDate.Value);
+            query = query.Where(x => x.CreatedAt >= request.StartDate.Value);
         }
 
-        if (endDate.HasValue)
+        if (request.EndDate.HasValue)
         {
-            query = query.Where(x => x.CreatedAt <= endDate.Value.AddDays(1).AddTicks(-1));
+            query = query.Where(x => x.CreatedAt <= request.EndDate.Value.AddDays(1).AddTicks(-1));
         }
 
-        return query.AsNoTracking().ToListAsync();
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(x => x.CreatedAt)  
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return new PaginationDto<Invoice>
+        {
+            CurrentPage = request.PageNumber,
+            PageSize = request.PageSize,
+            TotalCount = totalCount,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize),
+            Items = items
+        };
     }
-    
+
     public Task<Invoice?> GetInvoiceById(long id, long brandId)
         => Context.Invoices.Include(e => e.InvoicesDetails)
             .FirstOrDefaultAsync(x => x.Id == id && x.BrandId == brandId);
@@ -158,7 +175,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             throw new Exception("Error processing debit transaction", ex);
         }
     }
-    
+
     private static List<NpgsqlParameter> CreateParameters(DebitTransactionRequest request)
     {
         var invoicesDetailsJson = JsonConvert.SerializeObject(request.invoices);
@@ -186,7 +203,7 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
             new("p_reason", NpgsqlDbType.Varchar) { Value = request.Reason ?? string.Empty }
         };
     }
-    
+
     private void CreateDebitListParameters(DebitTransactionRequest request, DataTable dataTableDetails, SqlCommand cmd)
     {
         cmd.CommandType = CommandType.StoredProcedure;
@@ -384,9 +401,34 @@ public class InvoiceRepository : BaseRepository, IInvoiceRepository
 
     public async Task<decimal> GetTotalAdquisitionsAdmin(long brandId, int paymentGroupId)
         => await Context.InvoicesDetails.Where(x =>
-                !x.Invoice.CancellationDate.HasValue && 
+                !x.Invoice.CancellationDate.HasValue &&
                 x.Invoice.Status &&
                 x.Invoice.BrandId == brandId &&
                 x.PaymentGroupId == paymentGroupId)
             .SumAsync(x => x.BaseAmount ?? 0);
+    
+    public async IAsyncEnumerable<List<Invoice>> GetInvoicesInBatches(DateTime? startDate, DateTime? endDate, int batchSize, long brandId)
+    {
+        int skip = 0;
+        List<Invoice> batch;
+
+        do
+        {
+            batch = await Context.Invoices
+                .Include(x => x.InvoicesDetails)
+                .Where(x => x.BrandId == brandId)
+                .WhereIf(startDate.HasValue, x => x.CreatedAt >= startDate!.Value)
+                .WhereIf(endDate.HasValue, x => x.CreatedAt <= endDate!.Value)
+                .OrderByDescending(x => x.CreatedAt)
+                .Skip(skip)
+                .Take(batchSize)
+                .ToListAsync();
+
+            if (batch.Any())
+            {
+                yield return batch;
+                skip += batchSize;
+            }
+        } while (batch.Count == batchSize);
+    }
 }

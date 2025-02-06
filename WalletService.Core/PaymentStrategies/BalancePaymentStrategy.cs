@@ -213,7 +213,8 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
             {
                 AffiliateId = request.AffiliateId, InvoiceAmount = debitTransactionRequest.Debit,
-                BrandId = request.BrandId
+                BrandId = request.BrandId,
+                AdminUserName = Constants.RecycoinAdmin
             });
         }
 
@@ -222,7 +223,8 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
             {
                 AffiliateId = request.AffiliateId, InvoiceAmount = debitTransactionRequest.Debit,
-                BrandId = request.BrandId
+                BrandId = request.BrandId,
+                AdminUserName = Constants.HouseCoinAdmin
             });
         }
         
