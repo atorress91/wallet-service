@@ -173,8 +173,15 @@ public class WalletService : BaseService, IWalletService
     {
         var responseAffiliates = await _accountServiceAdapter.GetTotalActiveMembers(_brandService.BrandId);
         var response = responseAffiliates.Content!.ToJsonObject<GetTotalActiveMembersResponse>();
-
-        var paymentGroupId = _brandService.BrandId == 2 ? 11 : 12;
+  
+        var paymentGroupId = _brandService.BrandId switch
+        {
+            1 => 1,
+            2 => 11,
+            3 => 12,
+            4 => 13,
+            _ => 1
+        };
 
         var enabledAffiliates = response!.Data;
         var walletProfit = await _walletRepository.GetAvailableBalanceAdmin(_brandService.BrandId);
