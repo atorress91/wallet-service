@@ -763,9 +763,9 @@ public class WalletRepository : BaseRepository, IWalletRepository
             Value = request.BrandId
         });
     }
-
     public Task<List<Wallet>> GetWalletByUserId(int userId, long brandId)
-        => Context.Wallets.Where(x => x.UserId == userId && x.BrandId == brandId).ToListAsync();
+        => Context.Wallets.Where(x => x.UserId == userId && x.BrandId == brandId)
+            .OrderByDescending(x => x.CreatedAt).ToListAsync();
 
     public Task<List<Wallet>> GetWalletsRequest(int userId, long brandId)
         => Context.Wallets.AsNoTracking().Where(x
@@ -773,7 +773,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
                && x.AffiliateId == userId && x.BrandId == brandId).ToListAsync();
 
     public Task<List<Wallet>> GetAllWallets(long brandId)
-        => Context.Wallets.Where(x => x.BrandId == brandId).AsNoTracking().ToListAsync();
+        => Context.Wallets.Where(x => x.BrandId == brandId)
+            .OrderByDescending(x => x.CreatedAt).AsNoTracking().ToListAsync();
 
     public Task<List<ModelFourStatistic>> GetUserModelFour(int[] affiliateIds)
     {
