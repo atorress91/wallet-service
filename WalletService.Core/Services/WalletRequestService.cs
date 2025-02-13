@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using WalletService.Core.Caching;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -26,6 +27,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
     private readonly IWalletPeriodRepository  _walletPeriodRepository;
     private readonly IBalancePaymentStrategy   _balancePaymentStrategy;
     private readonly IBrandService             _brandService; 
+    private readonly RedisCache                _redisCache;
 
     public WalletRequestService(
         IMapper                  mapper,
@@ -35,7 +37,8 @@ public class WalletRequestService : BaseService, IWalletRequestService
         IInvoiceDetailRepository invoicesDetails,
         IWalletRepository        walletRepository,
         IWalletPeriodRepository  walletPeriodRepository, IBalancePaymentStrategy balancePaymentStrategy,
-        IBrandService             brandService
+        IBrandService             brandService,
+        RedisCache                redisCache
     ) : base(mapper)
     {
         _walletRequestRepository = walletRequestRepository;
@@ -46,6 +49,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         _walletPeriodRepository  = walletPeriodRepository;
         _balancePaymentStrategy  = balancePaymentStrategy;
         _brandService            = brandService;
+        _redisCache              = redisCache;
     }
 
     public async Task<IEnumerable<WalletRequestDto>> GetAllWalletsRequests()
@@ -72,20 +76,21 @@ public class WalletRequestService : BaseService, IWalletRequestService
 
     public async Task<WalletRequestDto?> CreateWalletRequestAsync(WalletRequestRequest request)
     {
-        bool isDateValid;
+        bool isDateValid = false;
+        var cacheKey = string.Format(CacheKeys.BalanceInformationModel2, request.AffiliateId);
 
-        if (_brandService.BrandId is 1 or 2)
+        if (_brandService.BrandId is 1)
         {
             isDateValid = await IsWithdrawalDateAllowed();
         }
-        else 
+        else if( _brandService.BrandId is 3)
         {
              isDateValid  = IsWithdrawalUtcDateAllowed();
         }
         
         var hasWalletBtc = await HasWalletAddress(request.AffiliateId);
 
-        if (!isDateValid)
+        if (!isDateValid && _brandService.BrandId is 1 or 3)
             return null;
 
         if (!hasWalletBtc)
@@ -97,7 +102,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         var userReverseBalance   = await _walletRepository.GetReverseBalanceByAffiliateId(request.AffiliateId,_brandService.BrandId);
         var isActivePool         = await _walletRepository.IsActivePoolGreaterThanOrEqualTo25(request.AffiliateId,_brandService.BrandId);
 
-        if (!isActivePool && _brandService.BrandId is 1 or 2)
+        if (!isActivePool && _brandService.BrandId is 1)
             return null;
 
         if (!response.IsSuccessful)
@@ -131,7 +136,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         };
 
         walletRequest = await _walletRequestRepository.CreateWalletRequestAsync(walletRequest);
-
+        await _redisCache.Delete(cacheKey);
         return Mapper.Map<WalletRequestDto>(walletRequest);
     }
 
@@ -184,6 +189,12 @@ public class WalletRequestService : BaseService, IWalletRequestService
             item.UpdatedAt     = today;
             item.Status        = WalletRequestStatus.cancel.ToByte();
         });
+
+        foreach (var userId in ids)
+        {
+            var cacheKey = string.Format(CacheKeys.BalanceInformationModel2, userId);
+            await _redisCache.Delete(cacheKey);
+        }
 
         await _walletRequestRepository.UpdateBulkWalletRequestsAsync(idsList.ToList());
     }
