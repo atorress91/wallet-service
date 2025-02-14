@@ -397,7 +397,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
     {
         var utcNow = DateTime.UtcNow;
         
-        if (utcNow.DayOfWeek != DayOfWeek.Saturday)
+        if (utcNow.DayOfWeek != DayOfWeek.Friday)
             return false;
         
         var startTime = new TimeSpan(0, 0, 0);
