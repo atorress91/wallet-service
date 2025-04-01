@@ -221,19 +221,20 @@ public class ToThirdPartiesPaymentStrategy : BaseService
 
         if (request.BrandId == Constants.RecyCoin)
         {
-            await _bonusRepository.CreateBonus(new BonusRequest
-            {
-                AffiliateId = request.PurchaseFor,
-                Amount = (debitTransactionRequest.Debit / 2),
-                InvoiceId = spResponse.Id,
-                Comment = "Bonus for Recycoin"
-            });
+            // await _bonusRepository.CreateBonus(new BonusRequest
+            // {
+            //     AffiliateId = request.PurchaseFor,
+            //     Amount = (debitTransactionRequest.Debit / 2),
+            //     InvoiceId = spResponse.Id,
+            //     Comment = "Bonus for Recycoin"
+            // });
             await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
             {
                 AffiliateId = request.PurchaseFor,
                 InvoiceAmount = debitTransactionRequest.Debit,
                 BrandId = request.BrandId,
-                AdminUserName = Constants.RecycoinAdmin
+                AdminUserName = Constants.RecycoinAdmin,
+                LevelPercentages = [8.0m,5.0m,4.0m,2.0m,1.0m]
             });
         }
 
@@ -243,7 +244,8 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             {
                 AffiliateId = request.PurchaseFor, InvoiceAmount = debitTransactionRequest.Debit,
                 BrandId = request.BrandId,
-                AdminUserName = Constants.HouseCoinAdmin
+                AdminUserName = Constants.HouseCoinAdmin,
+                LevelPercentages = [8.0m, 6.0m, 5.0m, 4.0m, 2.0m],
             });
         }
 

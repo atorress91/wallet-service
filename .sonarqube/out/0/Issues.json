@@ -1,0 +1,4927 @@
+{
+  "$schema": "http://json.schemastore.org/sarif-1.0.0",
+  "version": "1.0.0",
+  "runs": [
+    {
+      "tool": {
+        "name": "Microsoft (R) Visual C# Compiler",
+        "version": "4.12.0.0",
+        "fileVersion": "4.12.0-3.24570.6 (913fb4ec)",
+        "semanticVersion": "4.12.0",
+        "language": "en-US"
+      },
+      "results": [
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'AffiliateUserName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/WalletWithDrawalDto/WalletWithDrawalDto.cs",
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 19,
+                  "endLine": 7,
+                  "endColumn": 36
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/WalletWithDrawalDto/WalletWithDrawalDto.cs",
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 19,
+                  "endLine": 7,
+                  "endColumn": 36
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Topics' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ConsumerSettings.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 21,
+                  "endLine": 5,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ConsumerSettings.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 21,
+                  "endLine": 5,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'GroupId' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ConsumerSettings.cs",
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 19,
+                  "endLine": 6,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ConsumerSettings.cs",
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 19,
+                  "endLine": 6,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'GroupInstanceId' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ConsumerSettings.cs",
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 19,
+                  "endLine": 9,
+                  "endColumn": 34
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ConsumerSettings.cs",
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 19,
+                  "endLine": 9,
+                  "endColumn": 34
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'BrokerList' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ApplicationConfiguration.cs",
+                "region": {
+                  "startLine": 34,
+                  "startColumn": 19,
+                  "endLine": 34,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ApplicationConfiguration.cs",
+                "region": {
+                  "startLine": 34,
+                  "startColumn": 19,
+                  "endLine": 34,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'data' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/AffiliateInformation/UserBinaryInformation.cs",
+                "region": {
+                  "startLine": 17,
+                  "startColumn": 40,
+                  "endLine": 17,
+                  "endColumn": 44
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/AffiliateInformation/UserBinaryInformation.cs",
+                "region": {
+                  "startLine": 17,
+                  "startColumn": 40,
+                  "endLine": 17,
+                  "endColumn": 44
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'message' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/AffiliateInformation/UserBinaryInformation.cs",
+                "region": {
+                  "startLine": 19,
+                  "startColumn": 19,
+                  "endLine": 19,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/AffiliateInformation/UserBinaryInformation.cs",
+                "region": {
+                  "startLine": 19,
+                  "startColumn": 19,
+                  "endLine": 19,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'fullName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 110,
+                  "startColumn": 19,
+                  "endLine": 110,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 110,
+                  "startColumn": 19,
+                  "endLine": 110,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'email' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 111,
+                  "startColumn": 19,
+                  "endLine": 111,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 111,
+                  "startColumn": 19,
+                  "endLine": 111,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'userName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 112,
+                  "startColumn": 19,
+                  "endLine": 112,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 112,
+                  "startColumn": 19,
+                  "endLine": 112,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'countryName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 117,
+                  "startColumn": 19,
+                  "endLine": 117,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 117,
+                  "startColumn": 19,
+                  "endLine": 117,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Concept' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletTransactionRequest/WalletTransactionRequest.cs",
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 19,
+                  "endLine": 13,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletTransactionRequest/WalletTransactionRequest.cs",
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 19,
+                  "endLine": 13,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Support' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletTransactionRequest/WalletTransactionRequest.cs",
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 19,
+                  "endLine": 14,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletTransactionRequest/WalletTransactionRequest.cs",
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 19,
+                  "endLine": 14,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Token' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/BaseResponses/CoinPayResponse.cs",
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 19,
+                  "endLine": 15,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/BaseResponses/CoinPayResponse.cs",
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 19,
+                  "endLine": 15,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Key' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ApplicationConfiguration.cs",
+                "region": {
+                  "startLine": 66,
+                  "startColumn": 19,
+                  "endLine": 66,
+                  "endColumn": 22
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ApplicationConfiguration.cs",
+                "region": {
+                  "startLine": 66,
+                  "startColumn": 19,
+                  "endLine": 66,
+                  "endColumn": 22
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Secret' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ApplicationConfiguration.cs",
+                "region": {
+                  "startLine": 67,
+                  "startColumn": 19,
+                  "endLine": 67,
+                  "endColumn": 25
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ApplicationConfiguration.cs",
+                "region": {
+                  "startLine": 67,
+                  "startColumn": 19,
+                  "endLine": 67,
+                  "endColumn": 25
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'IpnSecret' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ApplicationConfiguration.cs",
+                "region": {
+                  "startLine": 69,
+                  "startColumn": 19,
+                  "endLine": 69,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ApplicationConfiguration.cs",
+                "region": {
+                  "startLine": 69,
+                  "startColumn": 19,
+                  "endLine": 69,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'MerchantId' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ApplicationConfiguration.cs",
+                "region": {
+                  "startLine": 71,
+                  "startColumn": 19,
+                  "endLine": 71,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ApplicationConfiguration.cs",
+                "region": {
+                  "startLine": 71,
+                  "startColumn": 19,
+                  "endLine": 71,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'DebugEmail' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ApplicationConfiguration.cs",
+                "region": {
+                  "startLine": 73,
+                  "startColumn": 19,
+                  "endLine": 73,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Configuration/ApplicationConfiguration.cs",
+                "region": {
+                  "startLine": 73,
+                  "startColumn": 19,
+                  "endLine": 73,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Data' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/BaseResponses/CoinPayResponse.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 22,
+                  "endLine": 5,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/BaseResponses/CoinPayResponse.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 22,
+                  "endLine": 5,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Message' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/BaseResponses/CoinPayResponse.cs",
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 19,
+                  "endLine": 8,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/BaseResponses/CoinPayResponse.cs",
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 19,
+                  "endLine": 8,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Messages' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/BaseResponses/CoinPayResponse.cs",
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 21,
+                  "endLine": 9,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/BaseResponses/CoinPayResponse.cs",
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 21,
+                  "endLine": 9,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ProductsList' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/WalletRequest.cs",
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 42,
+                  "endLine": 15,
+                  "endColumn": 54
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/WalletRequest.cs",
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 42,
+                  "endLine": 15,
+                  "endColumn": 54
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Data' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 75,
+                  "startColumn": 61,
+                  "endLine": 75,
+                  "endColumn": 65
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 75,
+                  "startColumn": 61,
+                  "endLine": 75,
+                  "endColumn": 65
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'UserName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/LeaderBoardDto/LeaderBoardModel6.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 19,
+                  "endLine": 12,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/LeaderBoardDto/LeaderBoardModel6.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 19,
+                  "endLine": 12,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'AffiliateUserName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model3TransactionRequest.cs",
+                "region": {
+                  "startLine": 30,
+                  "startColumn": 19,
+                  "endLine": 30,
+                  "endColumn": 36
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model3TransactionRequest.cs",
+                "region": {
+                  "startLine": 30,
+                  "startColumn": 19,
+                  "endLine": 30,
+                  "endColumn": 36
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ProductName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model3TransactionRequest.cs",
+                "region": {
+                  "startLine": 31,
+                  "startColumn": 19,
+                  "endLine": 31,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model3TransactionRequest.cs",
+                "region": {
+                  "startLine": 31,
+                  "startColumn": 19,
+                  "endLine": 31,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Data' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 63,
+                  "startColumn": 74,
+                  "endLine": 63,
+                  "endColumn": 78
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 63,
+                  "startColumn": 74,
+                  "endLine": 63,
+                  "endColumn": 78
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'AffiliateName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model3TransactionRequest.cs",
+                "region": {
+                  "startLine": 19,
+                  "startColumn": 19,
+                  "endLine": 19,
+                  "endColumn": 32
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model3TransactionRequest.cs",
+                "region": {
+                  "startLine": 19,
+                  "startColumn": 19,
+                  "endLine": 19,
+                  "endColumn": 32
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'UserName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/LeaderBoardDto/LeaderBoardModel5.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 19,
+                  "endLine": 12,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/LeaderBoardDto/LeaderBoardModel5.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 19,
+                  "endLine": 12,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'EcoPoolsType' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model3TransactionRequest.cs",
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 36,
+                  "endLine": 9,
+                  "endColumn": 48
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model3TransactionRequest.cs",
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 36,
+                  "endLine": 9,
+                  "endColumn": 48
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'LevelsType' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model3TransactionRequest.cs",
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 42,
+                  "endLine": 10,
+                  "endColumn": 52
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model3TransactionRequest.cs",
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 42,
+                  "endLine": 10,
+                  "endColumn": 52
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'UserName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/LeaderBoardDto/LeaderBoardModel4.cs",
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 19,
+                  "endLine": 13,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/LeaderBoardDto/LeaderBoardModel4.cs",
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 19,
+                  "endLine": 13,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'AffiliateUserName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model2TransactionRequest.cs",
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 19,
+                  "endLine": 32,
+                  "endColumn": 36
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model2TransactionRequest.cs",
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 19,
+                  "endLine": 32,
+                  "endColumn": 36
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ProductName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model2TransactionRequest.cs",
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 19,
+                  "endLine": 33,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model2TransactionRequest.cs",
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 19,
+                  "endLine": 33,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Invoice' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/InvoiceDetailDto/InvoiceDetailDto.cs",
+                "region": {
+                  "startLine": 31,
+                  "startColumn": 31,
+                  "endLine": 31,
+                  "endColumn": 38
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/InvoiceDetailDto/InvoiceDetailDto.cs",
+                "region": {
+                  "startLine": 31,
+                  "startColumn": 31,
+                  "endLine": 31,
+                  "endColumn": 38
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'AffiliateName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model2TransactionRequest.cs",
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 19,
+                  "endLine": 21,
+                  "endColumn": 32
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model2TransactionRequest.cs",
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 19,
+                  "endLine": 21,
+                  "endColumn": 32
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ResultsEcoPoolDto' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/ResultEcoPoolLevelsDto/ResultEcoPoolLevelsDto.cs",
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 56,
+                  "endLine": 16,
+                  "endColumn": 73
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/ResultEcoPoolLevelsDto/ResultEcoPoolLevelsDto.cs",
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 56,
+                  "endLine": 16,
+                  "endColumn": 73
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'EcoPoolsType' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model2TransactionRequest.cs",
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 36,
+                  "endLine": 11,
+                  "endColumn": 48
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model2TransactionRequest.cs",
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 36,
+                  "endLine": 11,
+                  "endColumn": 48
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'LevelsType' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model2TransactionRequest.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 42,
+                  "endLine": 12,
+                  "endColumn": 52
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model2TransactionRequest.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 42,
+                  "endLine": 12,
+                  "endColumn": 52
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Data' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 42,
+                  "startColumn": 56,
+                  "endLine": 42,
+                  "endColumn": 60
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 42,
+                  "startColumn": 56,
+                  "endLine": 42,
+                  "endColumn": 60
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Data' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 34,
+                  "startColumn": 62,
+                  "endLine": 34,
+                  "endColumn": 66
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ServicesResponse.cs",
+                "region": {
+                  "startLine": 34,
+                  "startColumn": 62,
+                  "endLine": 34,
+                  "endColumn": 66
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ResultEcoPoolLevels' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/ResultsEcoPoolDto/ResultsEcoPoolDto.cs",
+                "region": {
+                  "startLine": 27,
+                  "startColumn": 79,
+                  "endLine": 27,
+                  "endColumn": 98
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/ResultsEcoPoolDto/ResultsEcoPoolDto.cs",
+                "region": {
+                  "startLine": 27,
+                  "startColumn": 79,
+                  "endLine": 27,
+                  "endColumn": 98
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'AffiliateUserName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1BTransactionRequest.cs",
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 19,
+                  "endLine": 32,
+                  "endColumn": 36
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1BTransactionRequest.cs",
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 19,
+                  "endLine": 32,
+                  "endColumn": 36
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ProductName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1BTransactionRequest.cs",
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 19,
+                  "endLine": 33,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1BTransactionRequest.cs",
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 19,
+                  "endLine": 33,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ModelType' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/ProcessGradingDto/EcoPoolConfigurationDto.cs",
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 19,
+                  "endLine": 16,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/ProcessGradingDto/EcoPoolConfigurationDto.cs",
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 19,
+                  "endLine": 16,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "SYSLIB0051",
+          "level": "warning",
+          "message": "'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.'",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Exceptions/BaseException.cs",
+                "region": {
+                  "startLine": 19,
+                  "startColumn": 76,
+                  "endLine": 19,
+                  "endColumn": 97
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 2
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'AffiliateName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1BTransactionRequest.cs",
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 19,
+                  "endLine": 21,
+                  "endColumn": 32
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1BTransactionRequest.cs",
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 19,
+                  "endLine": 21,
+                  "endColumn": 32
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'InvoicesDetails' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/InvoiceDto/InvoiceDto.cs",
+                "region": {
+                  "startLine": 37,
+                  "startColumn": 59,
+                  "endLine": 37,
+                  "endColumn": 74
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/InvoiceDto/InvoiceDto.cs",
+                "region": {
+                  "startLine": 37,
+                  "startColumn": 59,
+                  "endLine": 37,
+                  "endColumn": 74
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Levels' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/EcoPoolConfigurationRequest/EcoPoolConfigurationRequest.cs",
+                "region": {
+                  "startLine": 18,
+                  "startColumn": 45,
+                  "endLine": 18,
+                  "endColumn": 51
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/EcoPoolConfigurationRequest/EcoPoolConfigurationRequest.cs",
+                "region": {
+                  "startLine": 18,
+                  "startColumn": 45,
+                  "endLine": 18,
+                  "endColumn": 51
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'EcoPoolsType' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1BTransactionRequest.cs",
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 37,
+                  "endLine": 11,
+                  "endColumn": 49
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1BTransactionRequest.cs",
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 37,
+                  "endLine": 11,
+                  "endColumn": 49
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'LevelsType' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1BTransactionRequest.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 43,
+                  "endLine": 12,
+                  "endColumn": 53
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1BTransactionRequest.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 43,
+                  "endLine": 12,
+                  "endColumn": 53
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'buyer_name' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 19,
+                  "endLine": 7,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 19,
+                  "endLine": 7,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'currency1' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 19,
+                  "endLine": 8,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 19,
+                  "endLine": 8,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'currency2' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 19,
+                  "endLine": 9,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 19,
+                  "endLine": 9,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'email' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 19,
+                  "endLine": 10,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 19,
+                  "endLine": 10,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'fee' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 19,
+                  "endLine": 11,
+                  "endColumn": 22
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 19,
+                  "endLine": 11,
+                  "endColumn": 22
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ipn_id' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 19,
+                  "endLine": 12,
+                  "endColumn": 25
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 19,
+                  "endLine": 12,
+                  "endColumn": 25
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ipn_mode' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 19,
+                  "endLine": 13,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 19,
+                  "endLine": 13,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ipn_type' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 19,
+                  "endLine": 14,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 19,
+                  "endLine": 14,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ipn_version' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 19,
+                  "endLine": 15,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 19,
+                  "endLine": 15,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'item_name' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 19,
+                  "endLine": 16,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 19,
+                  "endLine": 16,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'merchant' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 18,
+                  "startColumn": 19,
+                  "endLine": 18,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 18,
+                  "startColumn": 19,
+                  "endLine": 18,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'status_text' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 22,
+                  "startColumn": 19,
+                  "endLine": 22,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 22,
+                  "startColumn": 19,
+                  "endLine": 22,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'txn_id' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 23,
+                  "startColumn": 19,
+                  "endLine": 23,
+                  "endColumn": 25
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 23,
+                  "startColumn": 19,
+                  "endLine": 23,
+                  "endColumn": 25
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'custom' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 24,
+                  "startColumn": 19,
+                  "endLine": 24,
+                  "endColumn": 25
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/IpnRequest.cs",
+                "region": {
+                  "startLine": 24,
+                  "startColumn": 19,
+                  "endLine": 24,
+                  "endColumn": 25
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'AffiliateUserName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1ATransactionRequest.cs",
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 19,
+                  "endLine": 32,
+                  "endColumn": 36
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1ATransactionRequest.cs",
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 19,
+                  "endLine": 32,
+                  "endColumn": 36
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ProductName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1ATransactionRequest.cs",
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 19,
+                  "endLine": 33,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1ATransactionRequest.cs",
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 19,
+                  "endLine": 33,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'InvoiceData' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/InvoiceRequest/InvoiceRequest.cs",
+                "region": {
+                  "startLine": 26,
+                  "startColumn": 19,
+                  "endLine": 26,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/InvoiceRequest/InvoiceRequest.cs",
+                "region": {
+                  "startLine": 26,
+                  "startColumn": 19,
+                  "endLine": 26,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'InvoiceDetail' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/InvoiceRequest/InvoiceRequest.cs",
+                "region": {
+                  "startLine": 37,
+                  "startColumn": 60,
+                  "endLine": 37,
+                  "endColumn": 73
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/InvoiceRequest/InvoiceRequest.cs",
+                "region": {
+                  "startLine": 37,
+                  "startColumn": 60,
+                  "endLine": 37,
+                  "endColumn": 73
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'AffiliateName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1ATransactionRequest.cs",
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 19,
+                  "endLine": 21,
+                  "endColumn": 32
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1ATransactionRequest.cs",
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 19,
+                  "endLine": 21,
+                  "endColumn": 32
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Code' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/RequestValidationCode/RequestValidationCode.cs",
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 23,
+                  "endLine": 6,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/RequestValidationCode/RequestValidationCode.cs",
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 23,
+                  "endLine": 6,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Password' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/RequestValidationCode/RequestValidationCode.cs",
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 23,
+                  "endLine": 7,
+                  "endColumn": 31
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/RequestValidationCode/RequestValidationCode.cs",
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 23,
+                  "endLine": 7,
+                  "endColumn": 31
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Products' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/ConPaymentRequest.cs",
+                "region": {
+                  "startLine": 47,
+                  "startColumn": 33,
+                  "endLine": 47,
+                  "endColumn": 41
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/ConPaymentRequest/ConPaymentRequest.cs",
+                "region": {
+                  "startLine": 47,
+                  "startColumn": 33,
+                  "endLine": 47,
+                  "endColumn": 41
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'EcoPoolsType' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1ATransactionRequest.cs",
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 37,
+                  "endLine": 11,
+                  "endColumn": 49
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1ATransactionRequest.cs",
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 37,
+                  "endLine": 11,
+                  "endColumn": 49
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'LevelsType' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1ATransactionRequest.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 43,
+                  "endLine": 12,
+                  "endColumn": 53
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/Model1ATransactionRequest.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 43,
+                  "endLine": 12,
+                  "endColumn": 53
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'data' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 36,
+                  "endLine": 8,
+                  "endColumn": 40
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 36,
+                  "endLine": 8,
+                  "endColumn": 40
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'message' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 19,
+                  "endLine": 9,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 19,
+                  "endLine": 9,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'UserName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/UserGradingRequest/UserGradingRequest.cs",
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 19,
+                  "endLine": 10,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/UserGradingRequest/UserGradingRequest.cs",
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 19,
+                  "endLine": 10,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Data' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ProductConfigurationDto.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 36,
+                  "endLine": 12,
+                  "endColumn": 40
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ProductConfigurationDto.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 36,
+                  "endLine": 12,
+                  "endColumn": 40
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Message' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ProductConfigurationDto.cs",
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 19,
+                  "endLine": 15,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/ProductConfigurationDto.cs",
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 19,
+                  "endLine": 15,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'UserName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 39,
+                  "startColumn": 19,
+                  "endLine": 39,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 39,
+                  "startColumn": 19,
+                  "endLine": 39,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Email' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 41,
+                  "startColumn": 19,
+                  "endLine": 41,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 41,
+                  "startColumn": 19,
+                  "endLine": 41,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'UserName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 17,
+                  "startColumn": 19,
+                  "endLine": 17,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 17,
+                  "startColumn": 19,
+                  "endLine": 17,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Email' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 19,
+                  "startColumn": 19,
+                  "endLine": 19,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 19,
+                  "startColumn": 19,
+                  "endLine": 19,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'FamilyTree' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 28,
+                  "endLine": 32,
+                  "endColumn": 38
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetAccountsEcoPoolResponse.cs",
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 28,
+                  "endLine": 32,
+                  "endColumn": 38
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Result' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetCoinBalancesResponse.cs",
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 41,
+                  "endLine": 8,
+                  "endColumn": 47
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetCoinBalancesResponse.cs",
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 41,
+                  "endLine": 8,
+                  "endColumn": 47
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'WalletPay' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletPayRequest/WalletPayRequest.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 40,
+                  "endLine": 5,
+                  "endColumn": 49
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletPayRequest/WalletPayRequest.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 40,
+                  "endLine": 5,
+                  "endColumn": 49
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Invoice' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletPayRequest/WalletPayRequest.cs",
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 42,
+                  "endLine": 6,
+                  "endColumn": 49
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletPayRequest/WalletPayRequest.cs",
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 42,
+                  "endLine": 6,
+                  "endColumn": 49
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Users' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/DeleteKeysRequest.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 21,
+                  "endLine": 5,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/DeleteKeysRequest.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 21,
+                  "endLine": 5,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'LevelPercentages' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/DistributeCommissionsRequest.cs",
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 22,
+                  "endLine": 10,
+                  "endColumn": 38
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Requests/WalletRequest/DistributeCommissionsRequest.cs",
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 22,
+                  "endLine": 10,
+                  "endColumn": 38
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Model123' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/NetworkDetailsResponse.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 36,
+                  "endLine": 5,
+                  "endColumn": 44
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/NetworkDetailsResponse.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 36,
+                  "endLine": 5,
+                  "endColumn": 44
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Model4' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/NetworkDetailsResponse.cs",
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 32,
+                  "endLine": 6,
+                  "endColumn": 38
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/NetworkDetailsResponse.cs",
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 32,
+                  "endLine": 6,
+                  "endColumn": 38
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Model5' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/NetworkDetailsResponse.cs",
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 36,
+                  "endLine": 7,
+                  "endColumn": 42
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/NetworkDetailsResponse.cs",
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 36,
+                  "endLine": 7,
+                  "endColumn": 42
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Model6' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/NetworkDetailsResponse.cs",
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 36,
+                  "endLine": 8,
+                  "endColumn": 42
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/NetworkDetailsResponse.cs",
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 36,
+                  "endLine": 8,
+                  "endColumn": 42
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Name' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 25,
+                  "startColumn": 19,
+                  "endLine": 25,
+                  "endColumn": 23
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 25,
+                  "startColumn": 19,
+                  "endLine": 25,
+                  "endColumn": 23
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Name' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 31,
+                  "startColumn": 19,
+                  "endLine": 31,
+                  "endColumn": 23
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 31,
+                  "startColumn": 19,
+                  "endLine": 31,
+                  "endColumn": 23
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Name' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 37,
+                  "startColumn": 19,
+                  "endLine": 37,
+                  "endColumn": 23
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 37,
+                  "startColumn": 19,
+                  "endLine": 37,
+                  "endColumn": 23
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Description' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 38,
+                  "startColumn": 19,
+                  "endLine": 38,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 38,
+                  "startColumn": 19,
+                  "endLine": 38,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Error' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 19,
+                  "endLine": 5,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 19,
+                  "endLine": 5,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Result' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 30,
+                  "endLine": 6,
+                  "endColumn": 36
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 30,
+                  "endLine": 6,
+                  "endColumn": 36
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Data' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GradingResponse.cs",
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 56,
+                  "endLine": 10,
+                  "endColumn": 60
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GradingResponse.cs",
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 56,
+                  "endLine": 10,
+                  "endColumn": 60
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'StatusText' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 19,
+                  "endLine": 14,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 19,
+                  "endLine": 14,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Type' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 19,
+                  "endLine": 15,
+                  "endColumn": 23
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 19,
+                  "endLine": 15,
+                  "endColumn": 23
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Coin' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 19,
+                  "endLine": 16,
+                  "endColumn": 23
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 19,
+                  "endLine": 16,
+                  "endColumn": 23
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Amountf' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 18,
+                  "startColumn": 19,
+                  "endLine": 18,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 18,
+                  "startColumn": 19,
+                  "endLine": 18,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Receivedf' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 20,
+                  "startColumn": 19,
+                  "endLine": 20,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 20,
+                  "startColumn": 19,
+                  "endLine": 20,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'PaymentAddress' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 22,
+                  "startColumn": 19,
+                  "endLine": 22,
+                  "endColumn": 33
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 22,
+                  "startColumn": 19,
+                  "endLine": 22,
+                  "endColumn": 33
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'SenderIp' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 23,
+                  "startColumn": 19,
+                  "endLine": 23,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 23,
+                  "startColumn": 19,
+                  "endLine": 23,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Checkout' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 24,
+                  "startColumn": 25,
+                  "endLine": 24,
+                  "endColumn": 33
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 24,
+                  "startColumn": 25,
+                  "endLine": 24,
+                  "endColumn": 33
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Shipping' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 25,
+                  "startColumn": 25,
+                  "endLine": 25,
+                  "endColumn": 33
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 25,
+                  "startColumn": 25,
+                  "endLine": 25,
+                  "endColumn": 33
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Currency' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 30,
+                  "startColumn": 19,
+                  "endLine": 30,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 30,
+                  "startColumn": 19,
+                  "endLine": 30,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ItemNumber' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 19,
+                  "endLine": 33,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 19,
+                  "endLine": 33,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'ItemName' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 34,
+                  "startColumn": 19,
+                  "endLine": 34,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 34,
+                  "startColumn": 19,
+                  "endLine": 34,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Details' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 35,
+                  "startColumn": 25,
+                  "endLine": 35,
+                  "endColumn": 32
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 35,
+                  "startColumn": 25,
+                  "endLine": 35,
+                  "endColumn": 32
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Invoice' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 36,
+                  "startColumn": 19,
+                  "endLine": 36,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 36,
+                  "startColumn": 19,
+                  "endLine": 36,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Custom' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 37,
+                  "startColumn": 19,
+                  "endLine": 37,
+                  "endColumn": 25
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 37,
+                  "startColumn": 19,
+                  "endLine": 37,
+                  "endColumn": 25
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'IpnUrl' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 38,
+                  "startColumn": 19,
+                  "endLine": 38,
+                  "endColumn": 25
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionInfoResponse.cs",
+                "region": {
+                  "startLine": 38,
+                  "startColumn": 19,
+                  "endLine": 38,
+                  "endColumn": 25
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Address' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 19,
+                  "endLine": 12,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 19,
+                  "endLine": 12,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'TxtId' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 19,
+                  "endLine": 13,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 19,
+                  "endLine": 13,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Description' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 19,
+                  "endLine": 14,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 19,
+                  "endLine": 14,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Currency' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 21,
+                  "endLine": 15,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 21,
+                  "endLine": 15,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'TransactionType' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 28,
+                  "endLine": 16,
+                  "endColumn": 43
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 28,
+                  "endLine": 16,
+                  "endColumn": 43
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'TransactionStatus' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 17,
+                  "startColumn": 30,
+                  "endLine": 17,
+                  "endColumn": 47
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 17,
+                  "startColumn": 30,
+                  "endLine": 17,
+                  "endColumn": 47
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'PaymentMethod' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 18,
+                  "startColumn": 26,
+                  "endLine": 18,
+                  "endColumn": 39
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 18,
+                  "startColumn": 26,
+                  "endLine": 18,
+                  "endColumn": 39
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Data' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 43,
+                  "startColumn": 28,
+                  "endLine": 43,
+                  "endColumn": 32
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 43,
+                  "startColumn": 28,
+                  "endLine": 43,
+                  "endColumn": 32
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8618",
+          "level": "warning",
+          "message": "Non-nullable property 'Message' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 46,
+                  "startColumn": 19,
+                  "endLine": 46,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Responses/GetTransactionByIdResponse.cs",
+                "region": {
+                  "startLine": 46,
+                  "startColumn": 19,
+                  "endLine": 46,
+                  "endColumn": 26
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S1118",
+          "level": "warning",
+          "message": "Add a 'protected' constructor or the 'static' keyword to the class declaration.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Constants/ApmTransactionType.cs",
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 14,
+                  "endLine": 3,
+                  "endColumn": 32
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S3925",
+          "level": "warning",
+          "message": "Update this implementation of 'ISerializable' to conform to the recommended serialization pattern.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Exceptions/BaseException.cs",
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 14,
+                  "endLine": 7,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Exceptions/BaseException.cs",
+                "region": {
+                  "startLine": 19,
+                  "startColumn": 12,
+                  "endLine": 19,
+                  "endColumn": 25
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "0": "Make this constructor 'protected'."
+            }
+          }
+        },
+        {
+          "ruleId": "S3925",
+          "level": "warning",
+          "message": "Update this implementation of 'ISerializable' to conform to the recommended serialization pattern.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Exceptions/CustomException.cs",
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 14,
+                  "endLine": 6,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Exceptions/CustomException.cs",
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 8,
+                  "endLine": 6,
+                  "endColumn": 13
+                }
+              }
+            },
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Exceptions/CustomException.cs",
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 12,
+                  "endLine": 14,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "0": "Add 'System.SerializableAttribute' attribute on 'CustomException' because it implements 'ISerializable'.",
+              "1": "Make this constructor 'protected'."
+            }
+          }
+        },
+        {
+          "ruleId": "S2386",
+          "level": "warning",
+          "message": "Use an immutable collection or reduce the accessibility of the public static field 'CustomerModel4Scope'.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Constants/Constants.cs",
+                "region": {
+                  "startLine": 91,
+                  "startColumn": 19,
+                  "endLine": 91,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S2386",
+          "level": "warning",
+          "message": "Use an immutable collection or reduce the accessibility of the public static field 'CustomerModel6Scope'.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Constants/Constants.cs",
+                "region": {
+                  "startLine": 93,
+                  "startColumn": 19,
+                  "endLine": 93,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S2386",
+          "level": "warning",
+          "message": "Use an immutable collection or reduce the accessibility of the public static field 'PartitionKeys'.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Constants/Constants.cs",
+                "region": {
+                  "startLine": 114,
+                  "startColumn": 19,
+                  "endLine": 114,
+                  "endColumn": 27
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S1118",
+          "level": "warning",
+          "message": "Add a 'protected' constructor or the 'static' keyword to the class declaration.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Enums/ProductPdfs.cs",
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 14,
+                  "endLine": 3,
+                  "endColumn": 31
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S3887",
+          "level": "warning",
+          "message": "Use an immutable collection or reduce the accessibility of the non-private readonly field 'ProductToPdfMap'.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Enums/ProductPdfs.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 28,
+                  "endLine": 5,
+                  "endColumn": 54
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S2386",
+          "level": "warning",
+          "message": "Use an immutable collection or reduce the accessibility of the public static field 'ProductToPdfMap'.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Enums/ProductPdfs.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 28,
+                  "endLine": 5,
+                  "endColumn": 54
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S101",
+          "level": "warning",
+          "message": "Rename class 'InvoiceDTO' to match pascal case naming rules, consider using 'InvoiceDto'.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/DTO/InvoiceDetailDto/InvoiceDTO.cs",
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 14,
+                  "endLine": 3,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA2211",
+          "level": "note",
+          "message": "Non-constant fields should not be visible",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Constants/Constants.cs",
+                "region": {
+                  "startLine": 93,
+                  "startColumn": 25,
+                  "endLine": 93,
+                  "endColumn": 44
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA2211",
+          "level": "note",
+          "message": "Non-constant fields should not be visible",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Constants/Constants.cs",
+                "region": {
+                  "startLine": 91,
+                  "startColumn": 25,
+                  "endLine": 91,
+                  "endColumn": 44
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S1104",
+          "level": "warning",
+          "message": "Make this field 'private' and encapsulate it in a 'public' property.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Constants/Constants.cs",
+                "region": {
+                  "startLine": 93,
+                  "startColumn": 25,
+                  "endLine": 93,
+                  "endColumn": 67
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S1104",
+          "level": "warning",
+          "message": "Make this field 'private' and encapsulate it in a 'public' property.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Constants/Constants.cs",
+                "region": {
+                  "startLine": 91,
+                  "startColumn": 25,
+                  "endLine": 91,
+                  "endColumn": 57
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S2223",
+          "level": "warning",
+          "message": "Change the visibility of 'CustomerModel6Scope' or make it 'const' or 'readonly'.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Constants/Constants.cs",
+                "region": {
+                  "startLine": 93,
+                  "startColumn": 25,
+                  "endLine": 93,
+                  "endColumn": 44
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S2223",
+          "level": "warning",
+          "message": "Change the visibility of 'CustomerModel4Scope' or make it 'const' or 'readonly'.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Constants/Constants.cs",
+                "region": {
+                  "startLine": 91,
+                  "startColumn": 25,
+                  "endLine": 91,
+                  "endColumn": 44
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA2211",
+          "level": "note",
+          "message": "Non-constant fields should not be visible",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Constants/Constants.cs",
+                "region": {
+                  "startLine": 114,
+                  "startColumn": 28,
+                  "endLine": 114,
+                  "endColumn": 41
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S1104",
+          "level": "warning",
+          "message": "Make this field 'private' and encapsulate it in a 'public' property.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Constants/Constants.cs",
+                "region": {
+                  "startLine": 114,
+                  "startColumn": 28,
+                  "endLine": 115,
+                  "endColumn": 97
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "S2223",
+          "level": "warning",
+          "message": "Change the visibility of 'PartitionKeys' or make it 'const' or 'readonly'.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/HeroSystem/walletService/WalletService.Models/Constants/Constants.cs",
+                "region": {
+                  "startLine": 114,
+                  "startColumn": 28,
+                  "endLine": 114,
+                  "endColumn": 41
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        }
+      ],
+      "rules": {
+        "CA2211": {
+          "id": "CA2211",
+          "shortDescription": "Non-constant fields should not be visible",
+          "fullDescription": "Static fields that are neither constants nor read-only are not thread-safe. Access to such a field must be carefully controlled and requires advanced programming techniques to synchronize access to the class object.",
+          "defaultLevel": "note",
+          "helpUri": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2211",
+          "properties": {
+            "category": "Usage",
+            "isEnabledByDefault": true,
+            "tags": [
+              "PortedFromFxCop",
+              "Telemetry",
+              "EnabledRuleInAggressiveMode"
+            ]
+          }
+        },
+        "CS8618": {
+          "id": "CS8618",
+          "shortDescription": "Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.",
+          "defaultLevel": "warning",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS8618)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry"
+            ]
+          }
+        },
+        "S101": {
+          "id": "S101",
+          "shortDescription": "Types should be named in PascalCase",
+          "fullDescription": "Shared naming conventions allow teams to collaborate efficiently. This rule checks whether or not type names are using PascalCase. To reduce noise, two consecutive upper case characters are allowed unless they form the whole type name. So, MyXClass is compliant, but XC on its own is not.",
+          "defaultLevel": "warning",
+          "helpUri": "https://rules.sonarsource.com/csharp/RSPEC-101",
+          "properties": {
+            "category": "Minor Code Smell",
+            "isEnabledByDefault": true,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "TestSourceScope",
+              "SonarWay"
+            ]
+          }
+        },
+        "S1104": {
+          "id": "S1104",
+          "shortDescription": "Fields should not have public accessibility",
+          "fullDescription": "Public fields in public classes do not respect the encapsulation principle and has three main disadvantages:",
+          "defaultLevel": "warning",
+          "helpUri": "https://rules.sonarsource.com/csharp/RSPEC-1104",
+          "properties": {
+            "category": "Minor Code Smell",
+            "isEnabledByDefault": true,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "SonarWay"
+            ]
+          }
+        },
+        "S1118": {
+          "id": "S1118",
+          "shortDescription": "Utility classes should not have public constructors",
+          "fullDescription": "Utility classes, which are collections of static members, are not meant to be instantiated.",
+          "defaultLevel": "warning",
+          "helpUri": "https://rules.sonarsource.com/csharp/RSPEC-1118",
+          "properties": {
+            "category": "Major Code Smell",
+            "isEnabledByDefault": true,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "TestSourceScope",
+              "SonarWay"
+            ]
+          }
+        },
+        "S2223": {
+          "id": "S2223",
+          "shortDescription": "Non-constant static fields should not be visible",
+          "fullDescription": "A static field that is neither constant nor read-only is not thread-safe. Correctly accessing these fields from different threads needs synchronization with locks. Improper synchronization may lead to unexpected results, thus publicly visible static fields are best suited for storing non-changing data shared by many consumers. To enforce this intent, these fields should be marked readonly or converted to constants.",
+          "defaultLevel": "warning",
+          "helpUri": "https://rules.sonarsource.com/csharp/RSPEC-2223",
+          "properties": {
+            "category": "Critical Code Smell",
+            "isEnabledByDefault": true,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "SonarWay"
+            ]
+          }
+        },
+        "S2386": {
+          "id": "S2386",
+          "shortDescription": "Mutable fields should not be \"public static\"",
+          "fullDescription": "public static mutable fields of classes which are accessed directly should be protected to the degree possible. This can be done by reducing the accessibility of the field or by changing the return type to an immutable type.",
+          "defaultLevel": "warning",
+          "helpUri": "https://rules.sonarsource.com/csharp/RSPEC-2386",
+          "properties": {
+            "category": "Minor Code Smell",
+            "isEnabledByDefault": true,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "SonarWay"
+            ]
+          }
+        },
+        "S3887": {
+          "id": "S3887",
+          "shortDescription": "Mutable, non-private fields should not be \"readonly\"",
+          "fullDescription": "Using the readonly keyword on a field means that it can’t be changed after initialization. However, when applied to collections or arrays, that’s only partly true. readonly enforces that another instance can’t be assigned to the field, but it cannot keep the contents from being updated. That means that in practice, the field value really can be changed, and the use of readonly on such a field is misleading, and you’re likely to not be getting the behavior you expect.",
+          "defaultLevel": "warning",
+          "helpUri": "https://rules.sonarsource.com/csharp/RSPEC-3887",
+          "properties": {
+            "category": "Minor Bug",
+            "isEnabledByDefault": true,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "TestSourceScope",
+              "SonarWay"
+            ]
+          }
+        },
+        "S3925": {
+          "id": "S3925",
+          "shortDescription": "\"ISerializable\" should be implemented correctly",
+          "fullDescription": "The ISerializable interface is the mechanism to control the type serialization process. If not implemented correctly this could result in an invalid serialization and hard to detect bugs.",
+          "defaultLevel": "warning",
+          "helpUri": "https://rules.sonarsource.com/csharp/RSPEC-3925",
+          "properties": {
+            "category": "Major Code Smell",
+            "isEnabledByDefault": true,
+            "tags": [
+              "C#",
+              "MainSourceScope",
+              "SonarWay"
+            ]
+          }
+        },
+        "SYSLIB0051": {
+          "id": "SYSLIB0051",
+          "shortDescription": "Type or member is obsolete",
+          "defaultLevel": "warning",
+          "helpUri": "https://aka.ms/dotnet-warnings/SYSLIB0051",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "CustomObsolete"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

@@ -298,7 +298,7 @@ public class CoinPayService : BaseService, ICoinPayService
 
         var channelRequest = new CreateChannelRequest
         {
-            IdCurrency = Constants.UsdtIdCurrency,
+            IdCurrency = request.CurrencyId,
             IdExternalIdentification = CommonExtensions.GenerateUniqueId(request.AffiliateId),
             IdNetwork = request.NetworkId,
             TagName = request.UserName,
@@ -615,7 +615,7 @@ public class CoinPayService : BaseService, ICoinPayService
             IdNetwork = _brandService.BrandId switch
             {
                 1 => Constants.UsdtIdNetwork,
-                2 => Constants.UsdtIdNetwork,
+                2 => Constants.BnbIdNetwork,
                 3 => Constants.BnbIdNetwork,
                 4 => Constants.BnbIdNetwork,
                 _ => Constants.BnbIdNetwork

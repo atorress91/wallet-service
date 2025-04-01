@@ -12,4 +12,5 @@ public class CreateTransactionRequest
     [JsonPropertyName("amount")] public int Amount { get; set; }
     [JsonPropertyName("products")] public List<ProductRequest>? Products { get; set; }
     [JsonPropertyName("networkId")] public int NetworkId { get; set; }
+    [JsonPropertyName("currencyId")] public int CurrencyId { get; set; }
 }

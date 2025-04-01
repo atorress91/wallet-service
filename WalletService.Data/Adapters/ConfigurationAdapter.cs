@@ -37,4 +37,6 @@ public class ConfigurationAdapter : BaseAdapter, IConfigurationAdapter
     public Task<IRestResponse> GetPointsConfiguration(long brandId)
         => Get($"/configuration/get_points_configuration", new Dictionary<string, string>(),brandId);
     
+    public Task<IRestResponse> GetMatrixConfiguration(long brandId, int matrixType)
+        => Get($"/configuration/get_matrix_configuration/{matrixType}", new Dictionary<string, string>(),brandId);
 }

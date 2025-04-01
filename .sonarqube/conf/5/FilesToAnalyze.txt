@@ -1,0 +1,15 @@
+﻿C:\HeroSystem\walletService\WalletService.Worker\Abstract\CronJobService.cs
+C:\HeroSystem\walletService\WalletService.Worker\Program.cs
+C:\HeroSystem\walletService\WalletService.Worker\Workers\ProcessDeleteTransactionsWorker.cs
+C:\HeroSystem\walletService\WalletService.Worker\Workers\Worker.cs
+C:\HeroSystem\walletService\WalletService.Worker\obj\Debug\net8.0\WalletService.Worker.GlobalUsings.g.cs
+C:\HeroSystem\walletService\WalletService.Worker\obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+C:\HeroSystem\walletService\WalletService.Worker\obj\Debug\net8.0\WalletService.Worker.AssemblyInfo.cs
+C:\HeroSystem\walletService\WalletService.Worker\nlog.config
+C:\HeroSystem\walletService\WalletService.Worker\nlog.development.config
+C:\HeroSystem\walletService\WalletService.Worker\nlog.production.config
+C:\HeroSystem\walletService\WalletService.Worker\appsettings.development.json
+C:\HeroSystem\walletService\WalletService.Worker\appsettings.json
+C:\HeroSystem\walletService\WalletService.Worker\appsettings.production.json
+C:\HeroSystem\walletService\WalletService.Worker\aws-ecs-tools-defaults.json
+C:\HeroSystem\walletService\WalletService.Worker\Properties\launchSettings.json

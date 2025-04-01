@@ -23,6 +23,7 @@ public static class Constants
     public const string ReverseBalance                        = "Saldo modelo 2";
     public const string ConPaymentAddress                     = "THiJ78d6DHm1575GfFyfe1K6k2Fp6Bq5pP";
     public const string ConPaymentCurrency                    = "USDT.TRC20";
+    public const string CoinPaymentsBnbCurrency               = "USDT.BEP20"; 
     public const int    MembershipBonus                       = 5;
     public const string SubjectConfirmBonus                   = "Comisión de referido";
     public const int    DaysToPayQuantity                     = 999;
@@ -35,7 +36,7 @@ public static class Constants
     public const string Membership                            = "Membresía";
     public const string TransferForMembership                 = "Transferencia para membresía al afiliado";
     public const string TransferToMembership                  = "Transferencia para membresía del afiliado";
-    public const int    CoinPaymentTax                        = 2;
+    public const int    CoinPaymentTax                        = 1;
     public const string DebitTransactionSp                    = "dbo.Debit_Transation_SP";
     public const string DebitTransactionSpModel1A             = "dbo.Debit_Transaction_SP_Model1A";
     public const string DebitTransactionSpModel1B             = "dbo.Debit_Transaction_SP_Model1B";

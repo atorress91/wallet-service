@@ -96,7 +96,7 @@ public class AffiliateBtcResponse
 {
     [NewtonsoftJson.JsonProperty("success")] public bool Success { get; set; }
 
-    [NewtonsoftJson.JsonProperty("data")] public AffiliateBtcDto[]? Data { get; set; }
+    [NewtonsoftJson.JsonProperty("data")] public AffiliateBtcDto?[]? Data { get; set; }
 
     [NewtonsoftJson.JsonProperty("message")] public string Message { get; set; } = string.Empty;
 

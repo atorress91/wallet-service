@@ -7,4 +7,5 @@ public class DistributeCommissionsRequest
     public long BrandId { get; set; }
     
     public string AdminUserName { get; set; } = string.Empty;
+    public decimal[] LevelPercentages { get; set; }
 }

@@ -201,6 +201,8 @@ public static class IocExtensionApp
         services.AddScoped<IBrandRepository, BrandRepository>();
         services.AddScoped<IBonusRepository, BonusRepository>();
         services.AddScoped<ICreditRepository, CreditRepository>();
+        services.AddScoped<IMatrixQualificationRepository, MatrixQualificationRepository>();
+        services.AddScoped<IMatrixEarningsRepository, MatrixEarningsRepository>();
     }
 
     private static void InjectAdapters(IServiceCollection services)
@@ -253,6 +255,7 @@ public static class IocExtensionApp
         services.AddScoped<IHouseCoinPdfService, HouseCoinPdfService>();
         services.AddScoped<IRedisCacheCleanupService, RedisCacheCleanupService>();
         services.AddScoped<IExitoJuntosPdfService, ExitoJuntosPdfService>();
+        services.AddScoped<IMatrixService, MatrixService>();
     }
 
     private static void InjectPackages(IServiceCollection services)

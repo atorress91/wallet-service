@@ -150,6 +150,8 @@ public static class IocExtensionWorker
         services.AddScoped<IBrandRepository, BrandRepository>();
         services.AddScoped<IBonusRepository, BonusRepository>();
         services.AddScoped<ICreditRepository, CreditRepository>();
+        services.AddScoped<IMatrixQualificationRepository, MatrixQualificationRepository>();
+        services.AddScoped<IMatrixEarningsRepository, MatrixEarningsRepository>();
     }
 
     private static void InjectUnitOfWork(IServiceCollection services)
@@ -194,6 +196,7 @@ public static class IocExtensionWorker
         services.AddScoped<IHouseCoinPdfService, HouseCoinPdfService>();
         services.AddScoped<IRedisCacheCleanupService, RedisCacheCleanupService>();
         services.AddScoped<IExitoJuntosPdfService, ExitoJuntosPdfService>();
+        services.AddScoped<IMatrixService, MatrixService>();
     }
 
     private static void InjectPackages(IServiceCollection services)

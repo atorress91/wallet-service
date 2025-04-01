@@ -99,7 +99,9 @@ public partial class WalletServiceDbContext : DbContext
 
     public DbSet<InvoicesSpResponse> InvoicesSpResponses { get; set; }
     public DbSet<PurchasesPerMonth> PurchasesPerMonth { get; set; }
-    
+    public DbSet<MatrixQualification> MatrixQualifications { get; set; }
+    public DbSet<MatrixEarning> MatrixEarnings { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(WalletServiceDbContext).Assembly);
@@ -1249,7 +1251,42 @@ public partial class WalletServiceDbContext : DbContext
             entity.HasNoKey();
             entity.ToTable("handle_debit_transaction", "wallet_service");
         });
-        
+
+        modelBuilder.Entity<MatrixQualification>(entity =>
+        {
+            entity.ToTable("matrix_qualifications", "wallet_service");
+            entity.Property(e => e.QualificationId).HasColumnName("qualification_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.MatrixType).HasColumnName("matrix_type");
+            entity.Property(e => e.TotalEarnings).HasColumnName("total_earnings");
+            entity.Property(e => e.WithdrawnAmount).HasColumnName("withdrawn_amount");
+            entity.Property(e => e.AvailableBalance).HasColumnName("available_balance");
+            entity.Property(e => e.IsQualified).HasColumnName("is_qualified");
+            entity.Property(e => e.QualificationDate).HasColumnName("qualification_date");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
+
+            entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
+        });
+
+        modelBuilder.Entity<MatrixEarning>(entity =>
+        {
+            entity.ToTable("matrix_earnings", "wallet_service");
+
+            entity.Property(e => e.EarningId).HasColumnName("earning_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.MatrixType).HasColumnName("matrix_type");
+            entity.Property(e => e.Amount).HasColumnName("amount");
+            entity.Property(e => e.SourceUserId).HasColumnName("source_user_id");
+            entity.Property(e => e.EarningType).HasColumnName("earning_type");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
+            
+            entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
+        });
+
         modelBuilder.Entity<PurchasesPerMonth>().HasNoKey();
         OnModelCreatingPartial(modelBuilder);
     }

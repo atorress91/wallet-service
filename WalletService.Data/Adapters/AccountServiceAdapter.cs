@@ -2,6 +2,7 @@
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Models.Configuration;
 using WalletService.Models.DTO.LeaderBoardDto;
+using WalletService.Models.Requests.MatrixRequest;
 using WalletService.Models.Requests.RequestValidationCode;
 using WalletService.Models.Responses;
 using WalletService.Models.Responses.BaseResponses;
@@ -174,4 +175,18 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
     
     public Task<IRestResponse> GetAffiliateBtcByAffiliateId(int affiliateId, long brandId)
         => Get($"/AffiliateBtc/get_affiliate_btc_by_affiliate_id/{affiliateId.ToJsonString()}/", new Dictionary<string, string>(), brandId);
+    
+    public Task<IRestResponse> PlaceUserInMatrix(MatrixRequest request, long brandId)
+        => Post($"/matrix/place_user_in_matrix/", request.ToJsonString(), brandId);
+    
+    public Task<IRestResponse> GetByUserAndMatrixTypeAsync(MatrixRequest request, long brandId)
+    {
+        var queryParams = new Dictionary<string, string>
+        {
+            { "userId", request.UserId.ToString() },
+            { "matrixType", request.MatrixType.ToString() }
+        };
+
+        return Get("/matrix/get_by_user_and_matrix_type", queryParams, brandId);
+    }
 }

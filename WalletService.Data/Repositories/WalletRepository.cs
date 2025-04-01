@@ -373,7 +373,6 @@ public class WalletRepository : BaseRepository, IWalletRepository
         }
     }
 
-
     public async Task<bool> CreateModel3Sp(Model3TransactionRequest request)
     {
         try
@@ -1075,8 +1074,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             .Select(s => s.Credit - s.Debit)
             .SumAsync();
     }
-
-
+    
     public async Task<InvoicesSpResponse?> DebitServiceBalanceTransaction(DebitTransactionRequest request)
     {
         try
@@ -1201,7 +1199,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
             await using var cmd =
                 new NpgsqlCommand(
-                    "SELECT wallet_service.distribute_commissions_per_purchase(@AffiliateId, @InvoiceAmount, @BrandId, @AdminUserName)",
+                    "SELECT wallet_service.distribute_commissions_per_purchase(@AffiliateId, @InvoiceAmount, @BrandId, @AdminUserName, @LevelPercentages)",
                     sqlConnection);
 
             cmd.Parameters.Add(new NpgsqlParameter("@AffiliateId", NpgsqlDbType.Integer)
@@ -1223,6 +1221,13 @@ public class WalletRepository : BaseRepository, IWalletRepository
             {
                 Value = request.AdminUserName
             });
+
+            var levelPercentagesParam =
+                new NpgsqlParameter("@LevelPercentages", NpgsqlDbType.Array | NpgsqlDbType.Numeric)
+                {
+                   Value = request.LevelPercentages
+                };
+            cmd.Parameters.Add(levelPercentagesParam);
 
             await sqlConnection.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
