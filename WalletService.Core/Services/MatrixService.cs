@@ -76,49 +76,49 @@ public class MatrixService : BaseService, IMatrixService
         return false;
     }
 
-    public async Task<bool> ProcessQualificationAsync(int userId, int matrixType)
-    {
-        var isQualified = await CheckQualificationAsync(userId, matrixType);
+    //public async Task<bool> ProcessQualificationAsync(int userId, int matrixType)
+    //{
+    //    var isQualified = await CheckQualificationAsync(userId, matrixType);
 
-        if (!isQualified)
-            return false;
+    //    if (!isQualified)
+    //        return false;
 
-        var matrixConfig = await _configurationAdapter.GetMatrixConfiguration(_brandService.BrandId, matrixType);
+    //    var matrixConfig = await _configurationAdapter.GetMatrixConfiguration(_brandService.BrandId, matrixType);
 
-        var response = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfig!.Content!);
+    //    var response = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfig!.Content!);
 
-        var qualification = await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(userId, matrixType);
+    //    var qualification = await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(userId, matrixType);
 
-        if (qualification!.AvailableBalance < response!.Data!.FeeAmount)
-            return false;
+    //    if (qualification!.AvailableBalance < response!.Data!.FeeAmount)
+    //        return false;
 
-        qualification.AvailableBalance -= response.Data!.FeeAmount;
-        qualification.WithdrawnAmount += response.Data!.FeeAmount;
-        await _matrixQualificationRepository.UpdateAsync(qualification);
+    //    qualification.AvailableBalance -= response.Data!.FeeAmount;
+    //    qualification.WithdrawnAmount += response.Data!.FeeAmount;
+    //    await _matrixQualificationRepository.UpdateAsync(qualification);
 
-        var request = new MatrixRequest
-        {
-            UserId = userId,
-            MatrixType = matrixType
-        };
+    //    var request = new MatrixRequest
+    //    {
+    //        UserId = userId,
+    //        MatrixType = matrixType
+    //    };
         
-        var accountResponse = await _accountServiceAdapter.PlaceUserInMatrix(request, _brandService.BrandId);
-    }
+    //    var accountResponse = await _accountServiceAdapter.PlaceUserInMatrix(request, _brandService.BrandId);
+    //}
 
-    public async Task<bool> ProcessMatrixCommissionsAsync(int userId, int matrixType)
-    {
-        var matrixConfigResponse = await _configurationAdapter.GetMatrixConfiguration(_brandService.BrandId, matrixType);
-        var matrixConfig = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfigResponse.Content!);
+    //public async Task<bool> ProcessMatrixCommissionsAsync(int userId, int matrixType)
+    //{
+    //    var matrixConfigResponse = await _configurationAdapter.GetMatrixConfiguration(_brandService.BrandId, matrixType);
+    //    var matrixConfig = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfigResponse.Content!);
         
-        if (matrixConfigResponse.Content == null || matrixConfigResponse.StatusCode != HttpStatusCode.OK)
-            throw new ApplicationException($"Error retrieving matrix configuration: {matrixConfigResponse.StatusCode}");
+    //    if (matrixConfigResponse.Content == null || matrixConfigResponse.StatusCode != HttpStatusCode.OK)
+    //        throw new ApplicationException($"Error retrieving matrix configuration: {matrixConfigResponse.StatusCode}");
         
-        if(matrixConfig?.Data is null)
-            throw new ApplicationException($"Error deserialize matrix configuration: {matrixConfigResponse.StatusCode}");
+    //    if(matrixConfig?.Data is null)
+    //        throw new ApplicationException($"Error deserialize matrix configuration: {matrixConfigResponse.StatusCode}");
         
-        var position = await _accountServiceAdapter.GetByUserAndMatrixTypeAsync(new MatrixRequest { UserId = userId, MatrixType = matrixType }, _brandService.BrandId);
+    //    var position = await _accountServiceAdapter.GetByUserAndMatrixTypeAsync(new MatrixRequest { UserId = userId, MatrixType = matrixType }, _brandService.BrandId);
 
-        var commissionAmount = matrixConfig.Data.FeeAmount * 0.1m;
+    //    var commissionAmount = matrixConfig.Data.FeeAmount * 0.1m;
         
-    }
+    //}
 }
