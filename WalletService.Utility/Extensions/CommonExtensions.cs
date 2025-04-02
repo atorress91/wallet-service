@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.Dynamic;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -36,7 +37,7 @@ public static class CommonExtensions
 
     public static string? GetIpAddress(this IPAddress source)
     {
-        var ipStr   = source.ToString();
+        var ipStr = source.ToString();
         var splitIp = ipStr.Split(':');
 
         if (splitIp.Length > 1) return source.ToString();
@@ -45,7 +46,12 @@ public static class CommonExtensions
     }
 
     #endregion
-
+    
+    public static IQueryable<T> WhereIf<T>(this IQueryable<T> query, bool condition,
+        Expression<Func<T, bool>> predicate)
+    {
+        return condition ? query.Where(predicate) : query;
+    }
 
     public static bool IsValidJson(this string value)
     {
@@ -57,6 +63,7 @@ public static class CommonExtensions
         {
             return false;
         }
+
         return true;
     }
 
@@ -68,11 +75,11 @@ public static class CommonExtensions
 
     public static string ToJsonString(this object source, JsonSerializerOptions jsonSerializerSettings)
         => JsonSerializer.Serialize(source, jsonSerializerSettings);
-    
+
     public static IEnumerable<TResult> ZipThree<T1, T2, T3, TResult>(
-        this IEnumerable<T1>      source,
-        IEnumerable<T2>           second,
-        IEnumerable<T3>           third,
+        this IEnumerable<T1> source,
+        IEnumerable<T2> second,
+        IEnumerable<T3> third,
         Func<T1, T2, T3, TResult> func)
     {
         using var e1 = source.GetEnumerator();
@@ -92,9 +99,9 @@ public static class CommonExtensions
 
     public static string? GetPropertyValue(this object value, string propertyName)
     {
-        var     modelDictionary  = value.ToJsonString().ToJsonObject<IDictionary<string, string>>();
-        var     propertyHasValue = false;
-        string? propertyValue    = null;
+        var modelDictionary = value.ToJsonString().ToJsonObject<IDictionary<string, string>>();
+        var propertyHasValue = false;
+        string? propertyValue = null;
         if (modelDictionary is not null && modelDictionary.ContainsKey(propertyName))
             propertyHasValue = modelDictionary.TryGetValue(propertyName, out propertyValue);
 
@@ -104,7 +111,7 @@ public static class CommonExtensions
     public static bool IsValidEmail(this string text)
     {
         var emailRegex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,10})+)$");
-        var match      = emailRegex.Match(text);
+        var match = emailRegex.Match(text);
 
         return match.Success;
     }
@@ -113,7 +120,7 @@ public static class CommonExtensions
     {
         DateTime date = DateTime.Now;
 
-        string formatDate  = date.ToString("yyyyMMddHHmm");
+        string formatDate = date.ToString("yyyyMMddHHmm");
         string orderNumber = formatDate + id.ToString();
 
         return orderNumber;
@@ -121,7 +128,7 @@ public static class CommonExtensions
 
     public static DataTable ConvertToDataTable<T>(ICollection<T> collection)
     {
-        DataTable      dataTable  = new DataTable();
+        DataTable dataTable = new DataTable();
         PropertyInfo[] properties = typeof(T).GetProperties();
         foreach (PropertyInfo property in properties)
         {
@@ -146,15 +153,15 @@ public static class CommonExtensions
     public static T DecryptObject<T>(string encryptedData)
     {
         string keyEncrypted = "0e4897fd799d9aca629d0036b3a4e524d9d200ab9f7e276933903add694a100f";
-        string iv           = "f74dc6fdc72a2828f74dc6fdc72a2828";
+        string iv = "f74dc6fdc72a2828f74dc6fdc72a2828";
 
         byte[] keyBytes = StringToByteArray(keyEncrypted);
-        byte[] ivBytes  = StringToByteArray(iv);
+        byte[] ivBytes = StringToByteArray(iv);
 
         using Aes aes = Aes.Create();
-        aes.Mode    = CipherMode.CBC;
-        aes.Key     = keyBytes;
-        aes.IV      = ivBytes;
+        aes.Mode = CipherMode.CBC;
+        aes.Key = keyBytes;
+        aes.IV = ivBytes;
         aes.Padding = PaddingMode.PKCS7;
 
         byte[] encryptedBytes = Convert.FromBase64String(encryptedData);
@@ -166,7 +173,7 @@ public static class CommonExtensions
         cryptoStream.FlushFinalBlock();
 
         byte[] decryptedBytes = memoryStream.ToArray();
-        string decryptedData  = Encoding.UTF8.GetString(decryptedBytes);
+        string decryptedData = Encoding.UTF8.GetString(decryptedBytes);
 
         var objectDeserialize = decryptedData.ToJsonObject<T>();
 
@@ -175,14 +182,14 @@ public static class CommonExtensions
 
     public static byte[] StringToByteArray(String hex)
     {
-        int    numberChars = hex.Length;
-        byte[] bytes       = new byte[numberChars / 2];
+        int numberChars = hex.Length;
+        byte[] bytes = new byte[numberChars / 2];
         for (int i = 0; i < numberChars; i += 2)
             bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
         return bytes;
     }
-    
-   private static DateTime CalculateStartDate(DateTime purchaseDate, TimeZoneInfo timeZone)
+
+    private static DateTime CalculateStartDate(DateTime purchaseDate, TimeZoneInfo timeZone)
     {
         DateTime startDate;
         var purchaseDateInTimeZone = TimeZoneInfo.ConvertTime(purchaseDate, timeZone);
@@ -208,7 +215,7 @@ public static class CommonExtensions
                 startDate = purchaseDateInTimeZone.AddDays(2);
                 break;
             case DayOfWeek.Sunday:
-                if(purchaseDateInTimeZone.Hour >= 17)
+                if (purchaseDateInTimeZone.Hour >= 17)
                 {
                     startDate = purchaseDateInTimeZone.AddDays(8);
                 }
@@ -216,6 +223,7 @@ public static class CommonExtensions
                 {
                     startDate = purchaseDateInTimeZone.AddDays(1);
                 }
+
                 break;
             default:
                 throw new InvalidOperationException("Day of week is not valid");
@@ -228,7 +236,7 @@ public static class CommonExtensions
     {
         var costaRicaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time");
         var startDate = CalculateStartDate(purchaseDate, costaRicaTimeZone);
-        var endDate = startDate.AddDays(4); 
+        var endDate = startDate.AddDays(4);
         return (startDate, endDate);
     }
 
@@ -239,14 +247,15 @@ public static class CommonExtensions
         var endDate = startDate.AddDays(28);
         return (startDate, endDate);
     }
+
     public static DateTime CalculateNextMonday(DateTime currentDate)
     {
         int daysUntilMonday = ((int)DayOfWeek.Monday - (int)currentDate.DayOfWeek + 7) % 7;
-        if (daysUntilMonday == 0) 
+        if (daysUntilMonday == 0)
             daysUntilMonday = 7;
         return currentDate.AddDays(daysUntilMonday);
     }
-    
+
     public static async Task<Dictionary<string, byte[]>> GetPdfContentFromProductNames(string[] productNames)
     {
         Dictionary<string, byte[]> pdfContents = new Dictionary<string, byte[]>();
@@ -279,7 +288,7 @@ public static class CommonExtensions
 
         return pdfContents;
     }
-    
+
     public static uint Crc32(string input)
     {
         var table = new uint[256];
@@ -311,23 +320,23 @@ public static class CommonExtensions
 
         return ~crc;
     }
-    
+
     public static int GenerateUniqueId(int affiliateId)
     {
         if (affiliateId < 1000)
             throw new ArgumentOutOfRangeException(nameof(affiliateId), "Affiliate ID must be at least 1000");
-        
+
         string seed = $"{DateTime.UtcNow:yyyyMMddHHmmss}{affiliateId}";
-        
+
         using (var sha1 = System.Security.Cryptography.SHA1.Create())
         {
             byte[] hash = sha1.ComputeHash(System.Text.Encoding.UTF8.GetBytes(seed));
             int uniqueId = BitConverter.ToInt32(hash, 0);
-            
+
             return Math.Abs(uniqueId);
         }
     }
-    
+
     #region ..Assigned..
 
     private static bool Assigned(this string? source)
@@ -386,7 +395,7 @@ public static class CommonExtensions
             KeyValuePair<object, string> pair => pair.Assigned(),
             KeyValuePair<string, object> pair => pair.Assigned(),
             KeyValuePair<string, string> pair => pair.Assigned(),
-            _                                 => false
+            _ => false
         };
     }
 
@@ -461,7 +470,7 @@ public static class CommonExtensions
             KeyValuePair<object, string> pair => pair.NotAssigned(),
             KeyValuePair<string, object> pair => pair.NotAssigned(),
             KeyValuePair<string, string> pair => pair.NotAssigned(),
-            _                                 => true
+            _ => true
         };
     }
 

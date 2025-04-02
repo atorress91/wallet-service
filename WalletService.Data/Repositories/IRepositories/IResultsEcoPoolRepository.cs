@@ -7,8 +7,8 @@ public interface IResultsEcoPoolRepository
 {
     Task<List<ResultsModel2>> GetAllResultsEcoPool();
     Task<List<ResultsModel2>> GetResultsModel2ToPayment();
-    Task<List<ResultsModel1A>> GetResultsModel1AToPayment();
-    Task<List<ResultsModel1B>> GetResultsModel1BToPayment();
+    Task<List<ResultsModel1a>> GetResultsModel1AToPayment();
+    Task<List<ResultsModel1b>> GetResultsModel1BToPayment();
     Task<List<ResultsModel3>> GetResultsMode3ToPayment();
     Task<decimal> SumResidualModel1AByUserId(int userId);
     Task<decimal> SumPassiveModel1AByUserId(int userId);

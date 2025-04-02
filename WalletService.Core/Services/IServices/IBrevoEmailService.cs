@@ -5,19 +5,19 @@ namespace WalletService.Core.Services.IServices;
 
 public interface IBrevoEmailService
 {
-    Task<bool> SendEmailWelcome(UserInfoResponse user, InvoicesSpResponse spResponse, int brandId);
-    Task<bool> SendBonusConfirmation(UserInfoResponse user, string userName, int brandId);
+    Task<bool> SendEmailWelcome(UserInfoResponse user, InvoicesSpResponse spResponse, long brandId);
+    Task<bool> SendBonusConfirmation(UserInfoResponse user, string userName, long brandId);
 
     Task<bool> SendEmailPurchaseConfirm(UserInfoResponse user, Dictionary<string, byte[]> pdfDataDict,
-        InvoicesSpResponse spResponse, int brandId);
+        InvoicesSpResponse spResponse, long brandId);
 
     Task<bool> SendEmailConfirmationEmailToThirdParty(UserInfoResponse user, string nameOfPurchaser,
-        List<string> productNames, int brandId);
+        List<string> productNames, long brandId);
 
-    Task<bool> SendEmailMembershipConfirm(UserInfoResponse user, byte[] pdfData, InvoicesSpResponse spResponse, int brandId);
+    Task<bool> SendEmailMembershipConfirm(UserInfoResponse user, byte[] pdfData, InvoicesSpResponse spResponse, long brandId);
 
     Task<bool> SendEmailPurchaseConfirmForAcademy(UserInfoResponse user, Dictionary<string, byte[]> pdfDataDict,
-        InvoicesSpResponse spResponse, int brandId);
+        InvoicesSpResponse spResponse, long brandId);
 
-    Task<bool> SendInvitationsForTradingAcademy(UserAffiliateResponse user, string link, string code, int brandId);
+    Task<bool> SendInvitationsForTradingAcademy(UserAffiliateResponse user, string link, string code, long brandId);
 }

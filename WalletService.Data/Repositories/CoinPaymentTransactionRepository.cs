@@ -15,17 +15,17 @@ public class CoinPaymentTransactionRepository : BaseRepository, ICoinPaymentTran
         WalletServiceDbContext context) : base(context)
         => _appSettings = appSettings.Value;
 
-    public Task<List<PaymentTransaction>> GetAllCoinPaymentTransaction(int brandId)
+    public Task<List<CoinpaymentTransaction>> GetAllCoinPaymentTransaction(long brandId)
         => Context.PaymentTransaction.Where(x => x.BrandId == brandId).AsNoTracking().ToListAsync();
 
-    public Task<PaymentTransaction?> GetCoinPaymentTransactionByIdTransaction(string idTransaction, int brandId)
+    public Task<CoinpaymentTransaction?> GetCoinPaymentTransactionByIdTransaction(string idTransaction, long brandId)
         => Context.PaymentTransaction.FirstOrDefaultAsync(e =>
-            e.IdTransaction == idTransaction && e.BrandId == brandId);
+            e.IdTransaction == idTransaction && (brandId == 0 || e.BrandId == brandId));
 
-    public Task<PaymentTransaction?> GetTransactionByTxnId(string idTransaction)
+    public Task<CoinpaymentTransaction?> GetTransactionByTxnId(string idTransaction)
         => Context.PaymentTransaction.FirstOrDefaultAsync(e =>
             e.IdTransaction == idTransaction);
-    public async Task<PaymentTransaction?> CreateCoinPaymentTransaction(PaymentTransaction request)
+    public async Task<CoinpaymentTransaction?> CreateCoinPaymentTransaction(CoinpaymentTransaction request)
     {
         var today = DateTime.Now;
         request.CreatedAt = today;
@@ -37,7 +37,7 @@ public class CoinPaymentTransactionRepository : BaseRepository, ICoinPaymentTran
         return request;
     }
 
-    public async Task<int> GetLastTransactionId(int brandId)
+    public async Task<int> GetLastTransactionId(long brandId)
     {
         var lastTransaction = await Context.PaymentTransaction
             .Where(x => x.PaymentMethod == "CoinPay" && x.BrandId == brandId)
@@ -45,7 +45,7 @@ public class CoinPaymentTransactionRepository : BaseRepository, ICoinPaymentTran
         return lastTransaction != null ? int.Parse(lastTransaction.IdTransaction) : 0;
     }
 
-    public async Task<PaymentTransaction?> UpdateCoinPaymentTransactionAsync(PaymentTransaction request)
+    public async Task<CoinpaymentTransaction?> UpdateCoinPaymentTransactionAsync(CoinpaymentTransaction request)
     {
         var today = DateTime.Now;
         request.UpdatedAt = today;
@@ -55,7 +55,7 @@ public class CoinPaymentTransactionRepository : BaseRepository, ICoinPaymentTran
         return request;
     }
 
-    public Task<List<PaymentTransaction>> GetAllUnconfirmedOrUnpaidTransactions(int brandId)
+    public Task<List<CoinpaymentTransaction>> GetAllUnconfirmedOrUnpaidTransactions(long brandId)
     {
         return Context.PaymentTransaction
             .Where(e => e.Status != 100 && DateTime.Now > e.CreatedAt.AddHours(3) && e.BrandId == brandId)
@@ -63,13 +63,13 @@ public class CoinPaymentTransactionRepository : BaseRepository, ICoinPaymentTran
             .ToListAsync();
     }
 
-    public Task<List<PaymentTransaction>> GetAllWireTransfer(int brandId)
+    public Task<List<CoinpaymentTransaction>> GetAllWireTransfer(long brandId)
         => Context.PaymentTransaction.Where(x => x.PaymentMethod == "wire_transfer" && x.BrandId == brandId)
             .AsNoTracking().ToListAsync();
 
-    public Task<PaymentTransaction?> GetPaymentTransactionById(int id, int brandId)
+    public Task<CoinpaymentTransaction?> GetPaymentTransactionById(int id, long brandId)
         => Context.PaymentTransaction.FirstOrDefaultAsync(x => x.Id == id && x.BrandId == brandId);
 
-    public Task<PaymentTransaction?> GetTransactionByReference(string reference)
+    public Task<CoinpaymentTransaction?> GetTransactionByReference(string reference)
         => Context.PaymentTransaction.FirstOrDefaultAsync(e => e.Reference == reference);
 }

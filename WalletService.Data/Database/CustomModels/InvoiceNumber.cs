@@ -2,5 +2,5 @@
 
 public class InvoiceNumber
 {
-    public int InvoiceNumberValue { get; set; }
+    public long InvoiceNumberValue { get; set; }
 }

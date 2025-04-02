@@ -9,26 +9,27 @@
 
 
     <ItemGroup>
-        <ProjectReference Include="..\WalletService.Data\WalletService.Data.csproj"/>
+        <ProjectReference Include="..\WalletService.Data\WalletService.Data.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0"/>
-        <PackageReference Include="Confluent.Kafka" Version="1.8.2"/>
+        <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+        <PackageReference Include="ClosedXML" Version="0.105.0-rc" />
+        <PackageReference Include="Confluent.Kafka" Version="2.3.0" />
         <PackageReference Include="Crc32.NET" Version="1.2.0" />
-        <PackageReference Include="Elastic.Apm.NetCoreAll" Version="1.22.0"/>
-        <PackageReference Include="FluentValidation" Version="11.4.0"/>
-        <PackageReference Include="HarfBuzzSharp" Version="2.8.2.4-preview.70"/>
-        <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="2.8.2.4-preview.70"/>
-        <PackageReference Include="HarfBuzzSharp.NativeAssets.WebAssembly" Version="2.8.2.4-preview.70"/>
-        <PackageReference Include="itext7" Version="8.0.0"/>
-        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0"/>
-        <PackageReference Include="NETCore.MailKit" Version="2.1.0"/>
-        <PackageReference Include="QuestPDF" Version="2023.5.3"/>
-        <PackageReference Include="sib_api_v3_sdk" Version="4.0.2"/>
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.4-preview.70"/>
-        <PackageReference Include="StackExchange.Redis" Version="2.7.27" />
-        <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0-preview.5.23280.8"/>
+        <PackageReference Include="Elastic.Apm.NetCoreAll" Version="1.25.3" />
+        <PackageReference Include="FluentValidation" Version="11.9.0" />
+        <PackageReference Include="HarfBuzzSharp" Version="7.3.0" />
+        <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="7.3.0" />
+        <PackageReference Include="HarfBuzzSharp.NativeAssets.WebAssembly" Version="7.3.0" />
+        <PackageReference Include="itext7" Version="8.0.2" />
+        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+        <PackageReference Include="NETCore.MailKit" Version="2.1.0" />
+        <PackageReference Include="QuestPDF" Version="2023.12.2" />
+        <PackageReference Include="sib_api_v3_sdk" Version="4.0.2" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.7" />
+        <PackageReference Include="StackExchange.Redis" Version="2.7.17" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0" />
     </ItemGroup>
 
   <ItemGroup>
@@ -120,6 +121,18 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Assets\logo-recy.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\HouseCoin\confirm-purchase.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\house-coin-logo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\ExitoJuntos\confirm-purchase.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\exito_juntos.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
 

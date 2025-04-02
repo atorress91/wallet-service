@@ -26,12 +26,14 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
     private readonly IBrandService            _brandService;
     private readonly IRecyCoinPdfService      _recyCoinPdfService;
     private readonly IBonusRepository         _bonusRepository;
+    private readonly IHouseCoinPdfService     _houseCoinPdfService;
     public BalancePaymentStrategy(IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter                             accountServiceAdapter, IWalletRepository walletRepository,
         IEcosystemPdfService                                ecosystemPdfService,
         IBrevoEmailService                                 brevoEmailService, IWalletRequestRepository walletRequestRepository,
         RedisCache                                         redisCache,IBrandService brandService,
         IRecyCoinPdfService                                recyCoinPdfService,
+        IHouseCoinPdfService                               houseCoinPdfService,
         IBonusRepository bonusRepository)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
@@ -44,9 +46,10 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         _brandService            = brandService;
         _recyCoinPdfService      = recyCoinPdfService;
         _bonusRepository         = bonusRepository;
+        _houseCoinPdfService     = houseCoinPdfService;
     }
 
-    private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId,int brandId)
+    private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId,long brandId)
     {
         var amountRequests    = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId, brandId);
         var availableBalance  = await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId,brandId);
@@ -132,7 +135,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             {
                 ProductId             = item.Id,
                 PaymentGroupId        = item.PaymentGroup,
-                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
+                AccumMinPurchase      = item.AcumCompMin,
                 ProductName           = item.Name!,
                 ProductPrice          = item.SalePrice,
                 ProductPriceBtc       = Constants.EmptyValue,
@@ -143,12 +146,12 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 ProductPoints         = item.ValuePoints,
                 ProductDiscount       = item.ProductDiscount,
                 CombinationId         = Constants.EmptyValue,
-                ProductPack           = Convert.ToByte(item.ProductPacks),
+                ProductPack           = item.ProductPacks,
                 BaseAmount            = (item.BaseAmount * product.Count),
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = Constants.EmptyValue,
+                ProductStart          = false,
                 BrandId               = request.BrandId, 
             };
 
@@ -178,9 +181,15 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Origin            = origin,
             Level             = Constants.EmptyValue,
             AffiliateUserName = request.AffiliateUserName,
-            AdminUserName     = request.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
+            AdminUserName     = request.BrandId switch
+            {
+                1 => Constants.AdminEcosystemUserName,
+                2 => Constants.RecycoinAdmin,
+                3 => Constants.HouseCoinAdmin,
+                _ => Constants.AdminEcosystemUserName
+            },
             ReceiptNumber     = request.ReceiptNumber,
-            Type              = Constants.EmptyValue,
+            Type              = true,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
             Reason            = string.Empty,
@@ -194,17 +203,30 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         
         if (request.BrandId == Constants.RecyCoin)
         { 
-            await _bonusRepository.CreateBonus(new BonusRequest
-            {
-                AffiliateId = request.AffiliateId,
-                Amount = (debitTransactionRequest.Debit / 2),
-                InvoiceId = spResponse.Id,
-                Comment = "Bonus for Recycoin"
-            });
+            // await _bonusRepository.CreateBonus(new BonusRequest
+            // {
+            //     AffiliateId = request.AffiliateId,
+            //     Amount = (debitTransactionRequest.Debit / 2),
+            //     InvoiceId = spResponse.Id,
+            //     Comment = "Bonus for Recycoin"
+            // });
             await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
             {
                 AffiliateId = request.AffiliateId, InvoiceAmount = debitTransactionRequest.Debit,
-                BrandId = request.BrandId
+                BrandId = request.BrandId,
+                AdminUserName = Constants.RecycoinAdmin,
+                LevelPercentages = [8.0m,5.0m,4.0m,2.0m,1.0m]
+            });
+        }
+
+        if (request.BrandId == Constants.HouseCoin)
+        {
+            await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
+            {
+                AffiliateId = request.AffiliateId, InvoiceAmount = debitTransactionRequest.Debit,
+                BrandId = request.BrandId,
+                AdminUserName = Constants.HouseCoinAdmin,
+                LevelPercentages = [8.0m, 6.0m, 5.0m, 4.0m, 2.0m],
             });
         }
         
@@ -216,7 +238,10 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (request.BrandId == Constants.RecyCoin)
         {
             invoicePdf = await _recyCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
-          
+        }
+        else if (request.BrandId == Constants.HouseCoin)  
+        {
+            invoicePdf = await _houseCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
         }
         else
         {
@@ -299,7 +324,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             {
                 ProductId             = item.Id,
                 PaymentGroupId        = item.PaymentGroup,
-                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
+                AccumMinPurchase      = item.AcumCompMin,
                 ProductName           = item.Name!,
                 ProductPrice          = item.SalePrice,
                 ProductPriceBtc       = Constants.EmptyValue,
@@ -310,12 +335,12 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 ProductPoints         = item.ValuePoints,
                 ProductDiscount       = item.ProductDiscount,
                 CombinationId         = Constants.EmptyValue,
-                ProductPack           = Convert.ToByte(item.ProductPacks),
+                ProductPack           = item.ProductPacks,
                 BaseAmount            = (item.BaseAmount * product.Count),
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = Constants.EmptyValue,
+                ProductStart          = false,
                 BrandId               = request.BrandId
             };
 
@@ -344,7 +369,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             AffiliateUserName = request.AffiliateUserName,
             AdminUserName     = request.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
             ReceiptNumber     = request.ReceiptNumber,
-            Type              = Constants.EmptyValue,
+            Type              = true,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
             Reason            = string.Empty,
@@ -421,7 +446,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             {
                 ProductId             = item.Id,
                 PaymentGroupId        = item.PaymentGroup,
-                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
+                AccumMinPurchase      = item.AcumCompMin,
                 ProductName           = item.Name!,
                 ProductPrice          = item.SalePrice,
                 ProductPriceBtc       = Constants.EmptyValue,
@@ -432,12 +457,12 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 ProductPoints         = item.ValuePoints,
                 ProductDiscount       = item.ProductDiscount,
                 CombinationId         = Constants.EmptyValue,
-                ProductPack           = Convert.ToByte(item.ProductPacks),
+                ProductPack           = item.ProductPacks,
                 BaseAmount            = (item.BaseAmount * product.Count),
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = Constants.EmptyValue,
+                ProductStart          = false,
                 BrandId               = request.BrandId 
             };
 
@@ -469,14 +494,14 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             AffiliateUserName = request.AffiliateUserName,
             AdminUserName     = request.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
             ReceiptNumber     = request.ReceiptNumber,
-            Type              = Constants.EmptyValue,
+            Type              = true,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
             Reason            = string.Empty ,
             BrandId           = request.BrandId,
         };
 
-        var spResponse = await _walletRepository.CoursesDebitTransaction(debitTransactionRequest);
+        var spResponse = await _walletRepository.DebitTransaction(debitTransactionRequest);
 
         if (spResponse is null)
             return false;
@@ -544,7 +569,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             {
                 ProductId             = item.Id,
                 PaymentGroupId        = item.PaymentGroup,
-                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
+                AccumMinPurchase      = item.AcumCompMin,
                 ProductName           = item.Name!,
                 ProductPrice          = item.SalePrice,
                 ProductPriceBtc       = Constants.EmptyValue,
@@ -555,12 +580,12 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 ProductPoints         = item.ValuePoints,
                 ProductDiscount       = item.ProductDiscount,
                 CombinationId         = Constants.EmptyValue,
-                ProductPack           = Convert.ToByte(item.ProductPacks),
+                ProductPack           = item.ProductPacks,
                 BaseAmount            = (item.BaseAmount * product.Count),
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = Constants.EmptyValue,
+                ProductStart          = false,
                 BrandId               = request.BrandId
             };
 
@@ -589,7 +614,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             AffiliateUserName = request.AffiliateUserName,
             AdminUserName     = request.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
             ReceiptNumber     = request.ReceiptNumber,
-            Type              = Constants.EmptyValue,
+            Type              = true,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
             Reason            = string.Empty ,
@@ -655,7 +680,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             {
                 ProductId             = item.Id,
                 PaymentGroupId        = item.PaymentGroup,
-                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
+                AccumMinPurchase      = item.AcumCompMin,
                 ProductName           = item.Name!,
                 ProductPrice          = item.SalePrice,
                 ProductPriceBtc       = Constants.EmptyValue,
@@ -666,12 +691,12 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 ProductPoints         = item.ValuePoints,
                 ProductDiscount       = Constants.EmptyValue,
                 CombinationId         = Constants.EmptyValue,
-                ProductPack           = Convert.ToByte(item.ProductPacks),
+                ProductPack           = item.ProductPacks,
                 BaseAmount            = item.BaseAmount,
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.EmptyValue,
-                ProductStart          = Constants.EmptyValue,
+                ProductStart          = false,
                 BrandId               = request.BrandId 
             };
 
@@ -703,7 +728,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             AffiliateUserName = request.AffiliateUserName,
             AdminUserName     = request.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
             ReceiptNumber     = request.ReceiptNumber,
-            Type              = Constants.EmptyValue,
+            Type              = true,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
             Reason            = string.Empty,

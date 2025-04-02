@@ -1,24 +1,39 @@
-﻿namespace WalletService.Data.Database.Models;
+﻿
+namespace WalletService.Data.Database.Models;
 
-public class ModelConfiguration
+public partial class ModelConfiguration
 {
-    public int Id { get; set; }
-    public double CompanyPercentage { get; set; }
-    public double CompanyPercentageLevels { get; set; }
-    public double ModelPercentage { get; set; }
-    public double MaxGainLimit { get; set; }
+    public long Id { get; set; }
+
+    public decimal CompanyPercentage { get; set; }
+
+    public decimal ModelPercentage { get; set; }
+
+    public decimal MaxGainLimit { get; set; }
+
     public DateTime DateInit { get; set; }
+
     public DateTime DateEnd { get; set; }
+
     public int Case { get; set; }
-    public int? Processed { get; set; }
-    public int? Totals { get; set; }
-    
-    public string ModelType { get; set; }
+
     public DateTime? CompletedAt { get; set; }
+
     public DateTime CreatedAt { get; set; }
+
     public DateTime UpdatedAt { get; set; }
+
     public DateTime? DeletedAt { get; set; }
 
-    public virtual ICollection<ModelConfigurationLevels>  ModelConfigurationLevels { get; set; }
-    public virtual ICollection<ResultsModel2> ResultsModel2 { get; set; }
+    public decimal CompanyPercentageLevels { get; set; }
+
+    public int? Processed { get; set; }
+
+    public int? Totals { get; set; }
+
+    public string ModelType { get; set; } = null!;
+
+    public virtual ICollection<ModelConfigurationLevel> ModelConfigurationLevels { get; } = new List<ModelConfigurationLevel>();
+
+    public virtual ICollection<ResultsModel2> ResultsModel2s { get; } = new List<ResultsModel2>();
 }

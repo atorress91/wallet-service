@@ -18,9 +18,9 @@ public abstract class BaseAdapter
 
     protected abstract string? GetTokenUrl();
     
-    protected abstract string? GetWebToken(int brandId);
+    protected abstract string? GetWebToken(long brandId);
 
-    protected async Task<baseResponse.IRestResponse> Get(string path, Dictionary<string, string>? queryParams, int brandId)
+    protected async Task<baseResponse.IRestResponse> Get(string path, Dictionary<string, string>? queryParams, long brandId)
     {
         var client  = new RestClient(GetServiceUrl()!);
         var request = new RestRequest(path);
@@ -36,7 +36,7 @@ public abstract class BaseAdapter
         };
     }
 
-    protected async Task<baseResponse.IRestResponse> Post(string path, string data, int brandId)
+    protected async Task<baseResponse.IRestResponse> Post(string path, string data, long brandId)
     {
         var client  = new RestClient(GetServiceUrl()!);
         var request = new RestRequest(path, Method.Post);
@@ -54,7 +54,7 @@ public abstract class BaseAdapter
         };
     }
 
-    protected async Task<baseResponse.IRestResponse> Put(string path,int brandId)
+    protected async Task<baseResponse.IRestResponse> Put(string path,long brandId)
     {
         var client  = new RestClient(GetServiceUrl()!);
         var request = new RestRequest(path, Method.Put);

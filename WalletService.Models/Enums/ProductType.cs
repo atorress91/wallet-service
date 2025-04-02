@@ -5,5 +5,7 @@ public enum ProductType
     EcoPool,
     Membership,
     RecyCoin = 11,
-    Course
+    HouseCoinPlan = 12,
+    ExitoJuntosPlan = 13,
+    Course,
 }

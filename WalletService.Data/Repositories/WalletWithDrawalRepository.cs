@@ -10,13 +10,13 @@ public class WalletWithDrawalRepository:BaseRepository,IWalletWithDrawalReposito
     public WalletWithDrawalRepository(WalletServiceDbContext context) : base(context)
     {
     }
-    public Task<List<WalletsWithdrawals>> GetAllWalletsWithdrawals()
+    public Task<List<WalletsWithdrawal>> GetAllWalletsWithdrawals()
         =>  Context.WalletsWithdrawals.AsNoTracking().ToListAsync();
     
-    public  Task<WalletsWithdrawals?> GetWalletWithdrawalById(int id)
+    public  Task<WalletsWithdrawal?> GetWalletWithdrawalById(int id)
         =>  Context.WalletsWithdrawals.FirstOrDefaultAsync(x => x.Id == id);
 
-    public async Task<WalletsWithdrawals> CreateWalletWithdrawalAsync(WalletsWithdrawals request)
+    public async Task<WalletsWithdrawal> CreateWalletWithdrawalAsync(WalletsWithdrawal request)
     {
         var today = DateTime.Now;
         request.CreatedAt = today;
@@ -27,7 +27,7 @@ public class WalletWithDrawalRepository:BaseRepository,IWalletWithDrawalReposito
 
         return request;
     } 
-    public async Task<WalletsWithdrawals> UpdateWalletWithdrawalAsync(WalletsWithdrawals request)
+    public async Task<WalletsWithdrawal> UpdateWalletWithdrawalAsync(WalletsWithdrawal request)
     {
         var today = DateTime.Now;
         request.UpdatedAt = today;
@@ -36,7 +36,7 @@ public class WalletWithDrawalRepository:BaseRepository,IWalletWithDrawalReposito
 
         return request;
     }
-    public async Task<WalletsWithdrawals> DeleteWalletWithdrawalAsync(WalletsWithdrawals request)
+    public async Task<WalletsWithdrawal> DeleteWalletWithdrawalAsync(WalletsWithdrawal request)
     {
         request.DeletedAt = DateTime.Now;
 

@@ -1,8 +1,7 @@
-﻿using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
-using System.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using NpgsqlTypes;
 using WalletService.Data.Database;
-using WalletService.Data.Database.CustomModels;
 using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Constants;
@@ -13,41 +12,27 @@ public class NetworkPurchaseRepository : BaseRepository, INetworkPurchaseReposit
 {
     public NetworkPurchaseRepository(WalletServiceDbContext context) : base(context) { }
 
-    public Task<List<NetworkPurchases>> GetNetworkPurchasesEcoPool(DateTime from, DateTime to)
+    public Task<List<NetworkPurchase>> GetNetworkPurchasesEcoPool(DateTime from, DateTime to)
         => Context.NetworkPurchases
             .Where(x => x.CreatedAt >= from && x.CreatedAt <= to
                                             && x.Origin == Constants.OriginEcoPoolPurchase).ToListAsync();
-
-
+    
     public async Task<List<(int Year, int Month, int TotalPurchases)>> GetPurchasesMadeInMyNetwork(HashSet<int> ids)
     {
         if (ids.Count == 0)
             return new List<(int, int, int)>();
-  
-        DataTable dt = new DataTable();
-        dt.Columns.Add("AffiliateId", typeof(int));
-        foreach (var id in ids)
-        {
-            dt.Rows.Add(id);
-        }
 
-        var parameter = new SqlParameter("@AffiliateIds", SqlDbType.Structured)
+        var sql = $"SELECT * FROM get_total_purchases_in_my_network_by_affiliate(@p0)";
+        
+        var parameter = new NpgsqlParameter("@p0", NpgsqlDbType.Array | NpgsqlDbType.Integer)
         {
-            TypeName = Constants.TypeTableAffiliateId,
-            Value    = dt
+            Value = ids.ToArray()
         };
 
-        var results = await Context.Set<PurchasesPerMonth>()
-            .FromSqlRaw("EXEC " + Constants.GetTotalPurchasesInMyNetworkSp + " @AffiliateIds", parameter)
+        var results = await Context.PurchasesPerMonth
+            .FromSqlRaw(sql, parameter)
             .ToListAsync();
 
         return results.Select(r => (r.Year, r.Month, r.TotalPurchases)).ToList();
     }
-
-
-
-
-
-
-
 }

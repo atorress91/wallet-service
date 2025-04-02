@@ -1,4 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
 using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -67,9 +66,9 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
 
         var branId = brandService!.BrandId;
         var listModel1AResults = await resultsEcoPoolRepository!.GetResultsModel1AToPayment();
-        var listModel1BResults = await resultsEcoPoolRepository!.GetResultsModel1BToPayment();
-        var listModel2Results = await resultsEcoPoolRepository!.GetResultsModel2ToPayment();
-        var listModel3Results = await resultsEcoPoolRepository!.GetResultsMode3ToPayment();
+        var listModel1BResults = await resultsEcoPoolRepository.GetResultsModel1BToPayment();
+        var listModel2Results = await resultsEcoPoolRepository.GetResultsModel2ToPayment();
+        var listModel3Results = await resultsEcoPoolRepository.GetResultsMode3ToPayment();
         
         var dictionaryPointsModelTotal = new Dictionary<int, UserGradingRequest>();
         
@@ -264,7 +263,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         }
     }   
     private static async Task CommissionsModel1A(
-        Dictionary<int, List<ResultsModel1A>> dictionaryModel1A,
+        Dictionary<int, List<ResultsModel1a>> dictionaryModel1A,
         IWalletModel1ARepository?             walletRepository1A,
         IWalletRepository?                    walletRepository,
         Dictionary<int, UserGradingRequest>   dictionaryPointsModel1A)
@@ -282,7 +281,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
                     Constants.CommissionModel1ADescriptionNormal,
                     WalletConceptType.purchasing_pool.ToString());
 
-            var listPerLevels = listPoolsPerUser.SelectMany(x => x.ResultsModel1ALevels);
+            var listPerLevels = listPoolsPerUser.SelectMany(x => x.ResultsModel1aLevels);
             var dictionaryPerLevels = listPerLevels.GroupBy(x
                 => x.AffiliateId).ToDictionary(group => group.Key, group => group.ToList());
 
@@ -327,7 +326,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
         }
     }
     private static async Task CommissionsModel1B(
-        Dictionary<int, List<ResultsModel1B>> dictionaryModel1B,
+        Dictionary<int, List<ResultsModel1b>> dictionaryModel1B,
         IWalletModel1BRepository?             walletRepository1B,
         IWalletRepository?                    walletRepository,
         Dictionary<int, UserGradingRequest>   dictionaryPointsModel1B)
@@ -346,7 +345,7 @@ public class ProcessPaymentModel1A1B23Consumer : BaseKafkaConsumer
                     Constants.CommissionModel1BDescriptionNormal,
                     WalletConceptType.purchasing_pool.ToString());
 
-            var listPerLevels = listPoolsPerUser.SelectMany(x => x.ResultsModel1BLevels);
+            var listPerLevels = listPoolsPerUser.SelectMany(x => x.ResultsModel1bLevels);
             var dictionaryPerLevels = listPerLevels.GroupBy(x
                 => x.AffiliateId).ToDictionary(group => group.Key, group => group.ToList());
 

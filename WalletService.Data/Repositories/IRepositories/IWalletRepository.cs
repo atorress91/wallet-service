@@ -6,48 +6,47 @@ namespace WalletService.Data.Repositories.IRepositories;
 
 public interface IWalletRepository
 {
-    Task<List<Wallets>> GetWalletByAffiliateId(int affiliateId, int brandId);
-    Task<List<InvoicesDetails>> GetDebitsModel2WithinMonth(DateTime from, DateTime to);
-    Task<List<InvoicesDetails>> GetDebitsModel1AWithinMonth(DateTime from, DateTime to);
-    Task<List<InvoicesDetails>> GetDebitsModel1BWithinMonth(DateTime from, DateTime to);
+    Task<List<Wallet>> GetWalletByAffiliateId(int affiliateId, long brandId);
+    Task<List<InvoicesDetail>> GetDebitsModel2WithinMonth(DateTime from, DateTime to);
+    Task<List<InvoicesDetail>> GetDebitsModel1AWithinMonth(DateTime from, DateTime to);
+    Task<List<InvoicesDetail>> GetDebitsModel1BWithinMonth(DateTime from, DateTime to);
     Task<InvoicesSpResponse?> DebitEcoPoolTransactionSp(DebitTransactionRequest request);
-    Task<List<InvoicesDetails>> GetDebitsModel2OutsideMonth(DateTime date);
-    Task<List<InvoicesDetails>> GetDebitsModel1AOutsideMonth(DateTime date);
-    Task<List<InvoicesDetails>> GetDebitsModel1BOutsideMonth(DateTime date);
-    Task<List<InvoicesDetails>> GetInvoicesDetailsItemsForModel3(DateTime from, DateTime to);
-    Task<List<Wallets>> GetWalletByUserId(int userId, int brandId);
-    Task<List<Wallets>> GetWalletsRequest(int userId, int brandId);
-    Task<Wallets?> GetWalletById(int id, int brandId);
+    Task<List<InvoicesDetail>> GetDebitsModel2OutsideMonth(DateTime date);
+    Task<List<InvoicesDetail>> GetDebitsModel1AOutsideMonth(DateTime date);
+    Task<List<InvoicesDetail>> GetDebitsModel1BOutsideMonth(DateTime date);
+    Task<List<InvoicesDetail>> GetInvoicesDetailsItemsForModel3(DateTime from, DateTime to);
+    Task<List<Wallet>> GetWalletByUserId(int userId, long brandId);
+    Task<List<Wallet>> GetWalletsRequest(int userId, long brandId);
+    Task<Wallet?> GetWalletById(int id, long brandId);
     Task<bool> CreateModel2Sp(Model2TransactionRequest request);
     Task<bool> CreateModel1ASp(Model1ATransactionRequest request);
     Task<bool> CreateModel1BSp(Model1BTransactionRequest request);
     Task<bool> CreateModel3Sp(Model3TransactionRequest request);
-    Task<Wallets> CreateWalletAsync(Wallets request);
-    Task<Wallets> UpdateWalletAsync(Wallets request);
-    Task<Wallets> DeleteWalletAsync(Wallets request);
-    Task<decimal> GetAvailableBalanceByAffiliateId(int userId, int brandId);
-    Task<decimal> GetAvailableBalanceAdmin(int brandId);
-    Task<decimal?> GetReverseBalanceByAffiliateId(int userId, int brandId);
-    Task<decimal?> GetTotalAcquisitionsByAffiliateId(int userId, int brandId);
+    Task<Wallet> CreateWalletAsync(Wallet request);
+    Task<Wallet> UpdateWalletAsync(Wallet request);
+    Task<Wallet> DeleteWalletAsync(Wallet request);
+    Task<decimal> GetAvailableBalanceByAffiliateId(int userId, long brandId);
+    Task<decimal> GetAvailableBalanceAdmin(long brandId);
+    Task<decimal?> GetReverseBalanceByAffiliateId(int userId, long brandId);
+    Task<decimal?> GetTotalAcquisitionsByAffiliateId(int userId, long brandId);
     Task<InvoicesSpResponse?> DebitTransaction(DebitTransactionRequest request);
     Task<bool> CreditTransaction(CreditTransactionRequest request);
-    Task<bool> CreateTransferBalance(Wallets debitTransaction, Wallets creditTransaction);
-    Task<List<Wallets>> GetAllWallets(int brandId);
-    Task<List<ModelFourStatistics>> GetUserModelFour(int[] affiliateIds);
-    Task<double?> GetTotalCommissionsPaid(int affiliateId, int brandId);
-    Task<decimal?> GetTotalServiceBalance(int affiliateId, int brandId);
-    Task<bool> IsActivePoolGreaterThanOrEqualTo25(int affiliateId, int brandId);
+    Task<bool> CreateTransferBalance(Wallet debitTransaction, Wallet creditTransaction);
+    Task<List<Wallet>> GetAllWallets(long brandId);
+    Task<List<ModelFourStatistic>> GetUserModelFour(int[] affiliateIds);
+    Task<decimal?> GetTotalCommissionsPaid(int affiliateId, long brandId);
+    Task<decimal?> GetTotalServiceBalance(int affiliateId, long brandId);
+    Task<bool> IsActivePoolGreaterThanOrEqualTo25(int affiliateId, long brandId);
     Task<InvoicesSpResponse?> HandleMembershipTransaction(DebitTransactionRequest request);
     Task<InvoicesSpResponse?> MembershipDebitTransaction(DebitTransactionRequest request);
     Task<InvoicesSpResponse?> AdminDebitTransaction(DebitTransactionRequest request);
-    Task<bool> BulkAdministrativeDebitTransaction(Wallets[] requests);
+    Task<bool> BulkAdministrativeDebitTransaction(Wallet[] requests);
 
     Task TransactionPoints(int affiliateId, decimal debitLeft, decimal debitRight, decimal creditLeft,
         decimal creditRight);
 
-    Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance(int brandId);
-    Task<InvoicesSpResponse?> CoursesDebitTransaction(DebitTransactionRequest request);
-    Task<decimal> GetTotalReverseBalance(int brandId);
+    Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance(long brandId);
+    Task<decimal> GetTotalReverseBalance(long brandId);
 
     Task<InvoicesSpResponse?> DebitServiceBalanceTransaction(DebitTransactionRequest request);
 
@@ -55,5 +54,7 @@ public interface IWalletRepository
 
     Task<bool> CreditServiceBalanceTransaction(CreditTransactionRequest request);
     Task<bool> DistributeCommissionsPerPurchaseAsync(DistributeCommissionsRequest request);
-    Task<decimal> GetTotalCommissionsPaid(int brandId);
+    Task<decimal> GetTotalCommissionsPaid(long brandId);
+    Task<decimal> GetCommissionsForAdminAsync(long brandId);
+    Task<Wallet> CreateAsync(Wallet request);
 }

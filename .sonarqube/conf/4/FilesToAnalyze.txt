@@ -1,0 +1,2 @@
+﻿C:\HeroSystem\walletService\WalletService.Ioc\IocExtensionApp.cs
+C:\HeroSystem\walletService\WalletService.Ioc\IocExtensionWorker.cs

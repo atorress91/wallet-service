@@ -94,13 +94,13 @@ public class GetTotalActiveMembersResponse
 
 public class AffiliateBtcResponse
 {
-    [JsonPropertyName("success")] public bool Success { get; set; }
+    [NewtonsoftJson.JsonProperty("success")] public bool Success { get; set; }
 
-    [JsonPropertyName("data")] public AffiliateBtcDto? Data { get; set; }
+    [NewtonsoftJson.JsonProperty("data")] public AffiliateBtcDto?[]? Data { get; set; }
 
-    [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
+    [NewtonsoftJson.JsonProperty("message")] public string Message { get; set; } = string.Empty;
 
-    [JsonPropertyName("code")] public int Code { get; set; }
+    [NewtonsoftJson.JsonProperty("code")] public int Code { get; set; }
 }
 
 public class PersonalNetwork

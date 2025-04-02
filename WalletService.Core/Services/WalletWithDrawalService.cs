@@ -30,7 +30,7 @@ public class WalletWithDrawalService : BaseService, IWalletWithdrawalService
 
     public async Task<WalletWithDrawalDto?> CreateWalletWithdrawalAsync(WalletWithDrawalRequest request)
     {
-        var wallet = Mapper.Map<WalletsWithdrawals>(request);
+        var wallet = Mapper.Map<WalletsWithdrawal>(request);
         wallet = await _walletWithDrawalRepository.CreateWalletWithdrawalAsync(wallet);
         return Mapper.Map<WalletWithDrawalDto>(wallet);
     }

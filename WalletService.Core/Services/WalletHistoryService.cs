@@ -31,7 +31,7 @@ public class WalletHistoryService : BaseService, IWalletHistoryService
 
     public async Task<WalletHistoryDto?> CreateWalletHistoriesAsync(WalletHistoryRequest request)
     {
-        var history = Mapper.Map<WalletsHistories>(request);
+        var history = Mapper.Map<WalletsHistory>(request);
         history = await _walletHistoryRepository.CreateWalletHistoriesAsync(history);
 
         return Mapper.Map<WalletHistoryDto>(history);

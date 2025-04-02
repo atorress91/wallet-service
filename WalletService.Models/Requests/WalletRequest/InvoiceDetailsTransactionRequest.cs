@@ -1,29 +1,59 @@
-﻿namespace WalletService.Models.Requests.WalletRequest;
+﻿using Newtonsoft.Json;
+
+namespace WalletService.Models.Requests.WalletRequest;
 
 public class InvoiceDetailsTransactionRequest
 {
-    public int ProductId { get; set; }
-    public int PaymentGroupId { get; set; }
-    public byte AccumMinPurchase { get; set; }
-    public string ProductName { get; set; } = null!;
-    public decimal ProductPrice { get; set; }
-    public decimal? ProductPriceBtc { get; set; }
-    public decimal ProductIva { get; set; }
-    public int ProductQuantity { get; set; }
-    public decimal? ProductCommissionable { get; set; }
-    public decimal? BinaryPoints { get; set; }
-    public int? ProductPoints { get; set; }
-    public decimal ProductDiscount { get; set; }
-    public int? CombinationId { get; set; }
-    public byte? ProductPack { get; set; }
-    public decimal? BaseAmount { get; set; }
-    public decimal? DailyPercentage { get; set; }
+    [JsonProperty("product_id")]
+    public int ProductId { get; init; }
+    [JsonProperty("payment_group_id")]
+    public int PaymentGroupId { get; init; }
     
-    public int? WaitingDays { get; set; }
+    [JsonProperty("accummin_purchase")]
+    public bool AccumMinPurchase { get; init; }
     
-    public int? DaysToPayQuantity { get; set; }
-    public byte ProductStart { get; set; }
-    public int BrandId { get; set; }
+    [JsonProperty("product_name")]
+    public string ProductName { get; init; } = string.Empty;
     
+    [JsonProperty("product_price")]
+    public decimal ProductPrice { get; init; }
     
+    [JsonProperty("product_price_btc")]
+    public decimal ProductPriceBtc { get; init; }
+    
+    [JsonProperty("product_iva")]
+    public decimal ProductIva { get; init; }
+    
+    [JsonProperty("product_quantity")]
+    public int ProductQuantity { get; init; }
+    
+    [JsonProperty("product_commissionable")]
+    public decimal ProductCommissionable { get; init; }
+    
+    [JsonProperty("binary_points")]
+    public decimal BinaryPoints { get; init; }
+    
+    [JsonProperty("product_points")]
+    public int ProductPoints { get; init; }
+    
+    [JsonProperty("product_discount")]
+    public decimal ProductDiscount { get; init; }
+    
+    [JsonProperty("combination_id")]
+    public int CombinationId { get; init; }
+    
+    [JsonProperty("product_pack")]
+    public bool ProductPack { get; init; }
+    [JsonProperty("base_amount")]
+    public decimal BaseAmount { get; init; }
+    [JsonProperty("daily_percentage")]
+    public decimal DailyPercentage { get; init; }
+    [JsonProperty("waiting_days")]
+    public int WaitingDays { get; init; }
+    [JsonProperty("days_to_pay_quantity")]
+    public int DaysToPayQuantity { get; init; }
+    [JsonProperty("product_start")]
+    public bool ProductStart { get; init; }
+    [JsonProperty("brand_id")]
+    public long BrandId{get;set;}
 }

@@ -17,32 +17,30 @@ public class InventoryServiceAdapter : BaseAdapter, IInventoryServiceAdapter
     protected override string? GetTokenUrl()
         => AppSettings.EndpointTokens!.InventoryServiceToken;
 
-    protected override string? GetWebToken(int brandId)
+    protected override string? GetWebToken(long brandId)
     {
         return brandId switch
         {
             1 => AppSettings.WebTokens!.EcosystemToken,
             2 => AppSettings.WebTokens!.RecyCoinToken,
+            3 => AppSettings.WebTokens!.HouseCoinToken,
+            4 => AppSettings.WebTokens!.ExitoJuntosToken,
             _ => null
         };
     }
 
-    public Task<IRestResponse> GetProductsIds(int[] ids, int brandId)
+    public Task<IRestResponse> GetProductsIds(int[] ids, long brandId)
     {
         var requestObject = new Dictionary<string, object>
         {
             { "productIds", ids }
         };
-
-
+        
         return Post("/product/get_products_by_ids/", requestObject.ToJsonString(), brandId);
     }
 
-    public Task<IRestResponse> GetProductById(int id, int brandId)
+    public Task<IRestResponse> GetProductById(int id, long brandId)
     {
         return Post($"/product/get_product_by_id/", id.ToJsonString(), brandId);
     }
-
-
-
 }

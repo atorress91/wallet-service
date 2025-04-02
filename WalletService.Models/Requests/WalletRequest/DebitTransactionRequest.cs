@@ -1,25 +1,25 @@
 ﻿namespace WalletService.Models.Requests.WalletRequest;
 
-public class DebitTransactionRequest
+public record DebitTransactionRequest
 {
-    public int AffiliateId { get; set; }
-    public int UserId { get; set; }
-    public string Concept { get; set; } = null!;
-    public decimal Points { get; set; }
-    public decimal Commissionable { get; set; }
-    public string? Bank { get; set; }
-    public string PaymentMethod { get; set; } = null!;
-    public byte Origin { get; set; }
-    public int Level { get; set; }
-    public decimal Debit { get; set; }
-    public string AffiliateUserName { get; set; }
-    public string AdminUserName { get; set; } = null!;
-    public string? ReceiptNumber { get; set; }
-    public byte Type { get; set; }
-    public string? SecretKey { get; set; }
-    public string? ConceptType { get; set; }
-    public string? Reason { get; set; }
-    public int BrandId { get; set; }
+    public int AffiliateId { get; init; }
+    public int UserId { get; init; }
+    public string Concept { get; init; } = string.Empty;
+    public decimal Points { get; init; }
+    public decimal Commissionable { get; init; }
+    public string PaymentMethod { get; init; } = string.Empty;
+    public short Origin { get; init; }
+    public int Level { get; init; }
+    public decimal Debit { get; init; }
+    public string AffiliateUserName { get; init; } = string.Empty;
+    public string AdminUserName { get; init; } = string.Empty;
+    public string ConceptType { get; init; } = string.Empty;
+    public long BrandId { get; init; }
+    public string? Bank { get; init; }
+    public string? ReceiptNumber { get; init; }
+    public bool Type { get; init; }
+    public string? SecretKey { get; init; }
+    public string? Reason { get; init; }
 
-    public List<InvoiceDetailsTransactionRequest> invoices { get; set; }
+    public List<InvoiceDetailsTransactionRequest>? invoices { get; init; } = new List<InvoiceDetailsTransactionRequest>();
 }

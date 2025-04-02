@@ -9,12 +9,12 @@
 
     <ItemGroup>
         <PackageReference Include="Crc32.NET" Version="1.2.0" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\WalletService.Models\WalletService.Models.csproj"/>
+        <ProjectReference Include="..\WalletService.Models\WalletService.Models.csproj" />
     </ItemGroup>
 
 </Project>

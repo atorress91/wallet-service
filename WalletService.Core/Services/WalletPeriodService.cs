@@ -40,13 +40,13 @@ public class WalletPeriodService : BaseService, IWalletPeriodService
                 existingPeriod.Status    = periodData.Status;
                 existingPeriod.UpdatedAt = DateTime.Now;
 
-                await _walletPeriodRepository.UpdateWalletPeriodsAsync(new List<WalletsPeriods> { existingPeriod });
+                await _walletPeriodRepository.UpdateWalletPeriodsAsync(new List<WalletsPeriod> { existingPeriod });
 
                 createdPeriods.Add(Mapper.Map<WalletPeriodDto>(existingPeriod));
             }
             else
             {
-                var newPeriod = new WalletsPeriods
+                var newPeriod = new WalletsPeriod
                 {
                     Date      = periodData.Date,
                     Status    = periodData.Status,
@@ -54,7 +54,7 @@ public class WalletPeriodService : BaseService, IWalletPeriodService
                     UpdatedAt = DateTime.Now
                 };
 
-                await _walletPeriodRepository.CreateWalletPeriodAsync(new List<WalletsPeriods> { newPeriod });
+                await _walletPeriodRepository.CreateWalletPeriodAsync(new List<WalletsPeriod> { newPeriod });
 
                 createdPeriods.Add(Mapper.Map<WalletPeriodDto>(newPeriod));
             }

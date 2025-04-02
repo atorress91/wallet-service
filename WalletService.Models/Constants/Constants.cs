@@ -10,6 +10,8 @@ public static class Constants
     public const string RevertEcoPoolConcept                  = "Devolucion Pool Adquisitivo";
     public const string AdminEcosystemUserName                = "adminecosystem";
     public const string RecycoinAdmin                         = "adminrecycoin";
+    public const string HouseCoinAdmin                        = "adminhousecoin";
+    public const string ExitoJuntosAdmin                      = "adminexitojuntos";
     public const int    AdminUserId                           = 1;
     public const string AdminCredit                           = "Crédito Administrativo";
     public const string HandleDebitTransactionCourse          = "dbo.HandleDebit_Transation_For_Courses_SP";
@@ -21,6 +23,7 @@ public static class Constants
     public const string ReverseBalance                        = "Saldo modelo 2";
     public const string ConPaymentAddress                     = "THiJ78d6DHm1575GfFyfe1K6k2Fp6Bq5pP";
     public const string ConPaymentCurrency                    = "USDT.TRC20";
+    public const string CoinPaymentsBnbCurrency               = "USDT.BEP20"; 
     public const int    MembershipBonus                       = 5;
     public const string SubjectConfirmBonus                   = "Comisión de referido";
     public const int    DaysToPayQuantity                     = 999;
@@ -33,7 +36,7 @@ public static class Constants
     public const string Membership                            = "Membresía";
     public const string TransferForMembership                 = "Transferencia para membresía al afiliado";
     public const string TransferToMembership                  = "Transferencia para membresía del afiliado";
-    public const int    CoinPaymentTax                        = 2;
+    public const int    CoinPaymentTax                        = 1;
     public const string DebitTransactionSp                    = "dbo.Debit_Transation_SP";
     public const string DebitTransactionSpModel1A             = "dbo.Debit_Transaction_SP_Model1A";
     public const string DebitTransactionSpModel1B             = "dbo.Debit_Transaction_SP_Model1B";
@@ -41,7 +44,7 @@ public static class Constants
     public const string DebitEcoPoolTransactionSpModel1A      = "dbo.Debit_Transaction_EcoPool_SP_Model1A";
     public const string DebitEcoPoolTransactionSpModel1B      = "dbo.Debit_Transaction_EcoPool_SP_Model1B";
     public const string AdminDebitTransactionSp               = "dbo.Admin_Debit_Transation_SP";
-    public const string HandleDebitTransactionSp              = "dbo.HandleDebit_Transation_SP";
+    public const string HandleDebitTransactionSp              = "wallet_service.handle_debit_transation";
     public const string CreditTransactionSp                   = "dbo.Credit_Transation_SP";
     public const string CreditTransactionSpModel1A            = "dbo.Credit_Transaction_SP_Model1A";
     public const string CreditTransactionSpModel1B            = "dbo.Credit_Transaction_SP_Model1B";
@@ -75,6 +78,7 @@ public static class Constants
     public const string SendFundsConcept                      = "Retiro de dinero";
     public const int    UsdtIdCurrency                        = 19;
     public const int    UsdtIdNetwork                         = 99;
+    public const int    BnbIdNetwork                          = 56;
     public const int    CoinPayIdWallet                       = 46616;
     public const int    ChildrenLimitModel4                   = 2;
     public const int    ChildrenLimitModel5                   = 4;
@@ -90,9 +94,12 @@ public static class Constants
 
     public const int Ecosystem                      = 1;
     public const int RecyCoin                       = 2;
+    public const int HouseCoin                      = 3;
     public const int RecyCoinPaymentGroup           = 11;
     public const string EcosystemSenderName         = "Ecosystem Sharing Evolution";
     public const string RecyCoinSenderName          = "RecyCoin";
+    public const string HouseCoinSenderName         = "House Coin";
+    public const string ExitoJuntosSenderName       = "Éxito Juntos";
     public const string SubjectInvitationForAcademy = "Invitación al curso de trading";
     public const string PurchasingPoolRevertBalance = "Pool Adquisitivo con saldo revertido";
     public const string WireTransfer                = "Transferencia bancaria";

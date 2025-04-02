@@ -14,7 +14,7 @@ public class BonusRepository : BaseRepository, IBonusRepository
     public async Task<int> CreateBonus(BonusRequest request)
     {
         var result = await Context.Database.ExecuteSqlInterpolatedAsync(
-            $"EXEC ManageBonus @InvoiceId = {request.InvoiceId}, @AffiliateId = {request.AffiliateId}, @Amount = {request.Amount}, @Comment = {request.Comment}");
+            $"SELECT wallet_service.manage_bonus({request.InvoiceId}, {request.AffiliateId}, {request.Amount}, {request.Comment});");
 
         return result; 
     }

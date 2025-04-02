@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="telephone=no" name="format-detection">
+    <title>Éxito juntos - Confirmación de compra</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #F5F5DC;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            line-height: 1.6;
+        }
+
+        .wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #FFFFFF;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #DAA520;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header-title {
+            color: #FFFFFF;
+            font-size: 2rem;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 2rem;
+            background-color: #F5F5DC;
+        }
+
+        .message-container {
+            background-color: #FFFFFF;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .content h2 {
+            color: #DAA520;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .content p {
+            color: #333333;
+            margin-bottom: 1rem;
+            font-size: 16px;
+        }
+
+        .button-container {
+            text-align: center;
+            padding: 1.5rem 0;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #DAA520;
+            color: #FFFFFF;
+            padding: 12px 32px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #000000;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            background-color: #000000;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .footer-title {
+            color: #FFFFFF;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <header class="header">
+        <h1 class="header-title">Éxito juntos</h1>
+    </header>
+
+    <div class="content">
+        <div class="message-container">
+            <h2>Confirmación de compra</h2>
+            <p>Estimado/a {0},</p>
+            <p>Es un placer informarte que hemos enviado el recibo correspondiente a tu reciente compra.</p>
+            <div class="important-note">
+                <p><strong>Número de factura:</strong> {3}</p>
+                <p><strong>Fecha de emisión:</strong> {1}</p>
+                <p><strong>Total:</strong> {4}</p>
+                <p><strong>Método de pago:</strong> {2}</p>
+            </div>
+            <p>El recibo ha sido enviado a la dirección de correo electrónico asociada a tu cuenta.</p>
+            <p>Atentamente,<br>Éxito juntos</p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-title">Síguenos en redes sociales</div>
+    </footer>
+</div>
+</body>
+</html>

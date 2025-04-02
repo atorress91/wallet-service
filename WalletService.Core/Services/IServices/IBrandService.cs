@@ -2,5 +2,5 @@
 
 public interface IBrandService
 {
-    int BrandId { get;}
+    long BrandId { get;}
 }

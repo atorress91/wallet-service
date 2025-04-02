@@ -2,7 +2,7 @@
 
 public class AffiliateBalance
 {
-    public int AffiliateId { get; set; }
+    public long AffiliateId { get; set; }
     public string? AffiliateUserName { get; set; }
-    public double Balance { get; set; }
+    public decimal? Balance { get; set; }
 }

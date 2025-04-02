@@ -28,7 +28,7 @@ public class RedisCacheCleanupBackgroundService:BackgroundService
                 await cleanupService.CleanupAsync();
             }
             
-            await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
         }
     }
 }

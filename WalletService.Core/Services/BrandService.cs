@@ -10,7 +10,15 @@ public class BrandService : BaseService, IBrandService
 
     public BrandService(IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(mapper)
         => _httpContextAccessor = httpContextAccessor;
-
-
-    public int BrandId => (int)(_httpContextAccessor.HttpContext?.Items["brandId"] ?? 0);
+    
+    public long BrandId
+    {
+        get
+        {
+            var brandId = _httpContextAccessor.HttpContext?.Items["brandId"];
+            if (brandId == null) return 0;
+            
+            return Convert.ToInt64(brandId);
+        }
+    }
 }

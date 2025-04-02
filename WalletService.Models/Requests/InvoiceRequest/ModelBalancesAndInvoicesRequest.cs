@@ -6,5 +6,5 @@ public class ModelBalancesAndInvoicesRequest
     public decimal Model1AAmount { get; set; }
     public decimal Model1BAmount { get; set; }
     public decimal Model2Amount  { get; set; }
-    public int[]   InvoiceId     { get; set; } = Array.Empty<int>();
+    public long[]   InvoiceId     { get; set; } = Array.Empty<long>();
 }

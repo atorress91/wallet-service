@@ -27,12 +27,14 @@ public class ToThirdPartiesPaymentStrategy : BaseService
     private readonly IBonusRepository _bonusRepository;
     private readonly IRecyCoinPdfService _recyCoinPdfService;
     private readonly RedisCache _redisCache;
+    private readonly IHouseCoinPdfService _houseCoinPdfService;
 
     public ToThirdPartiesPaymentStrategy(IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter accountServiceAdapter, IWalletRepository walletRepository,
         IEcosystemPdfService ecosystemPdfService, RedisCache redisCache,
         IBrevoEmailService brevoEmailService, IWalletRequestRepository walletRequestRepository,
-        IMapper mapper, IBonusRepository bonusRepository, IRecyCoinPdfService recyCoinPdfService) : base(mapper)
+        IMapper mapper, IBonusRepository bonusRepository, IRecyCoinPdfService recyCoinPdfService,
+        IHouseCoinPdfService houseCoinPdfService) : base(mapper)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter = accountServiceAdapter;
@@ -43,6 +45,7 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         _bonusRepository = bonusRepository;
         _recyCoinPdfService = recyCoinPdfService;
         _redisCache = redisCache;
+        _houseCoinPdfService = houseCoinPdfService;
     }
 
     public async Task<bool> ExecutePayment(WalletRequest request)
@@ -104,7 +107,7 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             {
                 ProductId = item.Id,
                 PaymentGroupId = item.PaymentGroup,
-                AccumMinPurchase = Convert.ToByte(item.AcumCompMin),
+                AccumMinPurchase = item.AcumCompMin,
                 ProductName = item.Name!,
                 ProductPrice = item.SalePrice,
                 ProductPriceBtc = Constants.EmptyValue,
@@ -115,12 +118,12 @@ public class ToThirdPartiesPaymentStrategy : BaseService
                 ProductPoints = item.ValuePoints,
                 ProductDiscount = Constants.EmptyValue,
                 CombinationId = Constants.EmptyValue,
-                ProductPack = Convert.ToByte(item.ProductPacks),
+                ProductPack = item.ProductPacks,
                 BaseAmount = item.BaseAmount,
                 DailyPercentage = item.DailyPercentage,
                 WaitingDays = item.DaysWait,
                 DaysToPayQuantity = Constants.DaysToPayQuantity,
-                ProductStart = Constants.EmptyValue,
+                ProductStart = false,
                 BrandId = request.BrandId
             };
 
@@ -142,7 +145,13 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             Deferred = Constants.EmptyValue,
             Detail = null,
             AffiliateId = request.AffiliateId,
-            AdminUserName = request.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
+            AdminUserName = request.BrandId switch
+            {
+                1 => Constants.AdminEcosystemUserName,
+                2 => Constants.RecycoinAdmin,
+                3 => Constants.HouseCoinAdmin,
+                _ => Constants.AdminEcosystemUserName
+            },
             Status = true,
             UserId = Constants.AdminUserId,
             Credit = Constants.EmptyValue,
@@ -174,8 +183,8 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             BrandId = request.BrandId
         };
 
-        var debitWallet = Mapper.Map<Wallets>(debitTransaction);
-        var creditWallet = Mapper.Map<Wallets>(creditTransaction);
+        var debitWallet = Mapper.Map<Wallet>(debitTransaction);
+        var creditWallet = Mapper.Map<Wallet>(creditTransaction);
 
         var success = await _walletRepository.CreateTransferBalance(debitWallet, creditWallet);
 
@@ -198,7 +207,7 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             AffiliateUserName = purchaseFor.UserName!,
             AdminUserName = request.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
             ReceiptNumber = request.ReceiptNumber,
-            Type = Constants.EmptyValue,
+            Type = true,
             SecretKey = request.SecretKey,
             invoices = invoiceDetails,
             Reason = string.Empty,
@@ -212,17 +221,31 @@ public class ToThirdPartiesPaymentStrategy : BaseService
 
         if (request.BrandId == Constants.RecyCoin)
         {
-            await _bonusRepository.CreateBonus(new BonusRequest
+            // await _bonusRepository.CreateBonus(new BonusRequest
+            // {
+            //     AffiliateId = request.PurchaseFor,
+            //     Amount = (debitTransactionRequest.Debit / 2),
+            //     InvoiceId = spResponse.Id,
+            //     Comment = "Bonus for Recycoin"
+            // });
+            await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
             {
                 AffiliateId = request.PurchaseFor,
-                Amount = (debitTransactionRequest.Debit / 2),
-                InvoiceId = spResponse.Id,
-                Comment = "Bonus for Recycoin"
+                InvoiceAmount = debitTransactionRequest.Debit,
+                BrandId = request.BrandId,
+                AdminUserName = Constants.RecycoinAdmin,
+                LevelPercentages = [8.0m,5.0m,4.0m,2.0m,1.0m]
             });
+        }
+
+        if (request.BrandId == Constants.HouseCoin)
+        {
             await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
             {
                 AffiliateId = request.PurchaseFor, InvoiceAmount = debitTransactionRequest.Debit,
-                BrandId = request.BrandId
+                BrandId = request.BrandId,
+                AdminUserName = Constants.HouseCoinAdmin,
+                LevelPercentages = [8.0m, 6.0m, 5.0m, 4.0m, 2.0m],
             });
         }
 
@@ -230,21 +253,24 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1A);
         await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
 
-        // var fullName                   = purchaseFor.Name + " " + purchaseFor.LastName;
-
         byte[] invoicePdf;
         if (request.BrandId == Constants.RecyCoin)
         {
-            invoicePdf = await _recyCoinPdfService.GenerateInvoice(purchaseFor, debitTransactionRequest, spResponse);
+            invoicePdf =
+                await _recyCoinPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
+        }
+        else if (request.BrandId == Constants.HouseCoin)
+        {
+            invoicePdf =
+                await _houseCoinPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
         }
         else
         {
-            invoicePdf = await _ecosystemPdfService.GenerateInvoice(purchaseFor, debitTransactionRequest, spResponse);
+            invoicePdf =
+                await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
         }
 
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
-
-        // await _brevoEmailService.SendEmailConfirmationEmailToThirdParty(userInfoResponse, fullName, productNames);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
         {
@@ -264,7 +290,7 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         return true;
     }
 
-    private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId, int brandId)
+    private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId, long brandId)
     {
         var amountRequests =
             await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId, brandId);

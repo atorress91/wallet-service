@@ -36,6 +36,7 @@ public class CoinPayService : BaseService, ICoinPayService
     private readonly IWalletWithdrawalService _walletWithDrawalService;
     private readonly IBrandService _brandService;
     private readonly RedisCache _redisCache;
+    private readonly IWalletRepository _walletRepository;
     public CoinPayService(IMapper mapper, ICoinPayAdapter coinPayAdapter,
         ICoinPaymentTransactionRepository transactionRepository, ILogger<CoinPayService> logger,
         IAccountServiceAdapter accountServiceAdapter,
@@ -45,7 +46,8 @@ public class CoinPayService : BaseService, ICoinPayService
         IWalletRequestRepository walletRequestRepository,
         IWalletWithdrawalService walletWithDrawalService,
         IBrandService brandService,
-        RedisCache redisCache
+        RedisCache redisCache,
+        IWalletRepository walletRepository
     ) : base(mapper)
     {
         _coinPayAdapter = coinPayAdapter;
@@ -59,6 +61,7 @@ public class CoinPayService : BaseService, ICoinPayService
         _walletWithDrawalService = walletWithDrawalService;
         _brandService = brandService;
         _redisCache = redisCache;
+        _walletRepository = walletRepository;
     }
 
     #region coingPay
@@ -95,6 +98,28 @@ public class CoinPayService : BaseService, ICoinPayService
 
         await _coinPayPaymentStrategy.ExecuteRecyCoinPayment(walletRequest);
     }
+    
+    private async Task ExecuteHouseCoinPlanPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
+    {
+        walletRequest.ProductsList = products.Select(product => new ProductsRequests
+        {
+            IdProduct = product.ProductId,
+            Count = product.Quantity
+        }).ToList();
+
+        await _coinPayPaymentStrategy.ExecuteHouseCoinPayment(walletRequest);
+    }
+    
+    private async Task ExecuteExitoJuntosPlanPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
+    {
+        walletRequest.ProductsList = products.Select(product => new ProductsRequests
+        {
+            IdProduct = product.ProductId,
+            Count = product.Quantity
+        }).ToList();
+
+        await _coinPayPaymentStrategy.ExecuteExitoJuntosPayment(walletRequest);
+    }
 
     private async Task ExecuteCoursePayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
     {
@@ -107,7 +132,7 @@ public class CoinPayService : BaseService, ICoinPayService
         await _coinPayPaymentStrategy.ExecuteCoursePayment(walletRequest);
     }
 
-    private async Task<ProductType> GetProductType(List<ProductRequest> request,int brandId)
+    private async Task<ProductType> GetProductType(List<ProductRequest> request,long brandId)
     {
         if (request == null || !request.Any())
         {
@@ -140,12 +165,14 @@ public class CoinPayService : BaseService, ICoinPayService
             case 8:
                 return ProductType.EcoPool;
             case 11: return ProductType.RecyCoin;
+            case 12: return ProductType.HouseCoinPlan;
+            case 13: return ProductType.ExitoJuntosPlan;
             default:
                 return ProductType.Course;
         }
     }
 
-    private async Task ProcessPaymentTransaction(PaymentTransaction transactionResult)
+    private async Task ProcessPaymentTransaction(CoinpaymentTransaction transactionResult)
     {
         _logger.LogInformation(
             $"[CoinPayService] | ProcessPaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
@@ -209,6 +236,14 @@ public class CoinPayService : BaseService, ICoinPayService
                 await ExecuteRecyCoinPayment(walletRequest, products);
                 _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | RecyCoin Payment executed");
                 break;
+            case ProductType.HouseCoinPlan:
+                await ExecuteHouseCoinPlanPayment(walletRequest, products);
+                _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | HouseCoinPlan Payment executed");
+                break;
+            case ProductType.ExitoJuntosPlan:
+                await ExecuteExitoJuntosPlanPayment(walletRequest, products);
+                _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | ExitoJuntosPlan Payment executed");
+                break;
             case ProductType.Course:
                 await ExecuteCoursePayment(walletRequest, products);
                 _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | Course Payment executed");
@@ -234,7 +269,7 @@ public class CoinPayService : BaseService, ICoinPayService
         var result = response.Content!.ToJsonObject<CreateTransactionResponse>() ??
                      new CreateTransactionResponse();
 
-        var paymentTransaction = new PaymentTransaction
+        var paymentTransaction = new CoinpaymentTransaction
         {
             IdTransaction = result.Data!.IdTransaction.ToString(),
             AffiliateId = request.AffiliateId,
@@ -259,13 +294,13 @@ public class CoinPayService : BaseService, ICoinPayService
         _logger.LogInformation("Starting to create a channel: {RequestDetails}", request.ToJsonString());
 
         var today = DateTime.Now;
-        PaymentTransaction? transactionResponse;
+        CoinpaymentTransaction? transactionResponse;
 
         var channelRequest = new CreateChannelRequest
         {
-            IdCurrency = Constants.UsdtIdCurrency,
+            IdCurrency = request.CurrencyId,
             IdExternalIdentification = CommonExtensions.GenerateUniqueId(request.AffiliateId),
-            IdNetwork = Constants.UsdtIdNetwork,
+            IdNetwork = request.NetworkId,
             TagName = request.UserName,
         };
 
@@ -294,7 +329,7 @@ public class CoinPayService : BaseService, ICoinPayService
                 _brandService.BrandId);
         _logger.LogInformation("Checking for existing transaction with ID: {TransactionId}", channel.Data!.Id);
 
-        var paymentTransaction = new PaymentTransaction
+        var paymentTransaction = new CoinpaymentTransaction
         {
             IdTransaction = channel.Data.Id.ToString(),
             AffiliateId = request.AffiliateId,
@@ -485,7 +520,7 @@ public class CoinPayService : BaseService, ICoinPayService
         }
 
         var response = new SendFundsDto();
-        var successfulIds = new List<int>();
+        var successfulIds = new List<long>();
 
         foreach (var request in requests)
         {
@@ -546,7 +581,8 @@ public class CoinPayService : BaseService, ICoinPayService
         var deserializeResponse = JsonConvert.DeserializeObject<ServicesResponse>(trcResponse.Content!);
         if (deserializeResponse!.Data != null)
         {
-            userTrcAddress = JsonConvert.DeserializeObject<TrcAddressResponse>(deserializeResponse.Data.ToString()!);
+            var addressArray = JsonConvert.DeserializeObject<TrcAddressResponse[]>(deserializeResponse.Data.ToString()!);
+            userTrcAddress = addressArray?.FirstOrDefault(x => x != null);
             _logger.LogInformation(
                 $"[CoinPayService] | ProcessWithdrawal | TRC address deserialized successfully for Affiliate ID: {request.AffiliateId}");
         }
@@ -569,22 +605,28 @@ public class CoinPayService : BaseService, ICoinPayService
             return new SendFundsResponse
             {
                 StatusCode = (int)HttpStatusCode.BadRequest,
-                Message = "No valid TRC address found"
+                Message = "No valid address found"
             };
         }
 
         var sendFundsRequest = new SendFundRequest
         {
             IdCurrency = Constants.UsdtIdCurrency,
-            IdNetwork = Constants.UsdtIdNetwork,
+            IdNetwork = _brandService.BrandId switch
+            {
+                1 => Constants.UsdtIdNetwork,
+                2 => Constants.BnbIdNetwork,
+                3 => Constants.BnbIdNetwork,
+                4 => Constants.BnbIdNetwork,
+                _ => Constants.BnbIdNetwork
+            },
             Address = userTrcAddress.Address,
             Amount = request.Amount,
             Details = Constants.SendFundsConcept,
             AmountPlusFee = false
         };
 
-        _logger.LogInformation(
-            $"[CoinPayService] | ProcessWithdrawal | Sending funds for Affiliate ID: {request.AffiliateId}");
+        _logger.LogInformation($"[CoinPayService] | ProcessWithdrawal | Sending funds for Affiliate ID: {request.AffiliateId}");
 
         var response = await _coinPayAdapter.SendFunds(sendFundsRequest);
         if (response is { IsSuccessful: true, Content: not null })
@@ -608,15 +650,57 @@ public class CoinPayService : BaseService, ICoinPayService
 
             if (servicesResponse is { StatusCode: 1 })
             {
-                _logger.LogInformation(
-                    $"[CoinPayService] | ProcessWithdrawal | Funds sent successfully for Affiliate ID: {request.AffiliateId}");
-                await _walletWithDrawalService.CreateWalletWithdrawalAsync(walletWithdrawal);
+                _logger.LogInformation($"[CoinPayService] | ProcessWithdrawal | Funds sent successfully for Affiliate ID: {request.AffiliateId}");
+    
+                var debitTransaction = new Wallet
+                {
+                    AffiliateId = request.AffiliateId,
+                    UserId = 1,
+                    Credit = 0,
+                    Debit = request.Amount,
+                    Deferred = 0,
+                    Status = true,
+                    Concept = Constants.SendFundsConcept,
+                    Support = 1,
+                    Date = today,
+                    Compression = true,
+                    Detail = "Retiro de fondos en coinpay",
+                    CreatedAt = today,
+                    UpdatedAt = today,
+                    AffiliateUserName = user.UserName!,
+                    AdminUserName = _brandService.BrandId switch
+                    {
+                        1 => "adminecosystem",
+                        2 => "adminrecycoin",
+                        3 => "adminhousecoin",
+                        4 => "adminexitojuntos",
+                        _ => "adminecosystem"
+                    },
+                    ConceptType = WalletConceptType.balance_transfer.ToString(),
+                    BrandId = _brandService.BrandId,
+                };
+
+                try 
+                {
+                    await Task.WhenAll(
+                        _walletRepository.CreateWalletAsync(debitTransaction),
+                        _walletWithDrawalService.CreateWalletWithdrawalAsync(walletWithdrawal)
+                    );
+                    await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
+                    
+                    _logger.LogInformation(
+                        $"[CoinPayService] | ProcessWithdrawal | Debit transaction and withdrawal created successfully for Affiliate ID: {request.AffiliateId}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"[CoinPayService] | ProcessWithdrawal | Error creating debit transaction for Affiliate ID: {request.AffiliateId}. Error: {ex}");
+                }
+                
                 return servicesResponse;
             }
             else
             {
-                _logger.LogWarning(
-                    $"[CoinPayService] | ProcessWithdrawal | Successful operation but invalid response format for Affiliate ID: {request.AffiliateId} {response.ToJsonString()}");
+                _logger.LogWarning($"[CoinPayService] | ProcessWithdrawal | Successful operation but invalid response format for Affiliate ID: {request.AffiliateId} {response.ToJsonString()}");
                 return new SendFundsResponse
                 {
                     StatusCode = (int)response.StatusCode,
@@ -625,8 +709,7 @@ public class CoinPayService : BaseService, ICoinPayService
             }
         }
 
-        _logger.LogWarning(
-            $"[CoinPayService] | ProcessWithdrawal | Failed to send funds for Affiliate ID: {request.AffiliateId} {response.ToJsonString()}");
+        _logger.LogWarning($"[CoinPayService] | ProcessWithdrawal | Failed to send funds for Affiliate ID: {request.AffiliateId} {response.ToJsonString()}");
         return new SendFundsResponse
         {
             StatusCode = (int)response.StatusCode,
@@ -634,7 +717,7 @@ public class CoinPayService : BaseService, ICoinPayService
         };
     }
 
-    private async Task UpdateSuccessfulWithdrawals(List<int> successfulWithdrawalIds)
+    private async Task UpdateSuccessfulWithdrawals(List<long> successfulWithdrawalIds)
     {
         _logger.LogInformation(
             $"[WalletService] | UpdateSuccessfulWithdrawals | Starting update for {successfulWithdrawalIds.ToJsonString()} successful withdrawals.");

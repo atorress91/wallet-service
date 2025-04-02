@@ -7,8 +7,8 @@ public interface IEcoPoolConfigurationRepository
     Task<ModelConfiguration?> GetConfigurationByType(string modelType);
     Task<ModelConfiguration?> GetConfiguration();
     Task<ModelConfiguration> CreateConfiguration(ModelConfiguration poolConfiguration);
-    Task CreateConfigurationLevels(IEnumerable<ModelConfigurationLevels>           levels);
+    Task CreateConfigurationLevels(IEnumerable<ModelConfigurationLevel>           levels);
     Task<ModelConfiguration> UpdateConfiguration(ModelConfiguration poolConfiguration);
-    Task DeleteAllLevelsConfiguration(int                               configurationId);
+    Task DeleteAllLevelsConfiguration(long                               configurationId);
     Task<ModelConfiguration> GetProgressPercentage(int                configurationId);
 }

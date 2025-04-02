@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WalletService.Data.Database;
 using WalletService.Data.Database.Models;
+using WalletService.Data.Repositories.IRepositories;
 
 namespace WalletService.Data.Repositories;
 
@@ -8,16 +9,16 @@ public class WalletRetentionConfigRepository : BaseRepository, IWalletRetentionC
 {
     public WalletRetentionConfigRepository(WalletServiceDbContext context) : base(context) { }
 
-    public Task<List<WalletsRetentionsConfigs>> GetAllWalletsRetentionConfig()
+    public Task<List<WalletsRetentionsConfig>> GetAllWalletsRetentionConfig()
         => Context.WalletsRetentionsConfigs.AsNoTracking().ToListAsync();
 
-    public Task<WalletsRetentionsConfigs?> GetWalletRetentionConfigById(int id)
+    public Task<WalletsRetentionsConfig?> GetWalletRetentionConfigById(int id)
         => Context.WalletsRetentionsConfigs.FirstOrDefaultAsync(x => x.Id == id);
 
-    public async Task<IEnumerable<WalletsRetentionsConfigs>> CreateWalletRetentionConfigAsync(IEnumerable<WalletsRetentionsConfigs> request)
+    public async Task<IEnumerable<WalletsRetentionsConfig>> CreateWalletRetentionConfigAsync(IEnumerable<WalletsRetentionsConfig> request)
     {
         var today                  = DateTime.Now;
-        var createRetentionConfigs = new List<WalletsRetentionsConfigs>();
+        var createRetentionConfigs = new List<WalletsRetentionsConfig>();
 
         foreach (var periodRetention in request)
         {
@@ -33,10 +34,10 @@ public class WalletRetentionConfigRepository : BaseRepository, IWalletRetentionC
         return createRetentionConfigs;
     }
 
-    public async Task<IEnumerable<WalletsRetentionsConfigs>> UpdateWalletRetentionConfigAsync(IEnumerable<WalletsRetentionsConfigs> request)
+    public async Task<IEnumerable<WalletsRetentionsConfig>> UpdateWalletRetentionConfigAsync(IEnumerable<WalletsRetentionsConfig> request)
     {
         var today                   = DateTime.Now;
-        var updatedRetentionConfigs = new List<WalletsRetentionsConfigs>();
+        var updatedRetentionConfigs = new List<WalletsRetentionsConfig>();
 
         foreach (var periodRetention in request)
         {
@@ -53,7 +54,7 @@ public class WalletRetentionConfigRepository : BaseRepository, IWalletRetentionC
     }
 
 
-    public async Task<WalletsRetentionsConfigs> DeleteWalletRetentionConfigAsync(WalletsRetentionsConfigs request)
+    public async Task<WalletsRetentionsConfig> DeleteWalletRetentionConfigAsync(WalletsRetentionsConfig request)
     {
         request.DeletedAt = DateTime.Now;
 

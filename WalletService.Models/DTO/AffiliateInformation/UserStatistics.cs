@@ -6,8 +6,8 @@ public class UserStatistics
     public int AmountPoolModel1B { get; set; }
     public int AmountPoolModel2 { get; set; }
     public int AmountPoolModel3 { get; set; }
-    public decimal VolumeLeftModel4 { get; set; }
-    public decimal VolumeRightModel4 { get; set; }
+    public decimal? VolumeLeftModel4 { get; set; }
+    public decimal? VolumeRightModel4 { get; set; }
     public decimal AmountChildrenLeftModel4 { get; set; }
     public decimal AmountChildrenRightModel4 { get; set; }
     public decimal AmountPassiveModel1A { get; set; }

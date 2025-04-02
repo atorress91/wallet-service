@@ -4,9 +4,9 @@ namespace WalletService.Data.Repositories.IRepositories;
 
 public interface IWalletHistoryRepository
 {
-    Task<List<WalletsHistories>> GetAllWalletsHistoriesAsync();
-    Task<WalletsHistories?> GetWalletHistoriesByIdAsync(int            id);
-    Task<WalletsHistories> CreateWalletHistoriesAsync(WalletsHistories request);
-    Task<WalletsHistories> UpdateWalletHistoriesAsync(WalletsHistories request);
-    Task<WalletsHistories> DeleteWalletHistoriesAsync(WalletsHistories request);
+    Task<List<WalletsHistory>> GetAllWalletsHistoriesAsync();
+    Task<WalletsHistory?> GetWalletHistoriesByIdAsync(int            id);
+    Task<WalletsHistory> CreateWalletHistoriesAsync(WalletsHistory request);
+    Task<WalletsHistory> UpdateWalletHistoriesAsync(WalletsHistory request);
+    Task<WalletsHistory> DeleteWalletHistoriesAsync(WalletsHistory request);
 }

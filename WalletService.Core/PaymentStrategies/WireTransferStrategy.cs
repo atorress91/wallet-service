@@ -108,7 +108,7 @@ public class WireTransferStrategy : IWireTransferStrategy
             {
                 ProductId             = item.Id,
                 PaymentGroupId        = item.PaymentGroup,
-                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
+                AccumMinPurchase      = item.AcumCompMin,
                 ProductName           = item.Name!,
                 ProductPrice          = item.SalePrice,
                 ProductPriceBtc       = 0,
@@ -119,12 +119,12 @@ public class WireTransferStrategy : IWireTransferStrategy
                 ProductPoints         = item.ValuePoints,
                 ProductDiscount       = item.ProductDiscount,
                 CombinationId         = 0,
-                ProductPack           = Convert.ToByte(item.ProductPacks),
+                ProductPack           = item.ProductPacks,
                 BaseAmount            = (item.BaseAmount * product.Count),
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = 0
+                ProductStart          = false
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -152,7 +152,7 @@ public class WireTransferStrategy : IWireTransferStrategy
             AffiliateUserName = request.AffiliateUserName,
             AdminUserName     = Constants.AdminEcosystemUserName,
             ReceiptNumber     = request.ReceiptNumber,
-            Type              = 0,
+            Type              = true,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
             Reason            = string.Empty    
@@ -233,7 +233,7 @@ public class WireTransferStrategy : IWireTransferStrategy
             {
                 ProductId             = item.Id,
                 PaymentGroupId        = item.PaymentGroup,
-                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
+                AccumMinPurchase      = item.AcumCompMin,
                 ProductName           = item.Name!,
                 ProductPrice          = item.SalePrice,
                 ProductPriceBtc       = 0,
@@ -244,12 +244,12 @@ public class WireTransferStrategy : IWireTransferStrategy
                 ProductPoints         = item.ValuePoints,
                 ProductDiscount       = item.ProductDiscount,
                 CombinationId         = 0,
-                ProductPack           = Convert.ToByte(item.ProductPacks),
+                ProductPack           = item.ProductPacks,
                 BaseAmount            = (item.BaseAmount * product.Count),
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = 0
+                ProductStart          = false
             };
 
             invoiceDetails.Add(invoiceDetail);
@@ -277,14 +277,14 @@ public class WireTransferStrategy : IWireTransferStrategy
             AffiliateUserName = request.AffiliateUserName,
             AdminUserName     = Constants.AdminEcosystemUserName,
             ReceiptNumber     = request.ReceiptNumber,
-            Type              = 0,
+            Type              = true,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
             Reason            = string.Empty    
         };
 
         var hasCourse  = await _invoiceRepository.GetInvoicesForTradingAcademyPurchases(request.AffiliateId);
-        var spResponse = await _invoiceRepository.HandleDebitTransactionForCourse(debitTransactionRequest);
+        var spResponse = await _invoiceRepository.HandleDebitTransaction(debitTransactionRequest);
         
         if (spResponse is null)
             return false;

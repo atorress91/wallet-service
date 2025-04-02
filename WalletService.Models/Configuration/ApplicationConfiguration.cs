@@ -23,7 +23,7 @@ public class ApplicationConfiguration
 
 public class ConnectionStrings
 {
-    public string? SqlServerConnection { get; set; }
+    public string? PostgreSqlConnection { get; set; }
     public string? RedisConnection { get; set; }
 }
 
@@ -96,4 +96,7 @@ public class WebTokens
 {
     public string? EcosystemToken { get; set; }
     public string? RecyCoinToken { get; set; }
+    public string? HouseCoinToken { get; set; }
+    
+    public string? ExitoJuntosToken { get; set; }
 }

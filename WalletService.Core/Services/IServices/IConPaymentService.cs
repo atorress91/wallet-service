@@ -14,5 +14,5 @@ public interface IConPaymentService
     Task<GetTransactionInfoResponse> GetTransactionInfo(string                  txid, bool full = false);
 
     Task<string> ProcessIpnAsync(IpnRequest ipnRequest, IHeaderDictionary headers);
-    Task<CoinPaymentWithdrawalResponse?> CreateMassWithdrawal(WalletsRequests[] requests);
+    Task<CoinPaymentWithdrawalResponse?> CreateMassWithdrawal(WalletsRequest[] requests);
 }

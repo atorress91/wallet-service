@@ -41,7 +41,7 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
         if (user is null)
             return null;
 
-        var transaction = Mapper.Map<PaymentTransaction>(request);
+        var transaction = Mapper.Map<CoinpaymentTransaction>(request);
 
         transaction.Acredited      = false;
         transaction.Status         = Constants.EmptyValue;
@@ -140,7 +140,7 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
         return false;
     }
 
-    private WalletRequest BuildWalletRequest(PaymentTransaction payment, ConfirmPaymentTransactionRequest request)
+    private WalletRequest BuildWalletRequest(CoinpaymentTransaction payment, ConfirmPaymentTransactionRequest request)
     {
         var products = payment.Products.ToJsonObject<List<ProductRequest>>();
 
@@ -206,7 +206,7 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
         }
     }
 
-    private async Task<bool> UpdatePaymentTransaction(PaymentTransaction payment)
+    private async Task<bool> UpdatePaymentTransaction(CoinpaymentTransaction payment)
     {
         payment.Acredited      = true;
         payment.Status         = 100;

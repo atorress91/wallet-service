@@ -112,7 +112,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             {
                 ProductId             = item.Id,
                 PaymentGroupId        = item.PaymentGroup,
-                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
+                AccumMinPurchase      = item.AcumCompMin,
                 ProductName           = item.Name!,
                 ProductPrice          = item.SalePrice,
                 ProductPriceBtc       = Constants.EmptyValue,
@@ -123,12 +123,12 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
                 ProductPoints         = item.ValuePoints,
                 ProductDiscount       = item.ProductDiscount,
                 CombinationId         = Constants.EmptyValue,
-                ProductPack           = Convert.ToByte(item.ProductPacks),
+                ProductPack           = item.ProductPacks,
                 BaseAmount            = (item.BaseAmount * product.Count),
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = Constants.EmptyValue,
+                ProductStart          = false,
                 BrandId = request.BrandId,
             };
 
@@ -157,7 +157,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             AffiliateUserName = request.AffiliateUserName,
             AdminUserName     = Constants.AdminEcosystemUserName,
             ReceiptNumber     = request.ReceiptNumber,
-            Type              = Constants.EmptyValue,
+            Type              = true,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
             Reason            = string.Empty,
@@ -237,7 +237,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             {
                 ProductId             = item.Id,
                 PaymentGroupId        = item.PaymentGroup,
-                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
+                AccumMinPurchase      = item.AcumCompMin,
                 ProductName           = item.Name!,
                 ProductPrice          = item.SalePrice,
                 ProductPriceBtc       = Constants.EmptyValue,
@@ -248,12 +248,12 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
                 ProductPoints         = item.ValuePoints,
                 ProductDiscount       = item.ProductDiscount,
                 CombinationId         = Constants.EmptyValue,
-                ProductPack           = Convert.ToByte(item.ProductPacks),
+                ProductPack           = item.ProductPacks,
                 BaseAmount            = (item.BaseAmount * product.Count),
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.DaysToPayQuantity,
-                ProductStart          = Constants.EmptyValue,
+                ProductStart          = false,
                 BrandId = request.BrandId,
             };
 
@@ -282,7 +282,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             AffiliateUserName = request.AffiliateUserName,
             AdminUserName     = Constants.AdminEcosystemUserName,
             ReceiptNumber     = request.ReceiptNumber,
-            Type              = Constants.EmptyValue,
+            Type              = true,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
             Reason            = string.Empty    ,
@@ -290,7 +290,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         };
 
         var hasCourse  = await _invoiceRepository.GetInvoicesForTradingAcademyPurchases(request.AffiliateId);
-        var spResponse = await _invoiceRepository.HandleDebitTransactionForCourse(debitTransactionRequest);
+        var spResponse = await _invoiceRepository.HandleDebitTransaction(debitTransactionRequest);
 
         if (spResponse is null)
             return false;
@@ -352,7 +352,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             {
                 ProductId             = item.Id,
                 PaymentGroupId        = item.PaymentGroup,
-                AccumMinPurchase      = Convert.ToByte(item.AcumCompMin),
+                AccumMinPurchase      = item.AcumCompMin,
                 ProductName           = item.Name!,
                 ProductPrice          = item.SalePrice,
                 ProductPriceBtc       = Constants.EmptyValue,
@@ -363,12 +363,12 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
                 ProductPoints         = item.ValuePoints,
                 ProductDiscount       = Constants.EmptyValue,
                 CombinationId         = Constants.EmptyValue,
-                ProductPack           = Convert.ToByte(item.ProductPacks),
+                ProductPack           = item.ProductPacks,
                 BaseAmount            = item.BaseAmount,
                 DailyPercentage       = item.DailyPercentage,
                 WaitingDays           = item.DaysWait,
                 DaysToPayQuantity     = Constants.EmptyValue,
-                ProductStart          = Constants.EmptyValue,
+                ProductStart          = false,
                 BrandId = request.BrandId,
             };
 
@@ -397,7 +397,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             AffiliateUserName = request.AffiliateUserName,
             AdminUserName     = Constants.AdminEcosystemUserName,
             ReceiptNumber     = request.ReceiptNumber,
-            Type              = Constants.EmptyValue,
+            Type              = true,
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
             Reason            = string.Empty   ,
@@ -477,7 +477,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             {
                 ProductId = item.Id,
                 PaymentGroupId = item.PaymentGroup,
-                AccumMinPurchase = Convert.ToByte(item.AcumCompMin),
+                AccumMinPurchase = item.AcumCompMin,
                 ProductName = item.Name!,
                 ProductPrice = item.SalePrice,
                 ProductPriceBtc = Constants.EmptyValue,
@@ -488,12 +488,12 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
                 ProductPoints = item.ValuePoints,
                 ProductDiscount = item.ProductDiscount,
                 CombinationId = Constants.EmptyValue,
-                ProductPack = Convert.ToByte(item.ProductPacks),
+                ProductPack = item.ProductPacks,
                 BaseAmount = (item.BaseAmount * product.Count),
                 DailyPercentage = item.DailyPercentage,
                 WaitingDays = item.DaysWait,
                 DaysToPayQuantity = Constants.DaysToPayQuantity,
-                ProductStart = Constants.EmptyValue,
+                ProductStart = false,
                 BrandId = request.BrandId,
             };
 
@@ -522,7 +522,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
             AffiliateUserName = request.AffiliateUserName,
             AdminUserName = Constants.AdminEcosystemUserName,
             ReceiptNumber = request.ReceiptNumber,
-            Type = Constants.EmptyValue,
+            Type = true,
             SecretKey = request.SecretKey,
             invoices = invoiceDetails,
             Reason = request.Bank,

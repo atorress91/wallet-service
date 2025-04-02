@@ -4,15 +4,15 @@ namespace WalletService.Data.Repositories.IRepositories;
 
 public interface IWalletRequestRepository
 {
-    Task<List<WalletsRequests>> GetAllWalletsRequests();
-    Task<decimal>               GetTotalWalletRequestAmount(int brandId);
-	Task<List<WalletsRequests>> GetAllWalletRequestByAffiliateId(int id);
-    Task<List<WalletsRequests>> GetWalletRequestsByIds(List<int>     ids);
-    Task<WalletsRequests?> CreateWalletRequestAsync(WalletsRequests   request);
-    Task UpdateBulkWalletRequestsAsync(List<WalletsRequests>         request);
-    Task<WalletsRequests> DeleteWalletRequestAsync(WalletsRequests   request);
-    Task<decimal> GetTotalWalletRequestAmountByAffiliateId(int       id, int brandId);
-    Task<List<WalletsRequests>> GetAllWalletRequestRevertTransaction();
-    Task<WalletsRequests?> GetWalletRequestsByInvoiceNumber(int     invoiceId);
-    Task<WalletsRequests> UpdateWalletRequestsAsync(WalletsRequests requests);
+    Task<List<WalletsRequest>> GetAllWalletsRequests(long brandId);
+    Task<decimal>               GetTotalWalletRequestAmount(long brandId);
+	Task<List<WalletsRequest>> GetAllWalletRequestByAffiliateId(int id);
+    Task<List<WalletsRequest>> GetWalletRequestsByIds(List<long>     ids);
+    Task<WalletsRequest?> CreateWalletRequestAsync(WalletsRequest   request);
+    Task UpdateBulkWalletRequestsAsync(List<WalletsRequest>         request);
+    Task<WalletsRequest> DeleteWalletRequestAsync(WalletsRequest   request);
+    Task<decimal> GetTotalWalletRequestAmountByAffiliateId(int       id, long brandId);
+    Task<List<WalletsRequest>> GetAllWalletRequestRevertTransaction(long brandId);
+    Task<WalletsRequest?> GetWalletRequestsByInvoiceNumber(int     invoiceId);
+    Task<WalletsRequest> UpdateWalletRequestsAsync(WalletsRequest requests);
 }

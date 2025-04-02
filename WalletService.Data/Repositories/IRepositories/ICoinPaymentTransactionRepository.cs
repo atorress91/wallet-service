@@ -4,14 +4,14 @@ namespace WalletService.Data.Repositories.IRepositories;
 
 public interface ICoinPaymentTransactionRepository
 {
-    Task<List<PaymentTransaction>> GetAllCoinPaymentTransaction(int brandId);
-    Task<PaymentTransaction?> GetCoinPaymentTransactionByIdTransaction(string idTransaction, int brandId);
-    Task<PaymentTransaction?> CreateCoinPaymentTransaction(PaymentTransaction request);
-    Task<PaymentTransaction?> UpdateCoinPaymentTransactionAsync(PaymentTransaction request);
-    Task<List<PaymentTransaction>> GetAllUnconfirmedOrUnpaidTransactions(int brandId);
-    Task<List<PaymentTransaction>> GetAllWireTransfer(int brandId);
-    Task<PaymentTransaction?> GetPaymentTransactionById(int id, int brandId);
-    Task<int> GetLastTransactionId(int brandId);
-    Task<PaymentTransaction?> GetTransactionByReference(string reference);
-    Task<PaymentTransaction?> GetTransactionByTxnId(string idTransaction);
+    Task<List<CoinpaymentTransaction>> GetAllCoinPaymentTransaction(long brandId);
+    Task<CoinpaymentTransaction?> GetCoinPaymentTransactionByIdTransaction(string idTransaction, long brandId);
+    Task<CoinpaymentTransaction?> CreateCoinPaymentTransaction(CoinpaymentTransaction request);
+    Task<CoinpaymentTransaction?> UpdateCoinPaymentTransactionAsync(CoinpaymentTransaction request);
+    Task<List<CoinpaymentTransaction>> GetAllUnconfirmedOrUnpaidTransactions(long brandId);
+    Task<List<CoinpaymentTransaction>> GetAllWireTransfer(long brandId);
+    Task<CoinpaymentTransaction?> GetPaymentTransactionById(int id, long brandId);
+    Task<int> GetLastTransactionId(long brandId);
+    Task<CoinpaymentTransaction?> GetTransactionByReference(string reference);
+    Task<CoinpaymentTransaction?> GetTransactionByTxnId(string idTransaction);
 }

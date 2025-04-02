@@ -9,5 +9,5 @@ public class CreditTransactionRequest
     public string? AffiliateUserName { get; set; } 
     public string AdminUserName { get; set; } = string.Empty;
     public string ConceptType { get; set; } = string.Empty;
-    public int BrandId { get; set; }
+    public long BrandId { get; set; }
 }
