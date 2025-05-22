@@ -4,6 +4,8 @@ using WalletService.Data.Database.Models;
 using WalletService.Models.DTO.CoinPaymentTransactionDto;
 using WalletService.Models.DTO.InvoiceDetailDto;
 using WalletService.Models.DTO.InvoiceDto;
+using WalletService.Models.DTO.MatrixEarningDto;
+using WalletService.Models.DTO.MatrixQualificationDto;
 using WalletService.Models.DTO.ProcessGradingDto;
 using WalletService.Models.DTO.ResultEcoPoolLevelsDto;
 using WalletService.Models.DTO.ResultsEcoPoolDto;
@@ -17,6 +19,7 @@ using WalletService.Models.DTO.WalletWithDrawalDto;
 using WalletService.Models.Requests.ConPaymentRequest;
 using WalletService.Models.Requests.InvoiceDetailRequest;
 using WalletService.Models.Requests.InvoiceRequest;
+using WalletService.Models.Requests.MatrixEarningRequest;
 using WalletService.Models.Requests.PagaditoRequest;
 using WalletService.Models.Requests.PaymentTransaction;
 using WalletService.Models.Requests.WalletHistoryRequest;
@@ -35,10 +38,10 @@ public class MapperProfile : Profile
     public MapperProfile()
     {
         MapDto();
-        
+
         CreateMap<DateOnly, DateTime>()
             .ConvertUsing(src => new DateTime(src.Year, src.Month, src.Day));
-        
+
         CreateMap<DateTime, DateOnly>()
             .ConvertUsing(src => new DateOnly(src.Year, src.Month, src.Day));
     }
@@ -55,7 +58,7 @@ public class MapperProfile : Profile
         CreateMap<Invoice, InvoiceDto>();
         CreateMap<Invoice, InvoiceDTO>();
         CreateMap<InvoicesDetail, InvoiceDetailDto>()
-            .ForMember(dest => dest.Invoice, opt => opt.Ignore()); 
+            .ForMember(dest => dest.Invoice, opt => opt.Ignore());
         CreateMap<ModelConfiguration, ModelConfigurationDto>();
         CreateMap<ModelConfigurationLevel, EcoPoolLevelDto>();
         CreateMap<WalletTransactionRequest, Wallet>();
@@ -64,7 +67,8 @@ public class MapperProfile : Profile
         CreateMap<CoinpaymentTransaction, PaymentTransactionDto>();
         CreateMap<InvoicesTradingAcademyResponse, InvoiceTradingAcademyDto>();
         CreateMap<InvoiceModelOneAndTwoResponse, InvoiceModelOneAndTwoDto>();
-
+        CreateMap<MatrixEarning, MatrixEarningDto>();
+        CreateMap<MatrixQualification, MatrixQualificationDto>();
 
         CreateMap<WalletRequestRequest, WalletsRequest>()
             .ForMember(d => d.Id, map => map.Ignore())
@@ -109,12 +113,12 @@ public class MapperProfile : Profile
 
         CreateMap<Invoice, InvoiceDto>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => (int)src.Id))
-            .ForMember(dest => dest.DepositDate, opt => opt.MapFrom(src => 
-                src.DepositDate.HasValue ? 
-                    new DateTime(src.DepositDate.Value.Year, src.DepositDate.Value.Month, src.DepositDate.Value.Day) : 
-                    (DateTime?)null))
+            .ForMember(dest => dest.DepositDate, opt => opt.MapFrom(src =>
+                src.DepositDate.HasValue
+                    ? new DateTime(src.DepositDate.Value.Year, src.DepositDate.Value.Month, src.DepositDate.Value.Day)
+                    : (DateTime?)null))
             .ForMember(dest => dest.InvoicesDetails, opt => opt.MapFrom(src => src.InvoicesDetails));
-        
+
         CreateMap<InvoiceDetailRequest, InvoicesDetail>()
             .ForMember(dest => dest.Invoice, opt => opt.Ignore());
 
@@ -145,5 +149,6 @@ public class MapperProfile : Profile
             .ForMember(d => d.Ern, map => map.Ignore());
 
         CreateMap<PagaditoTransactionDetailRequest, PagaditoTransactionDetail>();
+        CreateMap<MatrixEarningRequest, MatrixEarning>();
     }
 }

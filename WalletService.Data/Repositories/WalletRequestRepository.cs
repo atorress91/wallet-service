@@ -92,4 +92,11 @@ public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
 
         return request;
     }
+    
+    public async Task<decimal?> GetTotalWithdrawnByAffiliateId(long affiliateId)
+        => await Context.WalletsRequests
+            .Where(x => x.AffiliateId == affiliateId && 
+                        x.Type == "withdrawal_request" && 
+                        x.Status == 1)
+            .SumAsync(x => (decimal?)x.Amount);
 }

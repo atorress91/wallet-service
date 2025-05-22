@@ -8,4 +8,5 @@ public interface IConfigurationAdapter
     Task<IRestResponse> GetConfigurationProduct(long brandId);
     Task<IRestResponse> GetPointsConfiguration(long brandId);
     Task<IRestResponse> GetMatrixConfiguration(long brandId, int matrixType);
+    Task<IRestResponse> GetAllMatrixConfigurations(long brandId);
 }

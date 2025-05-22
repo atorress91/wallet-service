@@ -1,9 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using WalletService.Data.Database.CustomModels;
 using WalletService.Data.Database.Models;
-using WalletService.Models.Requests.WalletRequest;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 
 namespace WalletService.Data.Database;
 
@@ -951,6 +948,11 @@ public partial class WalletServiceDbContext : DbContext
                 .HasForeignKey(d => d.BrandId)
                 .HasConstraintName("fk_wallets_brand");
 
+            entity
+                .HasIndex(e => new { e.AffiliateId, e.Concept, e.Detail })
+                .HasDatabaseName("ux_wallet_unique") 
+                .IsUnique();
+            
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
@@ -1254,7 +1256,9 @@ public partial class WalletServiceDbContext : DbContext
 
         modelBuilder.Entity<MatrixQualification>(entity =>
         {
-            entity.ToTable("matrix_qualifications", "wallet_service");
+            entity.ToTable("matrix_qualification", "wallet_service");
+
+            entity.HasKey(e => e.QualificationId);
             entity.Property(e => e.QualificationId).HasColumnName("qualification_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.MatrixType).HasColumnName("matrix_type");
@@ -1262,10 +1266,13 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.WithdrawnAmount).HasColumnName("withdrawn_amount");
             entity.Property(e => e.AvailableBalance).HasColumnName("available_balance");
             entity.Property(e => e.IsQualified).HasColumnName("is_qualified");
-            entity.Property(e => e.QualificationDate).HasColumnName("qualification_date");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(e => e.QualificationCount).HasColumnName("qualification_count");
+            entity.Property(e => e.LastQualificationWithdrawnAmount).HasColumnName("last_qualification_withdrawn_amount");
+            entity.Property(e => e.LastQualificationTotalEarnings).HasColumnName("last_qualification_total_earnings");
+            entity.Property(e => e.LastQualificationDate).HasColumnName("last_qualification_date");
 
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
@@ -1274,16 +1281,17 @@ public partial class WalletServiceDbContext : DbContext
         {
             entity.ToTable("matrix_earnings", "wallet_service");
 
+            entity.HasKey(e => e.EarningId);
             entity.Property(e => e.EarningId).HasColumnName("earning_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.MatrixType).HasColumnName("matrix_type");
             entity.Property(e => e.Amount).HasColumnName("amount");
             entity.Property(e => e.SourceUserId).HasColumnName("source_user_id");
-            entity.Property(e => e.EarningType).HasColumnName("earning_type");
+            entity.Property(e => e.EarningType).HasColumnName("earning_type").HasMaxLength(50);
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.DeletedAt).HasColumnName("deleted_at");
-            
+
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 

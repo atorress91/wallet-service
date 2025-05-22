@@ -1,6 +1,6 @@
-﻿namespace WalletService.Data.Database.Models;
+﻿namespace WalletService.Models.DTO.MatrixQualificationDto;
 
-public class MatrixQualification
+public class MatrixQualificationDto
 {
     public int QualificationId { get; set; }
     public long UserId { get; set; }
@@ -9,6 +9,7 @@ public class MatrixQualification
     public decimal WithdrawnAmount { get; set; }
     public decimal AvailableBalance { get; set; }
     public bool IsQualified { get; set; }
+    public DateTime QualificationDate { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }

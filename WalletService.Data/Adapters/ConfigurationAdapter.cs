@@ -8,14 +8,16 @@ namespace WalletService.Data.Adapters;
 public class ConfigurationAdapter : BaseAdapter, IConfigurationAdapter
 {
     public ConfigurationAdapter(
-        IOptions<ApplicationConfiguration> appSettings) : base(appSettings) { }
+        IOptions<ApplicationConfiguration> appSettings) : base(appSettings)
+    {
+    }
 
     protected override string? GetServiceUrl()
         => AppSettings.Endpoints!.SystemConfigurationURL;
 
     protected override string? GetTokenUrl()
         => AppSettings.EndpointTokens!.SystemConfigurationServiceToken;
-    
+
     protected override string? GetWebToken(long brandId)
     {
         return brandId switch
@@ -32,11 +34,21 @@ public class ConfigurationAdapter : BaseAdapter, IConfigurationAdapter
         => Get($"/grading", new Dictionary<string, string>(), brandId);
 
     public Task<IRestResponse> GetConfigurationProduct(long brandId)
-        => Get($"/configuration/get_product_configuration", new Dictionary<string, string>(),brandId);
+        => Get($"/configuration/get_product_configuration", new Dictionary<string, string>(), brandId);
 
     public Task<IRestResponse> GetPointsConfiguration(long brandId)
-        => Get($"/configuration/get_points_configuration", new Dictionary<string, string>(),brandId);
-    
+        => Get($"/configuration/get_points_configuration", new Dictionary<string, string>(), brandId);
+
     public Task<IRestResponse> GetMatrixConfiguration(long brandId, int matrixType)
-        => Get($"/configuration/get_matrix_configuration/{matrixType}", new Dictionary<string, string>(),brandId);
+    {
+        var queryParams = new Dictionary<string, string>
+        {
+            { "matrixType", matrixType.ToString() }
+        };
+    
+        return Get("/matrixConfiguration/get_matrix_configuration", queryParams, brandId);
+    }
+
+    public Task<IRestResponse> GetAllMatrixConfigurations(long brandId)
+        => Get($"/matrixConfiguration/get_all_matrix_configurations", new Dictionary<string, string>(), brandId);
 }

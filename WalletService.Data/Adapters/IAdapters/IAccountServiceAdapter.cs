@@ -1,5 +1,4 @@
-﻿using WalletService.Models.DTO.AffiliateInformation;
-using WalletService.Models.DTO.LeaderBoardDto;
+﻿using WalletService.Models.DTO.LeaderBoardDto;
 using WalletService.Models.Requests.MatrixRequest;
 using WalletService.Models.Responses;
 using WalletService.Models.Responses.BaseResponses;
@@ -26,5 +25,6 @@ public interface IAccountServiceAdapter
     Task<IRestResponse> DeleteTreeModel6(long brandId);
     Task<IRestResponse> GetTotalActiveMembers(long brandId);
     Task<IRestResponse> PlaceUserInMatrix(MatrixRequest request, long brandId);
-    Task<IRestResponse> GetByUserAndMatrixTypeAsync(MatrixRequest request, long brandId);
+    Task<IRestResponse> IsActiveInMatrix(MatrixRequest request, long brandId);
+    Task<IRestResponse> GetUplinePositionsAsync(MatrixRequest request, long brandId);
 }

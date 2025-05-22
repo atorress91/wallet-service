@@ -27,16 +27,16 @@ public class WalletRepository : BaseRepository, IWalletRepository
         => _appSettings = appSettings.Value;
 
     public Task<List<Wallet>> GetWalletByAffiliateId(int affiliateId, long brandId)
-        => Context.Wallets.Where(x => x.AffiliateId == affiliateId && x.BrandId == brandId).ToListAsync();
+        => Context.Wallets
+            .Where(x => x.AffiliateId == affiliateId && x.BrandId == brandId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync();
 
     public async Task<decimal> GetAvailableBalanceByAffiliateId(int affiliateId, long brandId)
-    {
-        var list = await Context.Wallets
-            .Where(x => x.AffiliateId == affiliateId && x.Status == true && x.BrandId == brandId).ToListAsync();
+        => await Context.Wallets
+            .Where(x => x.AffiliateId == affiliateId && x.Status == true && x.BrandId == brandId)
+            .SumAsync(x => (x.Credit ?? 0m) - (x.Debit ?? 0m));
 
-        var result = list.Sum(x => x.Credit - x.Debit);
-        return result.ToDecimal();
-    }
 
     public async Task<IEnumerable<AffiliateBalance>> GetAllAffiliatesWithPositiveBalance(long brandId)
     {
@@ -803,7 +803,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
         request.UpdatedAt = today;
 
         await Context.AddAsync(request);
-
+        await Context.SaveChangesAsync();
+        
         return request;
     }
 
@@ -1191,16 +1192,17 @@ public class WalletRepository : BaseRepository, IWalletRepository
         });
     }
 
-    public async Task<bool> DistributeCommissionsPerPurchaseAsync(DistributeCommissionsRequest request)
+    public async Task<List<int>> DistributeCommissionsPerPurchaseAsync(DistributeCommissionsRequest request)
     {
         try
         {
+            var beneficiaryIds = new List<int>();
             await using var sqlConnection = new NpgsqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
-
-            await using var cmd =
-                new NpgsqlCommand(
-                    "SELECT wallet_service.distribute_commissions_per_purchase(@AffiliateId, @InvoiceAmount, @BrandId, @AdminUserName, @LevelPercentages)",
-                    sqlConnection);
+            await sqlConnection.OpenAsync();
+            
+            var query = "SELECT * FROM wallet_service.distribute_commissions_per_purchase(@AffiliateId, @InvoiceAmount, @BrandId, @AdminUserName, @LevelPercentages)";
+            
+            await using var cmd = new NpgsqlCommand(query, sqlConnection);
 
             cmd.Parameters.Add(new NpgsqlParameter("@AffiliateId", NpgsqlDbType.Integer)
             {
@@ -1222,29 +1224,70 @@ public class WalletRepository : BaseRepository, IWalletRepository
                 Value = request.AdminUserName
             });
 
-            var levelPercentagesParam =
-                new NpgsqlParameter("@LevelPercentages", NpgsqlDbType.Array | NpgsqlDbType.Numeric)
-                {
-                   Value = request.LevelPercentages
-                };
+            var levelPercentagesParam = new NpgsqlParameter("@LevelPercentages", NpgsqlDbType.Array | NpgsqlDbType.Numeric)
+            {
+                Value = request.LevelPercentages
+            };
             cmd.Parameters.Add(levelPercentagesParam);
+            
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                beneficiaryIds.Add(reader.GetInt32(0)); 
+            }
 
-            await sqlConnection.OpenAsync();
-            await cmd.ExecuteNonQueryAsync();
             await sqlConnection.CloseAsync();
 
-            return true;
+            return beneficiaryIds;
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            return false;
+            Console.WriteLine($"Error distributing commissions: {e.Message}");
+            return new List<int>();
         }
     }
 
     public async Task<decimal> GetTotalCommissionsPaid(long brandId)
         => await Context.Wallets
             .Where(x => x.BrandId == brandId &&
-                        x.ConceptType == WalletConceptType.commission_passed_wallet.ToString() && x.Status == true)
+                        x.ConceptType == nameof(WalletConceptType.commission_passed_wallet) && x.Status == true)
             .SumAsync(x => (decimal)x.Credit!);
+    public async Task<decimal?> GetQualificationBalanceAsync(long userId, long brandId)
+    {
+        var qualificationConceptTypes = new[] { 
+            "commission_passed_wallet", 
+        };
+    
+        var balance = await Context.Wallets
+            .Where(w => w.AffiliateId == userId && 
+                        qualificationConceptTypes.Contains(w.ConceptType) && 
+                        w.Status == true &&
+                        w.Concept != "Comisión mensual pasada a la billetera" &&
+                        w.BrandId == brandId)
+            .GroupBy(w => w.UserId)
+            .Select(g => g.Sum(w => w.Credit - w.Debit))
+            .FirstOrDefaultAsync();
+        
+        return balance;
+    }
+    
+    public async Task<List<long>> GetUserIdsWithCommissionsGreaterThanOrEqualTo50(long brandId)
+    {
+        var qualificationConceptTypes = new[] { 
+            "commission_passed_wallet", 
+        };
+        
+        var users =  await Context.Wallets
+            .Where(x => x.BrandId == brandId &&
+                        qualificationConceptTypes.Contains(x.ConceptType) && 
+                        x.Status == true &&
+                        x.Concept != "Comisión mensual pasada a la billetera" &&
+                        x.BrandId == brandId)
+            .GroupBy(x => x.AffiliateId)
+            .Where(g => g.Sum(x => (decimal)x.Credit!) >= 25)
+            .Select(g => g.Key)
+            .ToListAsync();
+
+        return users;
+    }
 }

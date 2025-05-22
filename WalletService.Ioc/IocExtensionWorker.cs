@@ -197,6 +197,8 @@ public static class IocExtensionWorker
         services.AddScoped<IRedisCacheCleanupService, RedisCacheCleanupService>();
         services.AddScoped<IExitoJuntosPdfService, ExitoJuntosPdfService>();
         services.AddScoped<IMatrixService, MatrixService>();
+        services.AddScoped<IMatrixEarningsService, MatrixEarningsService>();
+        services.AddScoped<IMatrixQualificationService, MatrixQualificationService>();
     }
 
     private static void InjectPackages(IServiceCollection services)

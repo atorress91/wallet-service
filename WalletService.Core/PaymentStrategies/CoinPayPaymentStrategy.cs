@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
+using Hangfire;
 using WalletService.Core.Caching;
+using WalletService.Core.Caching.Extensions;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -26,14 +28,16 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
     private readonly IBonusRepository _bonusRepository;
     private readonly IHouseCoinPdfService _houseCoinPdfService;
     private readonly IExitoJuntosPdfService _exitoJuntosPdfService;
-
+    private readonly IMatrixService _matrixService;
+    private readonly IBackgroundJobClient _backgroundJobs;
     public CoinPayPaymentStrategy(IInvoiceRepository invoiceRepository,
         IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter accountServiceAdapter, IBrevoEmailService brevoEmailService,
         IEcosystemPdfService ecosystemPdfService, IWalletRepository walletRepository,
         IRecyCoinPdfService recyCoinPdfService,
         IBonusRepository bonusRepository, RedisCache redisCache,
-        IHouseCoinPdfService houseCoinPdfService, IExitoJuntosPdfService exitoJuntosPdfService)
+        IHouseCoinPdfService houseCoinPdfService, IExitoJuntosPdfService exitoJuntosPdfService,
+        IMatrixService matrixService,IBackgroundJobClient backgroundJobs)
     {
         _invoiceRepository = invoiceRepository;
         _inventoryServiceAdapter = inventoryServiceAdapter;
@@ -46,6 +50,8 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         _redisCache = redisCache;
         _houseCoinPdfService = houseCoinPdfService;
         _exitoJuntosPdfService = exitoJuntosPdfService;
+        _matrixService = matrixService;
+        _backgroundJobs = backgroundJobs;
     }
 
     private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
@@ -181,9 +187,9 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
         if (spResponse is null)
             return false;
-
-        var invoicePdf =
-            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
+        var invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
 
@@ -312,7 +318,8 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
 
         if (spResponse is null)
             return false;
-
+        
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>();
         var invoicePdf =
             await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
@@ -432,10 +439,10 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         if (spResponse is null)
             return false;
 
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
         await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId, request.BrandId);
 
-        var pdfResult =
-            await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
+        var pdfResult = await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
 
         await _brevoEmailService.SendEmailWelcome(userInfoResponse, spResponse, request.BrandId);
 
@@ -566,19 +573,21 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
             //     AffiliateId = request.AffiliateId, Amount = (debitTransactionRequest.Debit / 2),
             //     InvoiceId = spResponse.Id, Comment = "Bonus for Recycoin"
             // });
-            await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
-            {
+            var beneficiaryIds = await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest {
                 AffiliateId = request.AffiliateId,
                 InvoiceAmount = debitTransactionRequest.Debit,
                 BrandId = request.BrandId,
                 AdminUserName = Constants.RecycoinAdmin,
                 LevelPercentages = [8.0m,5.0m,4.0m,2.0m,1.0m]
             });
+            
+            _backgroundJobs.Enqueue(() => 
+                _matrixService.ProcessAllUsersMatrixQualificationsAsync(beneficiaryIds.ToArray())
+            );
         }
 
-        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
-        var invoicePdf =
-            await _recyCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
+        var invoicePdf = await _recyCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
         {
@@ -705,9 +714,8 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         if (spResponse is null)
             return false;
 
-        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
-        var invoicePdf =
-            await _houseCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
+        var invoicePdf = await _houseCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
         await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
         {
             AffiliateId = request.AffiliateId,
@@ -842,7 +850,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         if (spResponse is null)
             return false;
 
-        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
         var invoicePdf = await _exitoJuntosPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
@@ -857,14 +865,5 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
         }
 
         return true;
-    }
-
-    private async Task RemoveCacheKey(int affiliateId, string stringKey)
-    {
-        var key = string.Format(stringKey, affiliateId);
-        var existsKey = await _redisCache.KeyExists(key);
-
-        if (existsKey)
-            await _redisCache.Delete(key);
     }
 }

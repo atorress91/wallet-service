@@ -53,8 +53,10 @@ public interface IWalletRepository
     Task<InvoicesSpResponse?> DebitServiceBalanceEcoPoolTransactionSp(DebitTransactionRequest request);
 
     Task<bool> CreditServiceBalanceTransaction(CreditTransactionRequest request);
-    Task<bool> DistributeCommissionsPerPurchaseAsync(DistributeCommissionsRequest request);
+    Task<List<int>> DistributeCommissionsPerPurchaseAsync(DistributeCommissionsRequest request);
     Task<decimal> GetTotalCommissionsPaid(long brandId);
     Task<decimal> GetCommissionsForAdminAsync(long brandId);
     Task<Wallet> CreateAsync(Wallet request);
+    Task<decimal?> GetQualificationBalanceAsync(long userId, long brandId);
+    Task<List<long>> GetUserIdsWithCommissionsGreaterThanOrEqualTo50(long brandId);
 }

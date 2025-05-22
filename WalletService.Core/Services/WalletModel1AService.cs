@@ -31,6 +31,7 @@ public class WalletModel1AService : BaseService, IWalletModel1AService
         _redisCache                    = redisCache;
         _accountServiceAdapter         = accountServiceAdapter;
         _walletRepositoryModel1A       = walletRepositoryModel1A;
+        _brandService                  = brandService;
     }
 
     public async Task<BalanceInformationModel1ADto> GetBalanceInformationByAffiliateId(int affiliateId)

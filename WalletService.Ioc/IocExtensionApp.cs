@@ -2,6 +2,8 @@
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using FluentValidation.AspNetCore;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +19,7 @@ using NLog.Extensions.Logging;
 using Npgsql;
 using StackExchange.Redis;
 using WalletService.Core.Caching;
+using WalletService.Core.Caching.Interface;
 using WalletService.Core.Kafka.Producer;
 using WalletService.Core.Kafka.Topics;
 using WalletService.Core.Lock;
@@ -57,6 +60,7 @@ public static class IocExtensionApp
         InjectStrategies(services);
         InjectSingletonsAndFactories(services);
         RegisterServiceProvider(services);
+        services.InjectHangfire(); 
     }
 
     private static void InjectCaching(IServiceCollection services)
@@ -71,6 +75,7 @@ public static class IocExtensionApp
         services.AddSingleton<RedisCache>();
         services.AddSingleton<InMemoryCache>();
         services.AddSingleton<ILockManager, LockManager>();
+        services.AddSingleton<ICache, RedisCache>();
     }
 
     private static void InjectAuthentication(IServiceCollection services)
@@ -256,6 +261,9 @@ public static class IocExtensionApp
         services.AddScoped<IRedisCacheCleanupService, RedisCacheCleanupService>();
         services.AddScoped<IExitoJuntosPdfService, ExitoJuntosPdfService>();
         services.AddScoped<IMatrixService, MatrixService>();
+        services.AddScoped<IMatrixEarningsService, MatrixEarningsService>();
+        services.AddScoped<IMatrixQualificationService, MatrixQualificationService>();
+        services.AddScoped<MatrixService>(); 
     }
 
     private static void InjectPackages(IServiceCollection services)
@@ -273,5 +281,29 @@ public static class IocExtensionApp
         services.AddHttpContextAccessor();
 
         services.AddSingleton(_ = new KafkaProducer(services));
+    }
+    
+    private static void InjectHangfire(this IServiceCollection services)
+    {
+        var provider  = services.BuildServiceProvider();
+        var appConfig = provider.GetRequiredService<IOptions<ApplicationConfiguration>>().Value;
+
+        var cs = appConfig.ConnectionStrings?.PostgreSqlConnection
+                 ?? throw new InvalidOperationException("Connection string is missing in AppSettings:ConnectionStrings:PostgreSqlConnection");
+        
+        var storageOptions = new PostgreSqlStorageOptions
+        {
+            SchemaName               = "hangfire",
+            PrepareSchemaIfNecessary = true,
+            QueuePollInterval        = TimeSpan.FromSeconds(15)
+        };
+
+        services.AddHangfire(cfg => cfg
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(opt => opt.UseNpgsqlConnection(cs), storageOptions));
+
+        services.AddHangfireServer();
     }
 }

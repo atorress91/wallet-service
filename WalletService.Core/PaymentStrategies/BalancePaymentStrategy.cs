@@ -1,12 +1,12 @@
-﻿using WalletService.Core.Caching;
+﻿using Hangfire;
+using WalletService.Core.Caching;
+using WalletService.Core.Caching.Extensions;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Repositories.IRepositories;
-using WalletService.Models.Constants;
 using WalletService.Models.DTO.BalanceInformationDto;
 using WalletService.Models.Enums;
-using WalletService.Models.Requests.BonusRequest;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Responses;
 using WalletService.Utility.Extensions;
@@ -27,6 +27,8 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
     private readonly IRecyCoinPdfService      _recyCoinPdfService;
     private readonly IBonusRepository         _bonusRepository;
     private readonly IHouseCoinPdfService     _houseCoinPdfService;
+    private readonly IMatrixService _matrixService;
+    private IBackgroundJobClient _backgroundJobs;
     public BalancePaymentStrategy(IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter                             accountServiceAdapter, IWalletRepository walletRepository,
         IEcosystemPdfService                                ecosystemPdfService,
@@ -34,7 +36,8 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         RedisCache                                         redisCache,IBrandService brandService,
         IRecyCoinPdfService                                recyCoinPdfService,
         IHouseCoinPdfService                               houseCoinPdfService,
-        IBonusRepository bonusRepository)
+        IBonusRepository bonusRepository, IMatrixService   matrixService,
+        IBackgroundJobClient backgroundJobs)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter   = accountServiceAdapter;
@@ -47,6 +50,8 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         _recyCoinPdfService      = recyCoinPdfService;
         _bonusRepository         = bonusRepository;
         _houseCoinPdfService     = houseCoinPdfService;
+        _matrixService           = matrixService;
+        _backgroundJobs          = backgroundJobs;
     }
 
     private async Task<BalanceInformationDto> GetBalanceInformationByAffiliateId(int affiliateId,long brandId)
@@ -210,13 +215,18 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             //     InvoiceId = spResponse.Id,
             //     Comment = "Bonus for Recycoin"
             // });
-            await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
-            {
-                AffiliateId = request.AffiliateId, InvoiceAmount = debitTransactionRequest.Debit,
+            var beneficiaryIds = await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest {
+                AffiliateId = request.AffiliateId,
+                InvoiceAmount = debitTransactionRequest.Debit,
                 BrandId = request.BrandId,
                 AdminUserName = Constants.RecycoinAdmin,
                 LevelPercentages = [8.0m,5.0m,4.0m,2.0m,1.0m]
             });
+
+            _backgroundJobs.Enqueue(() => 
+                _matrixService.ProcessAllUsersMatrixQualificationsAsync(beneficiaryIds.ToArray())
+            );
+            
         }
 
         if (request.BrandId == Constants.HouseCoin)
@@ -230,9 +240,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             });
         }
         
-        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
-        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1A);
-        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
 
         byte[] invoicePdf;
         if (request.BrandId == Constants.RecyCoin)
@@ -381,7 +389,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
         
-        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
 
         var invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
@@ -506,7 +514,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
         
-        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
 
         var invoicePdf =
             await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
@@ -626,7 +634,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
 
-        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
 
         var invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
@@ -740,8 +748,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
         
-        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
-
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
         await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,_brandService.BrandId);
 
         var creditTransactionForWinningBonus = new CreditTransactionRequest
@@ -760,7 +767,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (bonusPaymentResult is false)
             return false;
         
-        await RemoveCacheKey(affiliateBonusWinner.Id, CacheKeys.BalanceInformationModel2);
+        await _redisCache.InvalidateBalanceAsync(affiliateBonusWinner.Id);
 
         await _brevoEmailService.SendBonusConfirmation(affiliateBonusWinner, request.AffiliateUserName,request.BrandId);
         var pdfResult = await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
@@ -772,13 +779,5 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         }
 
         return true;
-    }
-    private async Task RemoveCacheKey(int affiliateId, string stringKey)
-    {
-        var key      = string.Format(stringKey, affiliateId);
-        var existsKey = await _redisCache.KeyExists(key);
-        
-        if (existsKey)
-            await _redisCache.Delete(key);
     }
 }

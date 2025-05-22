@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using WalletService.Core.Caching;
+using WalletService.Core.Caching.Extensions;
 using WalletService.Core.Services;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -249,25 +250,20 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             });
         }
 
-        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
-        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1A);
-        await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel1B);
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId, request.PurchaseFor);
 
         byte[] invoicePdf;
         if (request.BrandId == Constants.RecyCoin)
         {
-            invoicePdf =
-                await _recyCoinPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
+            invoicePdf = await _recyCoinPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
         }
         else if (request.BrandId == Constants.HouseCoin)
         {
-            invoicePdf =
-                await _houseCoinPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
+            invoicePdf = await _houseCoinPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
         }
         else
         {
-            invoicePdf =
-                await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
+            invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
         }
 
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
@@ -311,14 +307,5 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         response.AvailableBalance -= response.ReverseBalance;
 
         return response;
-    }
-
-    private async Task RemoveCacheKey(int affiliateId, string stringKey)
-    {
-        var key = string.Format(stringKey, affiliateId);
-        var existsKey = await _redisCache.KeyExists(key);
-
-        if (existsKey)
-            await _redisCache.Delete(key);
     }
 }

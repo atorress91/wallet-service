@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using WalletService.Core.Caching;
+using WalletService.Core.Caching.Extensions;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
@@ -21,9 +23,11 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
     private readonly IBrevoEmailService       _brevoEmailService;
     private readonly IWalletRepository        _walletRepository;
     private readonly IRecyCoinPdfService _recyCoinPdfService;
+    private readonly RedisCache _redisCache;
     public CoinPaymentsPaymentStrategy(IInvoiceRepository invoiceRepository,     IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter                            accountServiceAdapter, IBrevoEmailService       brevoEmailService,
-        IEcosystemPdfService ecosystemPdfService, IWalletRepository walletRepository,IRecyCoinPdfService recyCoinPdfService)
+        IEcosystemPdfService ecosystemPdfService, IWalletRepository walletRepository,IRecyCoinPdfService recyCoinPdfService,
+        RedisCache redisCache)
     {
         _invoiceRepository       = invoiceRepository;
         _inventoryServiceAdapter = inventoryServiceAdapter;
@@ -32,6 +36,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         _ecosystemPdfService     = ecosystemPdfService;
         _walletRepository        = walletRepository;
         _recyCoinPdfService      = recyCoinPdfService;
+        _redisCache              = redisCache;
      }
     
     private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
@@ -168,7 +173,9 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
 
         if (spResponse is null)
             return false;
-
+        
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
+        
         var invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
@@ -294,7 +301,9 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
 
         if (spResponse is null)
             return false;
-
+        
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
+        
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>();
         var                        invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
@@ -408,7 +417,8 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
 
         if (spResponse is null)
             return false;
-
+        
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
         await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId,request.BrandId);
 
         var pdfResult = await _ecosystemPdfService.GenerateInvoice(userInfoResponse, debitTransactionRequest, spResponse);
@@ -533,7 +543,8 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
 
         if (spResponse is null)
             return false;
-
+        
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
         var invoicePdf = await _recyCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
         
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>

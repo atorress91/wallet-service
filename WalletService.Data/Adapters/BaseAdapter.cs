@@ -24,6 +24,15 @@ public abstract class BaseAdapter
     {
         var client  = new RestClient(GetServiceUrl()!);
         var request = new RestRequest(path);
+        
+        if (queryParams != null)
+        {
+            foreach (var param in queryParams)
+            {
+                request.AddQueryParameter(param.Key, param.Value);
+            }
+        }
+        
         request.AddHeader("Accept", "application/json");
         request.AddHeader("Authorization", GetTokenUrl()!);
         request.AddHeader("X-Client-Id",GetWebToken(brandId)!);

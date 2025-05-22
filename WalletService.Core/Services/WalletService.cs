@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Newtonsoft.Json;
 using WalletService.Core.Caching;
+using WalletService.Core.Caching.Extensions;
 using WalletService.Core.PaymentStrategies;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
@@ -98,7 +99,6 @@ public class WalletService : BaseService, IWalletService
     {
         var response = await _walletRepository.GetWalletByAffiliateId(affiliateId, _brandService.BrandId);
         var mappedList = Mapper.Map<IEnumerable<WalletDto?>>(response).ToList();
-        mappedList.Reverse();
 
         return mappedList;
     }
@@ -130,8 +130,7 @@ public class WalletService : BaseService, IWalletService
         if (!existsKey)
         {
             var amountRequests =
-                await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId,
-                    _brandService.BrandId);
+                await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(affiliateId, _brandService.BrandId);
             var availableBalance =
                 await _walletRepository.GetAvailableBalanceByAffiliateId(affiliateId, _brandService.BrandId);
             var reverseBalance =
@@ -187,8 +186,7 @@ public class WalletService : BaseService, IWalletService
         var amountRequests = await _walletRequestRepository.GetTotalWalletRequestAmount(_brandService.BrandId);
         var reverseBalance = await _walletRepository.GetTotalReverseBalance(_brandService.BrandId);
         var paidCommissions = await _walletRepository.GetTotalCommissionsPaid(_brandService.BrandId);
-        var calculatedCommissions =
-            await _invoiceRepository.GetTotalAdquisitionsAdmin(_brandService.BrandId, paymentGroupId);
+        var calculatedCommissions = await _invoiceRepository.GetTotalAdquisitionsAdmin(_brandService.BrandId, paymentGroupId);
         var totalCommissionsEarned = await _walletRepository.GetCommissionsForAdminAsync(_brandService.BrandId);
 
         var information = new BalanceInformationAdminDto
@@ -253,23 +251,7 @@ public class WalletService : BaseService, IWalletService
 
     public async Task RemoveKeys(DeleteKeysRequest request)
     {
-        foreach (var user in request.Users)
-        {
-            var keyModel2 = string.Format(CacheKeys.BalanceInformationModel2, user);
-            var keyModel1A = string.Format(CacheKeys.BalanceInformationModel1A, user);
-            var keyModel1B = string.Format(CacheKeys.BalanceInformationModel1B, user);
-            var existsModel2 = await _redisCache.KeyExists(keyModel2);
-            if (existsModel2)
-                await _redisCache.Delete(keyModel2);
-
-            var existsModel1A = await _redisCache.KeyExists(keyModel1A);
-            if (existsModel1A)
-                await _redisCache.Delete(keyModel1A);
-
-            var existsModel1B = await _redisCache.KeyExists(keyModel1B);
-            if (existsModel1B)
-                await _redisCache.Delete(keyModel1B);
-        }
+        await _redisCache.InvalidateBalanceAsync(request.Users.Select(int.Parse).ToArray());
     }
 
     public async Task<bool> CoursePaymentHandler(WalletRequest request)
@@ -370,15 +352,9 @@ public class WalletService : BaseService, IWalletService
 
         if (!success)
             return false;
-
-        var keys = new List<string>
-        {
-            string.Format(CacheKeys.BalanceInformationModel2, debitTransaction.AffiliateId),
-            string.Format(CacheKeys.BalanceInformationModel2, creditTransaction.AffiliateId),
-        };
-
-        await RemoveKeysAsync(keys);
-
+        
+        await _redisCache.InvalidateBalanceAsync(debitTransaction.AffiliateId,creditTransaction.AffiliateId);
+        
         var confirmPurchase = await PurchaseMembershipForNewAffiliates(creditTransaction);
 
         if (!confirmPurchase)
@@ -482,15 +458,8 @@ public class WalletService : BaseService, IWalletService
 
         if (!success)
             return new ServicesResponse { Success = false, Message = "No se pudo crear la transferencia.", Code = 400 };
-
-        var keys = new List<string>
-        {
-            string.Format(CacheKeys.BalanceInformationModel2, debitTransaction.AffiliateId),
-            string.Format(CacheKeys.BalanceInformationModel2, creditTransaction.AffiliateId),
-        };
-
-        await RemoveKeysAsync(keys);
-
+        
+        await _redisCache.InvalidateBalanceAsync(debitTransaction.AffiliateId,creditTransaction.AffiliateId);
         return new ServicesResponse
             { Success = true, Message = "La transferencia se ha creado correctamente.", Code = 200 };
     }
@@ -525,9 +494,8 @@ public class WalletService : BaseService, IWalletService
                 walletRequest.Status = WalletRequestStatus.cancel.ToByte();
                 break;
         }
-
-        await RemoveCacheKey(walletRequest.AffiliateId);
-
+        
+        await _redisCache.InvalidateBalanceAsync(walletRequest.AffiliateId);
         return true;
     }
 
@@ -572,9 +540,7 @@ public class WalletService : BaseService, IWalletService
         await _walletRequestRepository.UpdateWalletRequestsAsync(walletRequest);
     }
 
-    public async Task<(List<PurchasesPerMonthDto> CurrentYearPurchases, List<PurchasesPerMonthDto> PreviousYearPurchases
-            )?>
-        GetPurchasesMadeInMyNetwork(int affiliateId)
+    public async Task<(List<PurchasesPerMonthDto> CurrentYearPurchases, List<PurchasesPerMonthDto> PreviousYearPurchases)?> GetPurchasesMadeInMyNetwork(int affiliateId)
     {
         var networkResult = await _accountServiceAdapter.GetPersonalNetwork(affiliateId, _brandService.BrandId);
 
@@ -631,6 +597,7 @@ public class WalletService : BaseService, IWalletService
             ProductsList = new List<ProductsRequests> { membership }
         };
 
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
         return await _balancePaymentStrategy.ExecuteMembershipPayment(walletRequest);
     }
 
@@ -697,7 +664,7 @@ public class WalletService : BaseService, IWalletService
             var createdCredit = await _creditRepository.CreateCredit(credit);
 
             await _unitOfWork.CommitAsync();
-            await RemoveCacheKey(user.Id);
+            await _redisCache.InvalidateBalanceAsync(user.Id);
             
             return true;
         }
@@ -707,25 +674,30 @@ public class WalletService : BaseService, IWalletService
             throw;
         }
     }
-
-    private async Task RemoveKeysAsync(IEnumerable<string> keys)
-    {
-        foreach (var key in keys)
-        {
-            var exists = await _redisCache.KeyExists(key);
-            if (exists)
-                await _redisCache.Delete(key);
-        }
-    }
-
-    private async Task RemoveCacheKey(int affiliateId)
-    {
-        var key = string.Format(CacheKeys.BalanceInformationModel2, affiliateId);
-        var existsKey = await _redisCache.KeyExists(key);
-
-        if (existsKey)
-            await _redisCache.Delete(key);
-    }
+    
+    // public async Task<ResultPaymentDto> HandleResidualPaymentAsync(ResidualPaymentRequest request)
+    // {
+    //     //variable para el tamaño del batch
+    //     var batchSize = 50;
+    //     var usersProcessed = new HashSet<int>();
+    //     var result = new ResultPaymentDto
+    //     {
+    //         ProcessedUsers = 0,
+    //         SuccessfulPayments = 0,
+    //         FailedPayments = 0
+    //     };
+    //     
+    //     //obtener todas las facturas del sistema
+    //     await foreach (var invoices in _invoiceRepository.GetInvoicesInBatches(request.startDate, request.endDate, batchSize, _brandService.BrandId))
+    //     {
+    //         //filtrar la lista para obtener los afiliados únicos
+    //         var users = invoices.Select(i => i.AffiliateId).Distinct().ToList();
+    //         usersProcessed.UnionWith(users);
+    //     }
+    //
+    //     result.ProcessedUsers = usersProcessed.Count;
+    //     return result;
+    // }
 
     #endregion
 }

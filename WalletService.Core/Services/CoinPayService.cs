@@ -345,7 +345,7 @@ public class CoinPayService : BaseService, ICoinPayService
             BrandId   = _brandService.BrandId 
         };
 
-        if (existingTransaction != null && !existingTransaction.Acredited)
+        if (existingTransaction is { Acredited: false })
         {
             _logger.LogInformation("Updating an unaccredited existing transaction for Transaction ID: {TransactionId}",
                 existingTransaction.IdTransaction);
@@ -615,9 +615,6 @@ public class CoinPayService : BaseService, ICoinPayService
             IdNetwork = _brandService.BrandId switch
             {
                 1 => Constants.UsdtIdNetwork,
-                2 => Constants.BnbIdNetwork,
-                3 => Constants.BnbIdNetwork,
-                4 => Constants.BnbIdNetwork,
                 _ => Constants.BnbIdNetwork
             },
             Address = userTrcAddress.Address,
@@ -676,7 +673,7 @@ public class CoinPayService : BaseService, ICoinPayService
                         4 => "adminexitojuntos",
                         _ => "adminecosystem"
                     },
-                    ConceptType = WalletConceptType.balance_transfer.ToString(),
+                    ConceptType = nameof(WalletConceptType.balance_transfer),
                     BrandId = _brandService.BrandId,
                 };
 

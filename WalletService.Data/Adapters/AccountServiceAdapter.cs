@@ -13,8 +13,7 @@ namespace WalletService.Data.Adapters;
 
 public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
 {
-    public AccountServiceAdapter(
-        IOptions<ApplicationConfiguration> appSettings) : base(appSettings) { }
+    public AccountServiceAdapter(IOptions<ApplicationConfiguration> appSettings) : base(appSettings) { }
 
     protected override string? GetServiceUrl()
         => AppSettings.Endpoints?.AccountServiceURL;
@@ -179,7 +178,7 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
     public Task<IRestResponse> PlaceUserInMatrix(MatrixRequest request, long brandId)
         => Post($"/matrix/place_user_in_matrix/", request.ToJsonString(), brandId);
     
-    public Task<IRestResponse> GetByUserAndMatrixTypeAsync(MatrixRequest request, long brandId)
+    public Task<IRestResponse> IsActiveInMatrix(MatrixRequest request, long brandId)
     {
         var queryParams = new Dictionary<string, string>
         {
@@ -187,6 +186,17 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
             { "matrixType", request.MatrixType.ToString() }
         };
 
-        return Get("/matrix/get_by_user_and_matrix_type", queryParams, brandId);
+        return Get("/matrix/is_active_in_matrix", queryParams, brandId);
+    }
+    
+    public Task<IRestResponse> GetUplinePositionsAsync(MatrixRequest request, long brandId)
+    {
+        var queryParams = new Dictionary<string, string>
+        {
+            { "userId", request.UserId.ToString() },
+            { "matrixType", request.MatrixType.ToString() }
+        };
+
+        return Get("/matrix/get_upline_position_async", queryParams, brandId);
     }
 }
