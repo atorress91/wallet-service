@@ -233,7 +233,8 @@ public class WalletService : BaseService, IWalletService
     {
         if (request.ProductsList.Count == 0)
             return false;
-
+        
+        request.BrandId = _brandService.BrandId;
         var response = await _balancePaymentStrategyModel2.ExecutePayment(request);
 
         return response;
@@ -244,6 +245,7 @@ public class WalletService : BaseService, IWalletService
         if (request.ProductsList.Count == 0)
             return false;
 
+        request.BrandId = _brandService.BrandId;
         var response = await _balancePaymentStrategy.ExecuteMembershipPayment(request);
 
         return response;
@@ -256,11 +258,13 @@ public class WalletService : BaseService, IWalletService
 
     public async Task<bool> CoursePaymentHandler(WalletRequest request)
     {
+        request.BrandId = _brandService.BrandId;
         return await _balancePaymentStrategy.ExecutePaymentCourses(request);
     }
 
     public async Task<bool> AdminPaymentHandler(WalletRequest request)
     {
+        request.BrandId = _brandService.BrandId;
         return await _balancePaymentStrategy.ExecuteAdminPayment(request);
     }
 

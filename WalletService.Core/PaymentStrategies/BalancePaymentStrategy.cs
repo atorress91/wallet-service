@@ -390,25 +390,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             return false;
         
         await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
-
-        var invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
-        var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
-
-        Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
-        {
-            ["Invoice.pdf"] = invoicePdf
-        };
-
-        foreach (var pdfDataEntry in productPdfsContents)
-        {
-            allPdfData[pdfDataEntry.Key] = pdfDataEntry.Value;
-        }
-
-        if (allPdfData.Count > Constants.EmptyValue)
-        {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
-        }
-
+        
         return true;
     }
     public async Task<bool> ExecutePaymentCourses(WalletRequest request)

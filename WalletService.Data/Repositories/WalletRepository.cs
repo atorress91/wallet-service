@@ -206,17 +206,32 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         try
         {
-            var parameters = CreateDebitListParameters(request);
-            const string sql = @"
-            SELECT * FROM wallet_service.admin_debit_transaction_sp(
-                @p_affiliate_id, @p_user_id, @p_concept, @p_points, @p_commissionable,
-                @p_payment_method, @p_origin, @p_level, @p_debit, @p_affiliate_user_name,
-                @p_admin_user_name, @p_concept_type, @p_invoices_details, @p_brand_id,
-                @p_bank, @p_receipt_number, @p_type, @p_secret_key, @p_reason
-            )";
+            var invoicesJson = JsonConvert.SerializeObject(request.invoices);
 
             return await Context.InvoicesSpResponses
-                .FromSqlRaw(sql, parameters.ToArray())
+                .FromSqlInterpolated($@"
+                SELECT * 
+                  FROM wallet_service.admin_debit_transaction_sp(
+                      {request.AffiliateId},
+                      {request.UserId},
+                      {request.Concept},
+                      {request.Points},
+                      {request.Commissionable},
+                      {request.PaymentMethod},
+                      {request.Origin},
+                      {request.Level},
+                      {request.Debit},
+                      {request.AffiliateUserName},
+                      {request.AdminUserName},
+                      {request.ConceptType},
+                      {invoicesJson}::jsonb,
+                      {request.BrandId}::integer,
+                      {request.Type},
+                      {request.Bank},
+                      {request.ReceiptNumber},
+                      {request.SecretKey},
+                      {request.Reason}
+                  )")
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
         }
@@ -225,7 +240,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             throw new Exception("Error processing admin debit transaction", ex);
         }
     }
-
+    
     public async Task<bool> CreditTransaction(CreditTransactionRequest request)
     {
         try
@@ -762,6 +777,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             Value = request.BrandId
         });
     }
+
     public Task<List<Wallet>> GetWalletByUserId(int userId, long brandId)
         => Context.Wallets.Where(x => x.UserId == userId && x.BrandId == brandId)
             .OrderByDescending(x => x.CreatedAt).ToListAsync();
@@ -795,7 +811,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         return request;
     }
-    
+
     public async Task<Wallet> CreateAsync(Wallet request)
     {
         var today = DateTime.Now;
@@ -804,7 +820,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
 
         await Context.AddAsync(request);
         await Context.SaveChangesAsync();
-        
+
         return request;
     }
 
@@ -1075,7 +1091,7 @@ public class WalletRepository : BaseRepository, IWalletRepository
             .Select(s => s.Credit - s.Debit)
             .SumAsync();
     }
-    
+
     public async Task<InvoicesSpResponse?> DebitServiceBalanceTransaction(DebitTransactionRequest request)
     {
         try
@@ -1199,9 +1215,10 @@ public class WalletRepository : BaseRepository, IWalletRepository
             var beneficiaryIds = new List<int>();
             await using var sqlConnection = new NpgsqlConnection(_appSettings.ConnectionStrings?.PostgreSqlConnection);
             await sqlConnection.OpenAsync();
-            
-            var query = "SELECT * FROM wallet_service.distribute_commissions_per_purchase(@AffiliateId, @InvoiceAmount, @BrandId, @AdminUserName, @LevelPercentages)";
-            
+
+            var query =
+                "SELECT * FROM wallet_service.distribute_commissions_per_purchase(@AffiliateId, @InvoiceAmount, @BrandId, @AdminUserName, @LevelPercentages)";
+
             await using var cmd = new NpgsqlCommand(query, sqlConnection);
 
             cmd.Parameters.Add(new NpgsqlParameter("@AffiliateId", NpgsqlDbType.Integer)
@@ -1224,16 +1241,17 @@ public class WalletRepository : BaseRepository, IWalletRepository
                 Value = request.AdminUserName
             });
 
-            var levelPercentagesParam = new NpgsqlParameter("@LevelPercentages", NpgsqlDbType.Array | NpgsqlDbType.Numeric)
-            {
-                Value = request.LevelPercentages
-            };
+            var levelPercentagesParam =
+                new NpgsqlParameter("@LevelPercentages", NpgsqlDbType.Array | NpgsqlDbType.Numeric)
+                {
+                    Value = request.LevelPercentages
+                };
             cmd.Parameters.Add(levelPercentagesParam);
-            
+
             await using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                beneficiaryIds.Add(reader.GetInt32(0)); 
+                beneficiaryIds.Add(reader.GetInt32(0));
             }
 
             await sqlConnection.CloseAsync();
@@ -1252,34 +1270,37 @@ public class WalletRepository : BaseRepository, IWalletRepository
             .Where(x => x.BrandId == brandId &&
                         x.ConceptType == nameof(WalletConceptType.commission_passed_wallet) && x.Status == true)
             .SumAsync(x => (decimal)x.Credit!);
+
     public async Task<decimal?> GetQualificationBalanceAsync(long userId, long brandId)
     {
-        var qualificationConceptTypes = new[] { 
-            "commission_passed_wallet", 
+        var qualificationConceptTypes = new[]
+        {
+            "commission_passed_wallet",
         };
-    
+
         var balance = await Context.Wallets
-            .Where(w => w.AffiliateId == userId && 
-                        qualificationConceptTypes.Contains(w.ConceptType) && 
+            .Where(w => w.AffiliateId == userId &&
+                        qualificationConceptTypes.Contains(w.ConceptType) &&
                         w.Status == true &&
                         w.Concept != "Comisión mensual pasada a la billetera" &&
                         w.BrandId == brandId)
             .GroupBy(w => w.UserId)
             .Select(g => g.Sum(w => w.Credit - w.Debit))
             .FirstOrDefaultAsync();
-        
+
         return balance;
     }
-    
+
     public async Task<List<long>> GetUserIdsWithCommissionsGreaterThanOrEqualTo50(long brandId)
     {
-        var qualificationConceptTypes = new[] { 
-            "commission_passed_wallet", 
+        var qualificationConceptTypes = new[]
+        {
+            "commission_passed_wallet",
         };
-        
-        var users =  await Context.Wallets
+
+        var users = await Context.Wallets
             .Where(x => x.BrandId == brandId &&
-                        qualificationConceptTypes.Contains(x.ConceptType) && 
+                        qualificationConceptTypes.Contains(x.ConceptType) &&
                         x.Status == true &&
                         x.Concept != "Comisión mensual pasada a la billetera" &&
                         x.BrandId == brandId)
