@@ -32,7 +32,7 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 RecurringJob.AddOrUpdate<MatrixQualificationJob>(
     "matrix-qualifications-job",        
     job => job.ExecuteAsync(),           
-    Cron.Minutely                         
+    Cron.Hourly                         
 );
 
 app.UseCors();
