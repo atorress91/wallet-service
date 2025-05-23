@@ -10,8 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHealthChecks();
 builder.Services.IocAppInjectDependencies();
 
-builder.Services.AddTransient<MatrixQualificationJob>();
-
 QuestPDF.Settings.License = LicenseType.Community;
 
 builder.Services.AddEndpointsApiExplorer();
@@ -31,11 +29,11 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
     Authorization = new[] { new AllowAllDashboardAuthorizationFilter() }
 });
-// RecurringJob.AddOrUpdate<MatrixQualificationJob>(
-//     "matrix-qualifications-job",        
-//     job => job.ExecuteAsync(),           
-//     Cron.Hourly                         
-// );
+RecurringJob.AddOrUpdate<MatrixQualificationJob>(
+    "matrix-qualifications-job",        
+    job => job.ExecuteAsync(),           
+    Cron.Minutely                         
+);
 
 app.UseCors();
 app.UseSwagger();

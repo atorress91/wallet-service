@@ -261,6 +261,7 @@ public class MatrixService : BaseService, IMatrixService
     {
         var qualifiedMatrixTypes = new List<int>();
         var anyQualified = false;
+        var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
 
         if (allMatrices.Count == 0)
             return (false, qualifiedMatrixTypes);
@@ -268,10 +269,10 @@ public class MatrixService : BaseService, IMatrixService
         // 1) --------------------------------------------------------------------
         // Datos financieros
         // -----------------------------------------------------------------------
-        var commissions = await _walletRepository.GetQualificationBalanceAsync(userId, _brandService.BrandId);
+        var commissions = await _walletRepository.GetQualificationBalanceAsync(userId, brandId);
         var totalWithdrawn = await _walletRequestRepository.GetTotalWithdrawnByAffiliateId(userId);
-        var availableBalance = await _walletRepository.GetAvailableBalanceByAffiliateId(userId, _brandService.BrandId);
-        var amountRequests = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(userId, _brandService.BrandId);
+        var availableBalance = await _walletRepository.GetAvailableBalanceByAffiliateId(userId, brandId);
+        var amountRequests = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(userId, brandId);
         availableBalance -= amountRequests;
 
         // 2) --------------------------------------------------------------------
@@ -317,7 +318,7 @@ public class MatrixService : BaseService, IMatrixService
         var minCycle = userQualifications.Values.Min(q => q.QualificationCount);
         var usersToVerify = new HashSet<int>();
 
-        var userInfo = await _accountServiceAdapter.GetUserInfo(userId, _brandService.BrandId);
+        var userInfo = await _accountServiceAdapter.GetUserInfo(userId, brandId);
         var userName = userInfo?.UserName ?? "Usuario";
 
         foreach (var matrixConfig in allMatrices)
@@ -343,7 +344,7 @@ public class MatrixService : BaseService, IMatrixService
                 AdminUserName = "adminrecycoin",
                 Status = true,
                 ConceptType = "purchasing_pool",
-                BrandId = _brandService.BrandId
+                BrandId = brandId
             });
 
             availableBalance -= matrixConfig.FeeAmount;
@@ -360,7 +361,7 @@ public class MatrixService : BaseService, IMatrixService
 
             // 3.c Colocar usuario en la matriz
             var req = new MatrixRequest { UserId = userId, MatrixType = matrixConfig.MatrixType };
-            await _accountServiceAdapter.PlaceUserInMatrix(req, _brandService.BrandId);
+            await _accountServiceAdapter.PlaceUserInMatrix(req, brandId);
 
             // 3.d Comisiones
             var recipients = await ProcessMatrixCommissionsAsync(userId, matrixConfig.MatrixType, qualification.QualificationCount);
@@ -393,11 +394,12 @@ public class MatrixService : BaseService, IMatrixService
     private async Task<HashSet<int>> ProcessMatrixCommissionsAsync(int userId, int matrixType, int userQualificationCount)
     {
         var usersReceivedCommissions = new HashSet<int>();
+        var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
         await using var transaction = await _matrixEarningsRepository.BeginTransactionAsync();
 
         try
         {
-            var matrixConfigResponse = await _configurationAdapter.GetMatrixConfiguration(_brandService.BrandId, matrixType);
+            var matrixConfigResponse = await _configurationAdapter.GetMatrixConfiguration(brandId, matrixType);
             var matrixConfig = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfigResponse.Content!);
 
             if (matrixConfigResponse.Content == null || matrixConfigResponse.StatusCode != HttpStatusCode.OK)
@@ -409,7 +411,7 @@ public class MatrixService : BaseService, IMatrixService
                     $"Error deserialize matrix configuration: {matrixConfigResponse.StatusCode}");
 
             // Verificar que el usuario tenga una posición válida en esta matriz
-            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(new MatrixRequest { UserId = userId, MatrixType = matrixType }, _brandService.BrandId);
+            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(new MatrixRequest { UserId = userId, MatrixType = matrixType }, brandId);
             
             // Deserializamos la respuesta completa
             var matrixPositionResponse = JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!);
@@ -426,7 +428,7 @@ public class MatrixService : BaseService, IMatrixService
 
             // Obtener todas las posiciones superiores (upline)
             var uplinePositionsResponse = await _accountServiceAdapter.GetUplinePositionsAsync(
-                new MatrixRequest { UserId = userId, MatrixType = matrixType }, _brandService.BrandId);
+                new MatrixRequest { UserId = userId, MatrixType = matrixType }, brandId);
 
             var jObject = JObject.Parse(uplinePositionsResponse.Content!);
             var allUplinePositions = jObject["data"]?.ToObject<IEnumerable<MatrixPositionDto>>();
@@ -495,8 +497,9 @@ public class MatrixService : BaseService, IMatrixService
     }
     public async Task<bool> CheckQualificationAsync(long userId, int matrixType)
     {
+        var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
         // 1. Obtener configuración de la matriz
-        var matrixConfig = await _configurationAdapter.GetMatrixConfiguration(_brandService.BrandId, matrixType);
+        var matrixConfig = await _configurationAdapter.GetMatrixConfiguration(brandId, matrixType);
 
         if (matrixConfig.Content == null || matrixConfig.StatusCode != HttpStatusCode.OK)
         {
@@ -531,7 +534,7 @@ public class MatrixService : BaseService, IMatrixService
         }
 
         // 3. Obtener datos financieros actualizados
-        var commissions = await _walletRepository.GetQualificationBalanceAsync(userId, _brandService.BrandId);
+        var commissions = await _walletRepository.GetQualificationBalanceAsync(userId, brandId);
         var totalWithdrawn = await _walletRequestRepository.GetTotalWithdrawnByAffiliateId(userId);
 
         // 4. Actualizar montos totales en el registro (usando commissions como fuente principal)
@@ -580,11 +583,11 @@ public class MatrixService : BaseService, IMatrixService
     {
         var qualifiedMatrixTypes = new List<int>();
         var anyQualified = false;
-
+        var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
         // ---------------------------------------------------------------------
         // 1) Configuraciones de matrices (ordenadas)
         // ---------------------------------------------------------------------
-        var allMatrixConfigs = await _configurationAdapter.GetAllMatrixConfigurations(_brandService.BrandId);
+        var allMatrixConfigs = await _configurationAdapter.GetAllMatrixConfigurations(brandId);
         var jsonObject = JObject.Parse(allMatrixConfigs.Content!);
         var allMatrices = jsonObject["data"]?.ToObject<List<MatrixConfiguration>>()!
             .OrderBy(m => m.MatrixType).ToList();
@@ -595,10 +598,10 @@ public class MatrixService : BaseService, IMatrixService
         // ---------------------------------------------------------------------
         // 2) Datos financieros del usuario (una sola vez)
         // ---------------------------------------------------------------------
-        var commissions = await _walletRepository.GetQualificationBalanceAsync(userId, _brandService.BrandId);
+        var commissions = await _walletRepository.GetQualificationBalanceAsync(userId, brandId);
         var totalWithdrawn = await _walletRequestRepository.GetTotalWithdrawnByAffiliateId(userId);
-        var availableBalance = await _walletRepository.GetAvailableBalanceByAffiliateId(userId, _brandService.BrandId);
-        var amountRequests = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(userId, _brandService.BrandId);
+        var availableBalance = await _walletRepository.GetAvailableBalanceByAffiliateId(userId, brandId);
+        var amountRequests = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(userId, brandId);
         availableBalance -= amountRequests;
 
         // ---------------------------------------------------------------------
@@ -648,7 +651,7 @@ public class MatrixService : BaseService, IMatrixService
         var usersToVerify = new HashSet<int>();
 
         // Nombre del usuario para la transacción
-        var userInfo = await _accountServiceAdapter.GetUserInfo(userId, _brandService.BrandId);
+        var userInfo = await _accountServiceAdapter.GetUserInfo(userId, brandId);
         var userName = userInfo?.UserName ?? "Usuario";
 
         // ---------------------------------------------------------------------
@@ -684,7 +687,8 @@ public class MatrixService : BaseService, IMatrixService
                 AdminUserName = "adminrecycoin",
                 Status = true,
                 ConceptType = "purchasing_pool",
-                BrandId = _brandService.BrandId
+                BrandId = brandId,
+                Date = DateTime.Now
             });
 
             availableBalance -= matrixConfig.FeeAmount;
@@ -704,7 +708,7 @@ public class MatrixService : BaseService, IMatrixService
             // 5.c Colocar al usuario en la matriz
             // -----------------------------------------------------------------
             var request = new MatrixRequest { UserId = userId, MatrixType = matrixConfig.MatrixType };
-            await _accountServiceAdapter.PlaceUserInMatrix(request, _brandService.BrandId);
+            await _accountServiceAdapter.PlaceUserInMatrix(request, brandId);
 
             // -----------------------------------------------------------------
             // 5.d Procesar comisiones
@@ -943,6 +947,7 @@ public class MatrixService : BaseService, IMatrixService
     public async Task<BatchProcessingResult> ProcessAllUsersMatrixQualificationsAsync(int[]? userIds = null)
     {
         _logger.LogInformation("Starting matrix qualifications processing. IDs: {Count}", userIds?.Length ?? 0);
+        var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
         var result = new BatchProcessingResult
         {
             StartTime = DateTime.Now,
@@ -951,24 +956,24 @@ public class MatrixService : BaseService, IMatrixService
 
         // 1. ---------------- Cachear configuraciones ----------------------------
         var allMatrices = await _redisCache.Remember(
-            $"matrix_cfg_{_brandService.BrandId}",
+            $"matrix_cfg_{brandId}",
             TimeSpan.FromMinutes(10),
             async () =>
             {
-                var resp = await _configurationAdapter.GetAllMatrixConfigurations(_brandService.BrandId);
+                var resp = await _configurationAdapter.GetAllMatrixConfigurations(brandId);
                 var data = JObject.Parse(resp.Content!)["data"]!.ToObject<List<MatrixConfiguration>>()!;
                 return data.OrderBy(m => m.MatrixType).ToList();
             });
 
         // 2. ---------------- Obtener usuarios a procesar ------------------------
         var usersToProcess = userIds?.Length > 0 ? userIds 
-            : (await _walletRepository.GetUserIdsWithCommissionsGreaterThanOrEqualTo50(_brandService.BrandId))
+            : (await _walletRepository.GetUserIdsWithCommissionsGreaterThanOrEqualTo50(brandId))
             .Where(u => u != 0)
             .Select(u => (int)u)
             .ToArray();
 
         // 3. ---------------- Paralelismo controlado -----------------------------
-        const int maxDop = 1; // <- ajustar CPU/BD
+        const int maxDop = 8; // <- ajustar CPU/BD
         using var throttler = new SemaphoreSlim(maxDop);
 
         var tasks = usersToProcess.Select(async uid =>

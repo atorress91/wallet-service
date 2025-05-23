@@ -20,6 +20,7 @@ using Npgsql;
 using StackExchange.Redis;
 using WalletService.Core.Caching;
 using WalletService.Core.Caching.Interface;
+using WalletService.Core.Job;
 using WalletService.Core.Kafka.Producer;
 using WalletService.Core.Kafka.Topics;
 using WalletService.Core.Lock;
@@ -60,7 +61,8 @@ public static class IocExtensionApp
         InjectStrategies(services);
         InjectSingletonsAndFactories(services);
         RegisterServiceProvider(services);
-        services.InjectHangfire(); 
+        InjectHangfire(services); 
+        InjectJobs(services);
     }
 
     private static void InjectCaching(IServiceCollection services)
@@ -305,5 +307,10 @@ public static class IocExtensionApp
             .UsePostgreSqlStorage(opt => opt.UseNpgsqlConnection(cs), storageOptions));
 
         services.AddHangfireServer();
+    }
+    
+    private static void InjectJobs(this IServiceCollection services)
+    {
+        services.AddScoped<MatrixQualificationJob>();
     }
 }
