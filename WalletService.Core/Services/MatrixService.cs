@@ -344,7 +344,8 @@ public class MatrixService : BaseService, IMatrixService
                 AdminUserName = "adminrecycoin",
                 Status = true,
                 ConceptType = "purchasing_pool",
-                BrandId = brandId
+                BrandId = brandId,
+                Date = DateTime.Now,
             });
 
             availableBalance -= matrixConfig.FeeAmount;
