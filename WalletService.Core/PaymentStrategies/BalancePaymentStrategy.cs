@@ -498,8 +498,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         
         await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
 
-        var invoicePdf =
-            await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        var invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
 
         Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
         {

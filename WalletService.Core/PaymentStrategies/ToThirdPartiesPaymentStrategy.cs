@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Hangfire;
 using WalletService.Core.Caching;
 using WalletService.Core.Caching.Extensions;
 using WalletService.Core.Services;
@@ -9,7 +10,6 @@ using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Constants;
 using WalletService.Models.DTO.BalanceInformationDto;
 using WalletService.Models.Enums;
-using WalletService.Models.Requests.BonusRequest;
 using WalletService.Models.Requests.WalletRequest;
 using WalletService.Models.Requests.WalletTransactionRequest;
 using WalletService.Models.Responses;
@@ -29,13 +29,15 @@ public class ToThirdPartiesPaymentStrategy : BaseService
     private readonly IRecyCoinPdfService _recyCoinPdfService;
     private readonly RedisCache _redisCache;
     private readonly IHouseCoinPdfService _houseCoinPdfService;
-
+    private readonly IBackgroundJobClient _backgroundJobs;
+    private readonly IMatrixService _matrixService;
     public ToThirdPartiesPaymentStrategy(IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter accountServiceAdapter, IWalletRepository walletRepository,
         IEcosystemPdfService ecosystemPdfService, RedisCache redisCache,
         IBrevoEmailService brevoEmailService, IWalletRequestRepository walletRequestRepository,
         IMapper mapper, IBonusRepository bonusRepository, IRecyCoinPdfService recyCoinPdfService,
-        IHouseCoinPdfService houseCoinPdfService) : base(mapper)
+        IHouseCoinPdfService houseCoinPdfService,IBackgroundJobClient backgroundJobs,
+        IMatrixService matrixService) : base(mapper)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
         _accountServiceAdapter = accountServiceAdapter;
@@ -47,6 +49,8 @@ public class ToThirdPartiesPaymentStrategy : BaseService
         _recyCoinPdfService = recyCoinPdfService;
         _redisCache = redisCache;
         _houseCoinPdfService = houseCoinPdfService;
+        _backgroundJobs = backgroundJobs;
+        _matrixService = matrixService;
     }
 
     public async Task<bool> ExecutePayment(WalletRequest request)
@@ -229,7 +233,7 @@ public class ToThirdPartiesPaymentStrategy : BaseService
             //     InvoiceId = spResponse.Id,
             //     Comment = "Bonus for Recycoin"
             // });
-            await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
+            var beneficiaryIds = await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
             {
                 AffiliateId = request.PurchaseFor,
                 InvoiceAmount = debitTransactionRequest.Debit,
@@ -237,6 +241,9 @@ public class ToThirdPartiesPaymentStrategy : BaseService
                 AdminUserName = Constants.RecycoinAdmin,
                 LevelPercentages = [8.0m,5.0m,4.0m,2.0m,1.0m]
             });
+            _backgroundJobs.Enqueue(() => 
+                _matrixService.ProcessAllUsersMatrixQualificationsAsync(beneficiaryIds.ToArray())
+            );
         }
 
         if (request.BrandId == Constants.HouseCoin)
