@@ -78,9 +78,10 @@ public class MatrixService : BaseService, IMatrixService
             var totalProgressSinceLastCut = earningsSinceLastQualification + withdrawnSinceLastQualification;
             
             // ➋ Elegir meta según el ciclo
-            var goal = qualification.QualificationCount >= 1      // 2.º ciclo en adelante
-                ? matrixConfigResponse.Data.RangeMax
-                : matrixConfigResponse.Data.Threshold;
+            var cycle = qualification.QualificationCount;
+            var goal = cycle == 0
+                ? matrixConfigResponse.Data.Threshold
+                : matrixConfigResponse.Data.RangeMax * cycle;
             // Calcular porcentaje de progreso
             return Math.Min(100, (double)((totalProgressSinceLastCut / goal) * 100));
         }
@@ -561,8 +562,10 @@ public class MatrixService : BaseService, IMatrixService
         // 5. Calcular progreso desde el último corte de calificación
         var totalProgressSinceLastCut = (commissions ?? 0);
         
-        var requiredAmount = qualification.QualificationCount >= 1
-            ? matrixConfigResponse?.Data?.RangeMax : matrixConfigResponse?.Data?.Threshold;
+        var cycle = qualification.QualificationCount;     // 0 = primer ciclo
+        var requiredAmount = cycle == 0
+            ? matrixConfigResponse!.Data!.Threshold
+            : matrixConfigResponse!.Data!.RangeMax * cycle;
 
         // 6. Verificar si alcanza el umbral considerando solo lo acumulado desde el último corte
         var qualifies = totalProgressSinceLastCut >= requiredAmount;
