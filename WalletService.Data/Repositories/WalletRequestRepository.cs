@@ -48,16 +48,30 @@ public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
 
     public async Task<WalletsRequest?> CreateWalletRequestAsync(WalletsRequest request)
     {
-        var today = DateTime.Now;
-        request.CreatedAt = today;
-        request.UpdatedAt = today;
+        FormattableString sql = $@"
+        SELECT * 
+          FROM wallet_service.create_wallet_request(
+              {request.AffiliateId},
+              {request.PaymentAffiliateId},
+              {request.OrderNumber},
+              {request.Amount},
+              {request.Concept},
+              {request.Status},
+              {request.AttentionDate},
+              {request.AdminUserName},
+              {request.Type},
+              {request.InvoiceNumber},
+              {request.BrandId}
+          )";
 
-        await Context.AddAsync(request);
-        await Context.SaveChangesAsync();
+        var row = await Context.WalletsRequests
+            .FromSqlInterpolated(sql)
+            .AsNoTracking()
+            .SingleOrDefaultAsync();
 
-        return request;
+        return row;
     }
-
+    
     public async Task UpdateBulkWalletRequestsAsync(List<WalletsRequest> requests)
     {
         const int take         = 1000;

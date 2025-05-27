@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using WalletService.Core.Caching;
+using WalletService.Core.Caching.Extensions;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -218,10 +219,8 @@ public class CoinPayService : BaseService, ICoinPayService
             return;
 
         var productType = await GetProductType(products,transactionResult.BrandId);
+        await _redisCache.InvalidateBalanceAsync(walletRequest.AffiliateId);
         
-        await RemoveCacheKey(walletRequest.AffiliateId, CacheKeys.BalanceInformationModel2);
-        await RemoveCacheKey(walletRequest.AffiliateId, CacheKeys.BalanceInformationModel1A);
-        await RemoveCacheKey(walletRequest.AffiliateId, CacheKeys.BalanceInformationModel1B);
         switch (productType)
         {
             case ProductType.Membership:
@@ -683,8 +682,8 @@ public class CoinPayService : BaseService, ICoinPayService
                         _walletRepository.CreateWalletAsync(debitTransaction),
                         _walletWithDrawalService.CreateWalletWithdrawalAsync(walletWithdrawal)
                     );
-                    await RemoveCacheKey(request.AffiliateId, CacheKeys.BalanceInformationModel2);
-                    
+                  
+                    await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
                     _logger.LogInformation(
                         $"[CoinPayService] | ProcessWithdrawal | Debit transaction and withdrawal created successfully for Affiliate ID: {request.AffiliateId}");
                 }
@@ -749,13 +748,6 @@ public class CoinPayService : BaseService, ICoinPayService
 
         return false;
     }
-    private async Task RemoveCacheKey(int affiliateId, string stringKey)
-    {
-        var key = string.Format(stringKey, affiliateId);
-        var existsKey = await _redisCache.KeyExists(key);
-
-        if (existsKey)
-            await _redisCache.Delete(key);
-    }
+    
     #endregion
 }

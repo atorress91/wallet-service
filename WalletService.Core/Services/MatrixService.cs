@@ -29,13 +29,13 @@ public class MatrixService : BaseService, IMatrixService
     private readonly ILogger<MatrixService> _logger;
     private readonly RedisCache _redisCache;
 
-    public MatrixService(ILogger<MatrixService> logger, 
+    public MatrixService(ILogger<MatrixService> logger,
         IMapper mapper, IConfigurationAdapter configurationAdapter, IBrandService brandService,
         IMatrixQualificationRepository matrixQualificationRepository,
         IMatrixEarningsRepository matrixEarningsRepository,
         IAccountServiceAdapter accountServiceAdapter, IWalletRepository walletRepository,
         IWalletRequestRepository walletRequestRepository,
-        IServiceScopeFactory scopeFactory,RedisCache redisCache) : base(mapper)
+        IServiceScopeFactory scopeFactory, RedisCache redisCache) : base(mapper)
     {
         _brandService = brandService;
         _configurationAdapter = configurationAdapter;
@@ -45,9 +45,55 @@ public class MatrixService : BaseService, IMatrixService
         _walletRepository = walletRepository;
         _walletRequestRepository = walletRequestRepository;
         _scopeFactory = scopeFactory;
-       
+
         _logger = logger;
         _redisCache = redisCache;
+    }
+
+    // -----------------------------------------------------------------------------
+    // 1.  NUEVO   –  Método transaccional que centraliza débito + calificación
+    // -----------------------------------------------------------------------------
+    private async Task<decimal> ApplyQualificationAsync(MatrixQualification qualification, MatrixConfiguration matrixCfg,
+        string userName,
+        decimal availableBalance)
+    {
+        var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
+
+        await using var tx = await _matrixEarningsRepository.BeginTransactionAsync();
+
+        // 1.a Débito en el wallet
+        await _walletRepository.CreateAsync(new Wallet
+        {
+            AffiliateId = qualification.UserId,
+            UserId = 1,
+            Concept = $"Activación automática en {matrixCfg.MatrixName}",
+            Detail = $"Ciclo de activación: {qualification.QualificationCount + 1}",
+            Debit = matrixCfg.FeeAmount,
+            Credit = 0,
+            AffiliateUserName = userName,
+            AdminUserName = "adminrecycoin",
+            Status = true,
+            ConceptType = "purchasing_pool",
+            BrandId = brandId,
+            Date = DateTime.Now,
+        });
+
+        // 1.b Actualizar saldo disponible en memoria
+        availableBalance -= matrixCfg.FeeAmount;
+
+        // 1.c Actualizar calificación
+        qualification.IsQualified = true;
+        qualification.QualificationCount += 1;
+        qualification.AvailableBalance = availableBalance;
+        qualification.LastQualificationTotalEarnings = qualification.TotalEarnings;
+        qualification.LastQualificationWithdrawnAmount = qualification.WithdrawnAmount;
+        qualification.LastQualificationDate = DateTime.Now;
+        qualification.UpdatedAt = DateTime.Now;
+
+        await _matrixQualificationRepository.UpdateAsync(qualification);
+
+        await tx.CommitAsync();
+        return availableBalance;
     }
 
     private async Task<double> GetQualificationProgressAsync(int userId, int matrixType)
@@ -76,7 +122,7 @@ public class MatrixService : BaseService, IMatrixService
             var earningsSinceLastQualification = (commissions ?? 0);
             var withdrawnSinceLastQualification = (totalWithdrawn ?? 0);
             var totalProgressSinceLastCut = earningsSinceLastQualification + withdrawnSinceLastQualification;
-            
+
             // ➋ Elegir meta según el ciclo
             var cycle = qualification.QualificationCount;
             var goal = cycle == 0
@@ -90,7 +136,9 @@ public class MatrixService : BaseService, IMatrixService
             return 0;
         }
     }
-    private async Task VerifyRecipientQualificationsAsync(HashSet<int> userIds, int depth, IReadOnlyList<MatrixConfiguration> allMatrices)
+
+    private async Task VerifyRecipientQualificationsAsync(HashSet<int> userIds, int depth,
+        IReadOnlyList<MatrixConfiguration> allMatrices)
     {
         await _redisCache.InvalidateBalanceAsync(userIds.ToArray());
         while (true)
@@ -113,11 +161,13 @@ public class MatrixService : BaseService, IMatrixService
                 // Si califica, procesar calificación completa y recolectar nuevos usuarios
                 if (qualified)
                 {
-                    var (anyQualified, qualifiedMatrixTypes) = await ProcessAllMatrixQualificationsAsync(recipientId);
+                    var (anyQualified, qualifiedMatrixTypes) = await ProcessAllMatrixQualificationsAsync(recipientId,allMatrices.ToList());
                     if (anyQualified)
                     {
                         // Obtener los nuevos usuarios que recibieron comisiones
-                        var qualification = await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(recipientId, currentMatrixType);
+                        var qualification =
+                            await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(recipientId,
+                                currentMatrixType);
                         if (qualification != null && qualifiedMatrixTypes.Contains(currentMatrixType))
                         {
                             var newRecipientsUsers = await ProcessMatrixCommissionsAsync(recipientId, currentMatrixType,
@@ -144,6 +194,7 @@ public class MatrixService : BaseService, IMatrixService
             break;
         }
     }
+
     public async Task FixInconsistentQualificationRecordsAsync()
     {
         // Obtener todos los registros de calificación con contadores positivos pero valores de corte en 0
@@ -182,17 +233,22 @@ public class MatrixService : BaseService, IMatrixService
                 await _matrixQualificationRepository.UpdateAsync(record);
 
                 correctedCount++;
-                _logger.LogInformation($"Fixed qualification record ID {record.QualificationId} for user {record.UserId}");
+                _logger.LogInformation(
+                    $"Fixed qualification record ID {record.QualificationId} for user {record.UserId}");
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"Error fixing qualification record ID {record.QualificationId} for user {record.UserId}: {ex.Message}");
+                _logger.LogWarning(
+                    $"Error fixing qualification record ID {record.QualificationId} for user {record.UserId}: {ex.Message}");
             }
         }
 
-        _logger.LogInformation($"Process completed. Corrected {correctedCount} of {matrixQualifications.Count()} records.");
+        _logger.LogInformation(
+            $"Process completed. Corrected {correctedCount} of {matrixQualifications.Count()} records.");
     }
-    private async Task<int> GetNextUnqualifiedMatrixTypeAsync(int userId, IReadOnlyList<MatrixConfiguration> allMatrices)
+
+    private async Task<int> GetNextUnqualifiedMatrixTypeAsync(int userId,
+        IReadOnlyList<MatrixConfiguration> allMatrices)
     {
         var qualifications = await _matrixQualificationRepository.GetAllByUserIdAsync(userId);
 
@@ -215,7 +271,9 @@ public class MatrixService : BaseService, IMatrixService
         // el próximo objetivo es la Matrix 1 del ciclo siguiente.
         return 1;
     }
-    private async Task<UserProcessingResult> ProcessSingleUserAsync(int userId, List<MatrixConfiguration> allMatrices) // ← se aprovecha la cache
+
+    private async Task<UserProcessingResult> ProcessSingleUserAsync(int userId, 
+        List<MatrixConfiguration> allMatrices) 
     {
         var userResult = new UserProcessingResult
         {
@@ -227,7 +285,8 @@ public class MatrixService : BaseService, IMatrixService
         try
         {
             // 1. Procesar calificaciones usando la lista cacheada
-            var (qualified, matrixTypes) = await ProcessAllMatrixQualificationsAsync(userId, allMatrices); // ← sobrecarga optimizada
+            var (qualified, matrixTypes) =
+                await ProcessAllMatrixQualificationsAsync(userId, allMatrices); // ← sobrecarga optimizada
             userResult.WasQualified = qualified;
 
             if (qualified && matrixTypes.Any())
@@ -258,142 +317,105 @@ public class MatrixService : BaseService, IMatrixService
 
         return userResult;
     }
-    private async Task<(bool anyQualified, List<int> qualifiedMatrixTypes)> ProcessAllMatrixQualificationsAsync(int userId, List<MatrixConfiguration> allMatrices)
+
+    private async Task<(bool anyQualified, List<int> qualifiedMatrixTypes)> ProcessAllMatrixQualificationsAsync(int userId,
+        List<MatrixConfiguration> allMatrices)
     {
-        var qualifiedMatrixTypes = new List<int>();
-        var anyQualified = false;
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
+        var anyQualified = false;
+        var qualifiedMatrixTypes = new List<int>();
+        var usersToVerify = new HashSet<int>();
 
-        if (allMatrices.Count == 0)
-            return (false, qualifiedMatrixTypes);
-
-        // 1) --------------------------------------------------------------------
-        // Datos financieros
-        // -----------------------------------------------------------------------
-        var commissions = await _walletRepository.GetQualificationBalanceAsync(userId, brandId);
-        var totalWithdrawn = await _walletRequestRepository.GetTotalWithdrawnByAffiliateId(userId);
+        // --- Datos financieros base ------------------------------------------------
+        var commissions = await _walletRepository.GetQualificationBalanceAsync(userId, brandId) ?? 0m;
+        var totalWithdrawn = await _walletRequestRepository.GetTotalWithdrawnByAffiliateId(userId) ?? 0m;
         var availableBalance = await _walletRepository.GetAvailableBalanceByAffiliateId(userId, brandId);
-        var amountRequests = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(userId, brandId);
-        availableBalance -= amountRequests;
+        var pendingRequests = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(userId, brandId);
+        availableBalance -= pendingRequests;
 
-        // 2) --------------------------------------------------------------------
-        // Cargar/crear todas las calificaciones del usuario
-        // -----------------------------------------------------------------------
-        var userQualifications = (await _matrixQualificationRepository.GetAllByUserIdAsync(userId))
+        // --- Cargar/crear calificaciones en memoria --------------------------------
+        var qualifications = (await _matrixQualificationRepository.GetAllByUserIdAsync(userId))
             .ToDictionary(q => q.MatrixType);
 
-        foreach (var matrix in allMatrices)
+        foreach (var m in allMatrices)
         {
-            if (!userQualifications.TryGetValue(matrix.MatrixType, out var q))
+            if (!qualifications.TryGetValue(m.MatrixType, out var q))
             {
                 q = new MatrixQualification
                 {
                     UserId = userId,
-                    MatrixType = matrix.MatrixType,
-                    TotalEarnings = commissions ?? 0m,
-                    WithdrawnAmount = totalWithdrawn ?? 0m,
+                    MatrixType = m.MatrixType,
+                    TotalEarnings = commissions,
+                    WithdrawnAmount = totalWithdrawn,
                     AvailableBalance = availableBalance,
-                    IsQualified = false,
-                    QualificationCount = 0,
-                    LastQualificationTotalEarnings = 0m,
-                    LastQualificationWithdrawnAmount = 0m,
                     CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
                 };
                 await _matrixQualificationRepository.CreateAsync(q);
-                userQualifications[matrix.MatrixType] = q;
+                qualifications[m.MatrixType] = q;
             }
             else
             {
-                q.TotalEarnings = commissions ?? 0m;
-                q.WithdrawnAmount = totalWithdrawn ?? 0m;
+                // Sincronizar saldo para que el progreso sea correcto
+                q.TotalEarnings = commissions;
+                q.WithdrawnAmount = totalWithdrawn;
                 q.AvailableBalance = availableBalance;
                 q.UpdatedAt = DateTime.Now;
                 await _matrixQualificationRepository.UpdateAsync(q);
             }
         }
 
-        // 3) --------------------------------------------------------------------
-        // Procesar matriz por matriz
-        // -----------------------------------------------------------------------
-        var minCycle = userQualifications.Values.Min(q => q.QualificationCount);
-        var usersToVerify = new HashSet<int>();
+        // --- Nombre del usuario (para el débito) -----------------------------------
+        var userName = (await _accountServiceAdapter.GetUserInfo(userId, brandId))?.UserName ?? "Usuario";
 
-        var userInfo = await _accountServiceAdapter.GetUserInfo(userId, brandId);
-        var userName = userInfo?.UserName ?? "Usuario";
-
-        foreach (var matrixConfig in allMatrices)
+        // --- Procesar cada matriz secuencialmente ----------------------------------
+        foreach (var m in allMatrices)
         {
-            var qualification = userQualifications[matrixConfig.MatrixType];
+            var q = qualifications[m.MatrixType];
 
-            if (qualification.QualificationCount > minCycle)
-                continue;
+            // Si ya está en un ciclo más avanzado que otras, saltar (regla de secuencia)
+            var minCycle = qualifications.Values.Min(x => x.QualificationCount);
+            if (q.QualificationCount > minCycle) continue;
 
-            var qualifies = await CheckQualificationAsync(userId, matrixConfig.MatrixType);
+            // ¿Cumple el umbral?
+            var qualifies = await CheckQualificationAsync(userId, m.MatrixType);
             if (!qualifies) continue;
 
-            // 3.a Débito
-            await _walletRepository.CreateAsync(new Wallet
-            {
-                AffiliateId = userId,
-                UserId = 1,
-                Concept = $"Activación automática en {matrixConfig.MatrixName}",
-                Debit = matrixConfig.FeeAmount,
-                Detail = $"Ciclo de activación: {qualification.QualificationCount + 1}",
-                Credit = 0,
-                AffiliateUserName = userName,
-                AdminUserName = "adminrecycoin",
-                Status = true,
-                ConceptType = "purchasing_pool",
-                BrandId = brandId,
-                Date = DateTime.Now,
-            });
+            // Aplicar calificación (débito + actualización) **dentro de una transacción**
+            availableBalance = await ApplyQualificationAsync(q, m, userName, availableBalance);
 
-            availableBalance -= matrixConfig.FeeAmount;
-            qualification.AvailableBalance = availableBalance;
-            await _redisCache.InvalidateBalanceAsync(userId);
-            
-            // 3.b Actualizar calificación
-            qualification.QualificationCount += 1;
-            qualification.LastQualificationTotalEarnings = qualification.TotalEarnings;
-            qualification.LastQualificationWithdrawnAmount = qualification.WithdrawnAmount;
-            qualification.LastQualificationDate = DateTime.Now;
-            qualification.UpdatedAt = DateTime.Now;
-            await _matrixQualificationRepository.UpdateAsync(qualification);
+            qualifiedMatrixTypes.Add(m.MatrixType);
+            anyQualified = true;
 
-            // 3.c Colocar usuario en la matriz
-            var req = new MatrixRequest { UserId = userId, MatrixType = matrixConfig.MatrixType };
-            await _accountServiceAdapter.PlaceUserInMatrix(req, brandId);
+            // Colocar al usuario en la matriz y procesar comisiones
+            await _accountServiceAdapter.PlaceUserInMatrix(new MatrixRequest { UserId = userId, MatrixType = m.MatrixType }, brandId);
 
-            // 3.d Comisiones
-            var recipients = await ProcessMatrixCommissionsAsync(userId, matrixConfig.MatrixType, qualification.QualificationCount);
+            var recipients = await ProcessMatrixCommissionsAsync(userId, m.MatrixType, q.QualificationCount);
             usersToVerify.UnionWith(recipients);
 
-            qualifiedMatrixTypes.Add(matrixConfig.MatrixType);
-            anyQualified = true;
+            await _redisCache.InvalidateBalanceAsync(userId);
+            await _redisCache.InvalidateBalanceAsync(recipients.ToArray());
         }
 
-        // 4) --------------------------------------------------------------------
-        // Sincronizar saldo disponible en todos los registros
-        // -----------------------------------------------------------------------
-        foreach (var qual in userQualifications.Values)
-        {
+        // --- Sincronizar saldo final en todos los registros ------------------------
+        foreach (var qual in qualifications.Values)
             if (qual.AvailableBalance != availableBalance)
             {
                 qual.AvailableBalance = availableBalance;
                 qual.UpdatedAt = DateTime.Now;
                 await _matrixQualificationRepository.UpdateAsync(qual);
             }
+        
+        if (usersToVerify.Count > 0)
+        {
+            await VerifyRecipientQualificationsAsync(usersToVerify, 1, allMatrices);
         }
-
-        // 5) --------------------------------------------------------------------
-        // Verificar calificaciones en upline receptores
-        // -----------------------------------------------------------------------
-        await VerifyRecipientQualificationsAsync(usersToVerify, depth: 9, allMatrices);
 
         return (anyQualified, qualifiedMatrixTypes);
     }
-    private async Task<HashSet<int>> ProcessMatrixCommissionsAsync(int userId, int matrixType, int userQualificationCount)
+
+    private async Task<HashSet<int>> ProcessMatrixCommissionsAsync(int userId, int matrixType,
+        int userQualificationCount)
     {
         var usersReceivedCommissions = new HashSet<int>();
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
@@ -402,7 +424,8 @@ public class MatrixService : BaseService, IMatrixService
         try
         {
             var matrixConfigResponse = await _configurationAdapter.GetMatrixConfiguration(brandId, matrixType);
-            var matrixConfig = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfigResponse.Content!);
+            var matrixConfig =
+                JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfigResponse.Content!);
 
             if (matrixConfigResponse.Content == null || matrixConfigResponse.StatusCode != HttpStatusCode.OK)
                 throw new ApplicationException(
@@ -413,13 +436,16 @@ public class MatrixService : BaseService, IMatrixService
                     $"Error deserialize matrix configuration: {matrixConfigResponse.StatusCode}");
 
             // Verificar que el usuario tenga una posición válida en esta matriz
-            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(new MatrixRequest { UserId = userId, MatrixType = matrixType }, brandId);
-            
+            var positionResponse =
+                await _accountServiceAdapter.IsActiveInMatrix(
+                    new MatrixRequest { UserId = userId, MatrixType = matrixType }, brandId);
+
             // Deserializamos la respuesta completa
-            var matrixPositionResponse = JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!);
+            var matrixPositionResponse =
+                JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!);
             // Extraemos la posición desde la propiedad Data
             var position = matrixPositionResponse?.Data;
-            
+
             if (positionResponse.StatusCode != HttpStatusCode.OK || position == false)
             {
                 throw new ApplicationException($"User {userId} does not have a valid position in matrix {matrixType}");
@@ -452,7 +478,7 @@ public class MatrixService : BaseService, IMatrixService
 
                 // Guardar para log o depuración
                 _logger.LogInformation($"Processing commissions for user {userId} in matrix {matrixType}. " +
-                                  $"Found {filteredPositions.Count} eligible upline positions.");
+                                       $"Found {filteredPositions.Count} eligible upline positions.");
 
                 foreach (var uplinePosition in filteredPositions)
                 {
@@ -477,8 +503,8 @@ public class MatrixService : BaseService, IMatrixService
 
                         // Pasar el contador de calificaciones al crear la ganancia
                         await _matrixEarningsRepository.CreateAsync(earning, userQualificationCount);
-                        await _redisCache.InvalidateBalanceAsync(userId,(int)uplinePosition.UserId);
-                        
+                        await _redisCache.InvalidateBalanceAsync(userId, (int)uplinePosition.UserId);
+
                         // Agregar este usuario a la lista de los que recibieron comisiones
                         usersReceivedCommissions.Add((int)uplinePosition.UserId);
                     }
@@ -497,255 +523,72 @@ public class MatrixService : BaseService, IMatrixService
             throw; // Relanzar la excepción para manejo superior
         }
     }
+
     public async Task<bool> CheckQualificationAsync(long userId, int matrixType)
     {
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
-        // 1. Obtener configuración de la matriz
-        var matrixConfig = await _configurationAdapter.GetMatrixConfiguration(brandId, matrixType);
 
-        if (matrixConfig.Content == null || matrixConfig.StatusCode != HttpStatusCode.OK)
+        // 2.a Configuración de la matriz
+        var cfgResp = await _configurationAdapter.GetMatrixConfiguration(brandId, matrixType);
+        if (cfgResp.Content == null || cfgResp.StatusCode != HttpStatusCode.OK)
+            throw new ApplicationException($"Error retrieving matrix configuration: {cfgResp.StatusCode}");
+
+        var cfg = JsonConvert
+            .DeserializeObject<MatrixConfigurationResponse>(cfgResp.Content!)!
+            .Data;
+
+        // 2.b Cargar (o crear) registro de calificación
+        var qual = await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(userId, matrixType);
+        if (qual == null)
         {
-            throw new ApplicationException($"Error retrieving matrix configuration: {matrixConfig.StatusCode}");
-        }
-
-        var matrixConfigResponse = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfig.Content);
-
-        // 2. Obtener o crear el registro de calificación
-        var qualification = await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(userId, matrixType);
-
-        if (qualification == null)
-        {
-            // Crear nuevo registro de calificación si no existe
-            qualification = new MatrixQualification
+            qual = new MatrixQualification
             {
                 UserId = userId,
                 MatrixType = matrixType,
-                TotalEarnings = 0,
-                WithdrawnAmount = 0,
-                AvailableBalance = 0,
-                IsQualified = false,
-                QualificationCount = 0,
-                LastQualificationTotalEarnings = 0,
-                LastQualificationWithdrawnAmount = 0,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
-
-            await _matrixQualificationRepository.CreateAsync(qualification);
+            await _matrixQualificationRepository.CreateAsync(qual);
+            // No puede calificar recién creado
             return false;
         }
 
-        // 3. Obtener datos financieros actualizados
-        var commissions = await _walletRepository.GetQualificationBalanceAsync(userId, brandId);
-        var totalWithdrawn = await _walletRequestRepository.GetTotalWithdrawnByAffiliateId(userId);
+        // 2.c Refrescar montos financieros
+        var commissions = await _walletRepository.GetQualificationBalanceAsync(userId, brandId) ?? 0m;
+        var withdrawn = await _walletRequestRepository.GetTotalWithdrawnByAffiliateId(userId) ?? 0m;
+        qual.TotalEarnings = commissions;
+        qual.WithdrawnAmount = withdrawn;
+        qual.UpdatedAt = DateTime.Now;
+        await _matrixQualificationRepository.UpdateAsync(qual);
 
-        // 4. Actualizar montos totales en el registro (usando commissions como fuente principal)
-        qualification.TotalEarnings = commissions ?? 0m;
-        qualification.WithdrawnAmount = totalWithdrawn ?? 0m;
-        qualification.UpdatedAt = DateTime.Now;
-
-        if (qualification is { QualificationCount: > 0, LastQualificationTotalEarnings: 0, LastQualificationWithdrawnAmount: 0 })
-        {
-            // Corregir valores de corte usando los valores actuales 
-            // Esto asume que el progreso actual debe empezar desde cero
-            qualification.LastQualificationTotalEarnings = qualification.TotalEarnings;
-            qualification.LastQualificationWithdrawnAmount = qualification.WithdrawnAmount;
-            qualification.LastQualificationDate = DateTime.Now;
-
-            // Guardar para evitar sobre-calificación
-            await _matrixQualificationRepository.UpdateAsync(qualification);
-
-            // Devolver falso para evitar que se vuelva a calificar inmediatamente
-            return false;
-        }
-
-        // 5. Calcular progreso desde el último corte de calificación
-        var totalProgressSinceLastCut = (commissions ?? 0);
-        
-        var cycle = qualification.QualificationCount;     // 0 = primer ciclo
+        // 2.d Progreso desde el último corte
+        var cycle = qual.QualificationCount; // 0 → primer ciclo
         var requiredAmount = cycle == 0
-            ? matrixConfigResponse!.Data!.Threshold
-            : matrixConfigResponse!.Data!.RangeMax * cycle;
+            ? cfg!.Threshold
+            : cfg!.RangeMax * cycle;
 
-        // 6. Verificar si alcanza el umbral considerando solo lo acumulado desde el último corte
-        var qualifies = totalProgressSinceLastCut >= requiredAmount;
+        var progress = commissions - qual.LastQualificationTotalEarnings
+            + withdrawn - qual.LastQualificationWithdrawnAmount;
 
-        // 7. Actualizar estado de calificación si califica y no estaba calificado
-        // IMPORTANTE: No actualizamos los valores de corte (last_qualification_X) aquí
-        if (qualifies && !qualification.IsQualified)
-        {
-            qualification.IsQualified = true;
-        }
-
-        // 8. Siempre guardar los datos financieros actualizados
-        await _matrixQualificationRepository.UpdateAsync(qualification);
-
-        // 9. Retornar si califica o no, independientemente del estado actual de IsQualified
-        return qualifies;
+        return progress >= requiredAmount; // ***sin tocar IsQualified aquí*** :contentReference[oaicite:0]{index=0}
     }
+
     public async Task<(bool anyQualified, List<int> qualifiedMatrixTypes)> ProcessAllMatrixQualificationsAsync(int userId)
     {
-        var qualifiedMatrixTypes = new List<int>();
-        var anyQualified = false;
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
-        // ---------------------------------------------------------------------
-        // 1) Configuraciones de matrices (ordenadas)
-        // ---------------------------------------------------------------------
-        var allMatrixConfigs = await _configurationAdapter.GetAllMatrixConfigurations(brandId);
-        var jsonObject = JObject.Parse(allMatrixConfigs.Content!);
-        var allMatrices = jsonObject["data"]?.ToObject<List<MatrixConfiguration>>()!
-            .OrderBy(m => m.MatrixType).ToList();
-
-        if (allMatrices == null || allMatrices.Count == 0)
-            return (false, qualifiedMatrixTypes);
-
-        // ---------------------------------------------------------------------
-        // 2) Datos financieros del usuario (una sola vez)
-        // ---------------------------------------------------------------------
-        var commissions = await _walletRepository.GetQualificationBalanceAsync(userId, brandId);
-        var totalWithdrawn = await _walletRequestRepository.GetTotalWithdrawnByAffiliateId(userId);
-        var availableBalance = await _walletRepository.GetAvailableBalanceByAffiliateId(userId, brandId);
-        var amountRequests = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(userId, brandId);
-        availableBalance -= amountRequests;
-
-        // ---------------------------------------------------------------------
-        // 3) Calificaciones del usuario (crear/actualizar todas)
-        // ---------------------------------------------------------------------
-        var userQualifications = (await _matrixQualificationRepository.GetAllByUserIdAsync(userId))
-            .ToDictionary(q => q.MatrixType);
-
-        foreach (var matrix in allMatrices)
-        {
-            if (!userQualifications.TryGetValue(matrix.MatrixType, out var q))
+        var allMatrices = await _redisCache.Remember(
+            $"matrix_cfg_{brandId}",
+            TimeSpan.FromMinutes(10),
+            async () =>
             {
-                q = new MatrixQualification
-                {
-                    UserId = userId,
-                    MatrixType = matrix.MatrixType,
-                    TotalEarnings = commissions ?? 0m,
-                    WithdrawnAmount = totalWithdrawn ?? 0m,
-                    AvailableBalance = availableBalance,
-                    IsQualified = false,
-                    QualificationCount = 0,
-                    LastQualificationTotalEarnings = 0m,
-                    LastQualificationWithdrawnAmount = 0m,
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now,
-                    LastQualificationDate = DateTime.Now
-                };
-                await _matrixQualificationRepository.CreateAsync(q);
-                userQualifications[matrix.MatrixType] = q;
-            }
-            else
-            {
-                q.TotalEarnings = commissions ?? 0m;
-                q.WithdrawnAmount = totalWithdrawn ?? 0m;
-                q.AvailableBalance = availableBalance;
-                q.UpdatedAt = DateTime.Now;
-                await _matrixQualificationRepository.UpdateAsync(q);
-            }
-        }
-
-        // ---------------------------------------------------------------------
-        // 4) Calcular el ciclo mínimo (QC) actual
-        // ---------------------------------------------------------------------
-        var minCycle = userQualifications.Values.Min(q => q.QualificationCount);
-
-        // Lista para rastrear a quiénes se pagó comisión
-        var usersToVerify = new HashSet<int>();
-
-        // Nombre del usuario para la transacción
-        var userInfo = await _accountServiceAdapter.GetUserInfo(userId, brandId);
-        var userName = userInfo?.UserName ?? "Usuario";
-
-        // ---------------------------------------------------------------------
-        // 5) Procesar matrices SECÚENCIALMENTE
-        // ---------------------------------------------------------------------
-        foreach (var matrixConfig in allMatrices)
-        {
-            var qualification = userQualifications[matrixConfig.MatrixType];
-
-            // ------ NUEVA REGLA DE SECUENCIA ----------------------------------
-            // • Solo intentar cobrar si esta matriz aún está en el ciclo mínimo.
-            // • Si ya está calificada o su QC > minCycle, se salta.
-            if (qualification.QualificationCount > minCycle)
-                continue;
-            // ------------------------------------------------------------------
-
-            // ¿Alcanza el umbral?
-            var qualifies = await CheckQualificationAsync(userId, matrixConfig.MatrixType);
-            if (!qualifies) continue; // No llegó al threshold → pasa a la siguiente
-
-            // -----------------------------------------------------------------
-            // 5.a Débito por la tarifa
-            // -----------------------------------------------------------------
-            await _walletRepository.CreateAsync(new Wallet
-            {
-                AffiliateId = userId,
-                UserId = 1,
-                Concept = $"Activación automática en {matrixConfig.MatrixName}",
-                Debit = matrixConfig.FeeAmount,
-                Detail = $"Ciclo de activación: {qualification.QualificationCount + 1}",
-                Credit = 0,
-                AffiliateUserName = userName,
-                AdminUserName = "adminrecycoin",
-                Status = true,
-                ConceptType = "purchasing_pool",
-                BrandId = brandId,
-                Date = DateTime.Now
+                var resp = await _configurationAdapter.GetAllMatrixConfigurations(brandId);
+                var data = JObject.Parse(resp.Content!)["data"]!.ToObject<List<MatrixConfiguration>>()!;
+                return data.OrderBy(m => m.MatrixType).ToList();
             });
 
-            availableBalance -= matrixConfig.FeeAmount;
-            qualification.AvailableBalance = availableBalance;
-
-            // -----------------------------------------------------------------
-            // 5.b Actualizar la calificación
-            // -----------------------------------------------------------------
-            qualification.QualificationCount += 1;
-            qualification.LastQualificationTotalEarnings = qualification.TotalEarnings;
-            qualification.LastQualificationWithdrawnAmount = qualification.WithdrawnAmount;
-            qualification.LastQualificationDate = DateTime.Now;
-            qualification.UpdatedAt = DateTime.Now;
-            await _matrixQualificationRepository.UpdateAsync(qualification);
-
-            // -----------------------------------------------------------------
-            // 5.c Colocar al usuario en la matriz
-            // -----------------------------------------------------------------
-            var request = new MatrixRequest { UserId = userId, MatrixType = matrixConfig.MatrixType };
-            await _accountServiceAdapter.PlaceUserInMatrix(request, brandId);
-
-            // -----------------------------------------------------------------
-            // 5.d Procesar comisiones
-            // -----------------------------------------------------------------
-            var recipientUsers = await ProcessMatrixCommissionsAsync(userId, matrixConfig.MatrixType, qualification.QualificationCount);
-            usersToVerify.UnionWith(recipientUsers);
-            await _redisCache.InvalidateBalanceAsync(userId);
-            await _redisCache.InvalidateBalanceAsync(recipientUsers.ToArray());
-            
-            qualifiedMatrixTypes.Add(matrixConfig.MatrixType);
-            anyQualified = true;
-        }
-
-        // ---------------------------------------------------------------------
-        // 6) Sincronizar saldo disponible en todos los registros
-        // ---------------------------------------------------------------------
-        foreach (var qual in userQualifications.Values)
-        {
-            if (qual.AvailableBalance != availableBalance)
-            {
-                qual.AvailableBalance = availableBalance;
-                qual.UpdatedAt = DateTime.Now;
-                await _matrixQualificationRepository.UpdateAsync(qual);
-            }
-        }
-
-        // ---------------------------------------------------------------------
-        // 7) Verificar calificaciones en quienes recibieron comisión
-        // ---------------------------------------------------------------------
-        await VerifyRecipientQualificationsAsync(usersToVerify, 1, allMatrices);
-
-        return (anyQualified, qualifiedMatrixTypes);
+        return await ProcessAllMatrixQualificationsAsync(userId, allMatrices);
     }
+
     public async Task<bool> WithdrawFromMatrixAsync(int userId, short matrixType, decimal amount)
     {
         try
@@ -777,13 +620,16 @@ public class MatrixService : BaseService, IMatrixService
             return false;
         }
     }
+
     public async Task<bool> ProcessAdminMatrixPlacementAsync(int userId, int matrixType)
     {
         try
         {
             // 1. Obtener configuración de la matriz específica solicitada
-            var matrixConfigResponse = await _configurationAdapter.GetMatrixConfiguration(_brandService.BrandId, matrixType);
-            var matrixConfig = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfigResponse.Content!);
+            var matrixConfigResponse =
+                await _configurationAdapter.GetMatrixConfiguration(_brandService.BrandId, matrixType);
+            var matrixConfig =
+                JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfigResponse.Content!);
 
             if (matrixConfigResponse.Content == null || matrixConfigResponse.StatusCode != HttpStatusCode.OK)
                 throw new ApplicationException(
@@ -793,13 +639,15 @@ public class MatrixService : BaseService, IMatrixService
                 throw new ApplicationException("Matrix configuration data is missing or invalid");
 
             // 2. Verificar si el usuario ya tiene una posición en esta matriz
-            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(new MatrixRequest { UserId = userId, MatrixType = matrixType }, _brandService.BrandId);
+            var positionResponse =
+                await _accountServiceAdapter.IsActiveInMatrix(
+                    new MatrixRequest { UserId = userId, MatrixType = matrixType }, _brandService.BrandId);
             var existing = JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!);
-            
+
             if (positionResponse.IsSuccessful && existing?.Data == true)
                 // Si el usuario ya tiene una posición activa en la matriz, no se puede activar nuevamente
                 return false;
-            
+
             // 4. Obtener o crear el registro de calificación para esta matriz específica
             var qualification = await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(userId, matrixType);
 
@@ -847,6 +695,7 @@ public class MatrixService : BaseService, IMatrixService
             return false;
         }
     }
+
     public async Task<bool> ProcessDirectPaymentMatrixActivationAsync(MatrixRequest request)
     {
         try
@@ -865,20 +714,24 @@ public class MatrixService : BaseService, IMatrixService
             if (matrixConfig == null)
                 throw new ApplicationException("La configuración de la matriz es inválida");
 
-            var availableBalance = await _walletRepository.GetAvailableBalanceByAffiliateId(request.UserId, _brandService.BrandId);
-            var pendingAmount = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(request.UserId, _brandService.BrandId);
+            var availableBalance =
+                await _walletRepository.GetAvailableBalanceByAffiliateId(request.UserId, _brandService.BrandId);
+            var pendingAmount =
+                await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(request.UserId,
+                    _brandService.BrandId);
             availableBalance -= pendingAmount;
             if (availableBalance < matrixConfig.FeeAmount)
                 return false;
 
-            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(new MatrixRequest { UserId = targetUserId, MatrixType = request.MatrixType }, _brandService.BrandId);
-            
+            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(
+                new MatrixRequest { UserId = targetUserId, MatrixType = request.MatrixType }, _brandService.BrandId);
+
             var existing = JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!)?.Data;
-            
+
             if (positionResponse.IsSuccessful && existing == true)
                 // Si el usuario ya tiene una posición activa en la matriz, no se puede activar nuevamente
                 return false;
-            
+
             var payerInfo = await _accountServiceAdapter.GetUserInfo(request.UserId, _brandService.BrandId);
             var payerName = payerInfo?.UserName ?? "Usuario";
 
@@ -899,15 +752,16 @@ public class MatrixService : BaseService, IMatrixService
                 BrandId = _brandService.BrandId,
                 Date = DateTime.Now,
             };
-            
-            var qualification = await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(targetUserId, request.MatrixType);
+
+            var qualification =
+                await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(targetUserId, request.MatrixType);
             if (qualification?.IsQualified == true)
                 return false;
-            
+
             var debitResult = await _walletRepository.CreateWalletAsync(debitRequest);
             if (debitResult == null)
                 throw new ApplicationException("No se pudo procesar el débito");
-            
+
             if (qualification == null)
             {
                 qualification = new MatrixQualification
@@ -948,6 +802,7 @@ public class MatrixService : BaseService, IMatrixService
             return false;
         }
     }
+
     public async Task<BatchProcessingResult> ProcessAllUsersMatrixQualificationsAsync(int[]? userIds = null)
     {
         _logger.LogInformation("Starting matrix qualifications processing. IDs: {Count}", userIds?.Length ?? 0);
@@ -970,7 +825,8 @@ public class MatrixService : BaseService, IMatrixService
             });
 
         // 2. ---------------- Obtener usuarios a procesar ------------------------
-        var usersToProcess = userIds?.Length > 0 ? userIds 
+        var usersToProcess = userIds?.Length > 0
+            ? userIds
             : (await _walletRepository.GetUserIdsWithCommissionsGreaterThanOrEqualTo50(brandId))
             .Where(u => u != 0)
             .Select(u => (int)u)

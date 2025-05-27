@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System.Globalization;
 using Microsoft.IdentityModel.Tokens;
 using WalletService.Core.Caching;
+using WalletService.Core.Caching.Extensions;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -40,7 +41,7 @@ public class ConPaymentService : BaseService, IConPaymentService
     private readonly RedisCache _redisCache;
     private readonly IBrandService _brandService;
     private readonly IWalletWithdrawalService _walletWithDrawalService;
-
+    private readonly ICoinPayPaymentStrategy _coinPayPaymentStrategy;
     public ConPaymentService(
         IMapper mapper, IOptions<ApplicationConfiguration> appSettings,
         ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
@@ -54,14 +55,11 @@ public class ConPaymentService : BaseService, IConPaymentService
         ICoinPaymentsPaymentStrategy coinPaymentsPaymentStrategy,
         RedisCache redisCache,
         IBrandService brandService,
-        IWalletWithdrawalService walletWithDrawalService
+        IWalletWithdrawalService walletWithDrawalService,
+        ICoinPayPaymentStrategy coinPayPaymentStrategy
     ) : base(mapper)
     {
         _invoiceRepository = invoiceRepository;
-        var appSettings1 = appSettings.Value;
-        _conPaymentsApi =
-            new ConPaymentsApi.ConPaymentsApi(appSettings1.ConPayments!.Secret, appSettings1.ConPayments.Key);
-        _merchantId = appSettings1.ConPayments.MerchantId;
         _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
         _logger = logger;
         _accountServiceAdapter = accountServiceAdapter;
@@ -73,6 +71,26 @@ public class ConPaymentService : BaseService, IConPaymentService
         _redisCache = redisCache;
         _brandService = brandService;
         _walletWithDrawalService = walletWithDrawalService;
+        _coinPayPaymentStrategy = coinPayPaymentStrategy;
+        var appSettings1 = appSettings.Value;
+        // Configuración específica para brandId = 3
+        string apiKey, apiSecret,merchantId;
+        if (brandService.BrandId == 3)
+        {
+            // Configuración específica para HouseCoin (brandId = 3)
+            apiKey = "1d0bbcde6b8ed9ba7330269abd07f8f594602cbe5c1f85e156668c2fdadcf3e6";
+            apiSecret = "B975d24bB02d25f3E7Ac9C992e5e7E657fF8b07cbC91ad5D1ad79c9fB3222388";
+            merchantId = "7d5464c234445ce8e1ed8f328f74d10f";
+        }
+        else
+        {
+            // Configuración por defecto
+            apiKey = appSettings1.ConPayments!.Key;
+            apiSecret = appSettings1.ConPayments.Secret;
+            merchantId = appSettings1.ConPayments.MerchantId;
+        }
+        _conPaymentsApi = new ConPaymentsApi.ConPaymentsApi(apiSecret, apiKey);
+        _merchantId = merchantId;
     }
 
     public async Task<GetPayByNameProfileResponse> GetPayByNameProfile(string nameTag)
@@ -159,9 +177,9 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     private void SetRequestDefaults(ConPaymentRequest request)
     {
-        request.Address = Constants.ConPaymentAddress;
-        request.Currency1 = Constants.ConPaymentCurrency;
-        request.Currency2 = Constants.ConPaymentCurrency;
+        // request.Address = Constants.ConPaymentAddress;
+        request.Currency1 = Constants.CoinPaymentsBnbCurrency ;
+        request.Currency2 = Constants.CoinPaymentsBnbCurrency ;
 
         if (request.Products.Count > 0)
         {
@@ -171,6 +189,7 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     private SortedList<string, string> ConfigureParms(ConPaymentRequest request)
     {
+        request.Amount += 2;
         var parms = new SortedList<string, string>
         {
             { "cmd", "create_transaction" },
@@ -245,8 +264,7 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     public async Task<string> ProcessIpnAsync(IpnRequest ipnRequest, IHeaderDictionary headers)
     {
-        _logger.LogInformation(
-            $"[ConPaymentService] | ProcessIpnAsync | IpnRequest: {ipnRequest.ToJsonString()} | headers: {headers.ToJsonString()}");
+        _logger.LogInformation($"[ConPaymentService] | ProcessIpnAsync | IpnRequest: {ipnRequest.ToJsonString()} | headers: {headers.ToJsonString()}");
         if (!IsRequestValid(ipnRequest, headers))
             return "Invalid IPN Request";
 
@@ -314,23 +332,28 @@ public class ConPaymentService : BaseService, IConPaymentService
         {
             transactionResult.Acredited = true;
 
-            await RemoveCacheKey(walletRequest.AffiliateId, CacheKeys.BalanceInformationModel2);
-            await RemoveCacheKey(walletRequest.AffiliateId, CacheKeys.BalanceInformationModel1A);
-            await RemoveCacheKey(walletRequest.AffiliateId, CacheKeys.BalanceInformationModel1B);
+            await _redisCache.InvalidateBalanceAsync(walletRequest.AffiliateId);
             switch (productType)
             {
                 case ProductType.Membership:
                     await ExecuteMembershipPayment(walletRequest, products);
+                    _logger.LogInformation($"[CoinPaymentService] | ProcessPaymentTransaction | Membership Payment executed");
                     break;
                 case ProductType.EcoPool:
                     await ExecuteEcoPoolPayment(walletRequest, products);
+                    _logger.LogInformation($"[CoinPaymentService] | ProcessPaymentTransaction | Eco pool Payment executed");
                     break;
                 case ProductType.RecyCoin:
                     await ExecuteRecyCoinPayment(walletRequest, products);
-                    _logger.LogInformation($"[CoinPayService] | ProcessPaymentTransaction | RecyCoin Payment executed");
+                    _logger.LogInformation($"[CoinPaymentService] | ProcessPaymentTransaction | RecyCoin Payment executed");
+                    break;
+                case ProductType.HouseCoinPlan:
+                    await ExecuteHouseCoinPlanPayment(walletRequest, products);
+                    _logger.LogInformation($"[CoinPaymentService] | ProcessPaymentTransaction | HouseCoinPlan Payment executed");
                     break;
                 case ProductType.Course:
                     await ExecuteCoursePayment(walletRequest, products);
+                    _logger.LogInformation($"[CoinPaymentService] | ProcessPaymentTransaction | Course Payment executed");
                     break;
             }
         }
@@ -356,8 +379,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         }
         else
         {
-            var membershipResult =
-                await _inventoryServiceAdapter.GetProductById(productIds.First(), _brandService.BrandId);
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(productIds.First(), _brandService.BrandId);
             var productResult = membershipResult.Content!.ToJsonObject<ProductResponse>();
             firstProductCategory = productResult!.Data.PaymentGroup;
         }
@@ -370,6 +392,7 @@ public class ConPaymentService : BaseService, IConPaymentService
             case 8:
                 return ProductType.EcoPool;
             case 11: return ProductType.RecyCoin;
+            case 12: return ProductType.HouseCoinPlan;
             default:
                 return ProductType.Course;
         }
@@ -474,9 +497,8 @@ public class ConPaymentService : BaseService, IConPaymentService
 
         if (bonusPaymentResult is false)
             return;
-
-        await RemoveCacheKey(affiliateBonusWinner.Id, CacheKeys.BalanceInformationModel2);
-
+        
+        await _redisCache.InvalidateBalanceAsync(affiliateBonusWinner.Id);
         await _brevoEmailService.SendBonusConfirmation(affiliateBonusWinner, userInfo.UserName ?? string.Empty,
             _brandService.BrandId);
     }
@@ -543,8 +565,7 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     public async Task<CoinPaymentWithdrawalResponse?> CreateMassWithdrawal(WalletsRequest[] requests)
     {
-        _logger.LogInformation(
-            $"[ConPaymentService] | CreateMassWithdrawal | Start | requests: {requests.ToJsonString()}");
+        _logger.LogInformation($"[ConPaymentService] | CreateMassWithdrawal | Start | requests: {requests.ToJsonString()}");
 
         var withdrawals = await GetAddressesByAffiliateId(requests);
 
@@ -605,8 +626,7 @@ public class ConPaymentService : BaseService, IConPaymentService
 
                 if (user == null)
                 {
-                    _logger.LogWarning(
-                        $"[ConPaymentService] | CreateMassWithdrawal | No user found for ID {successfulRequest.AffiliateId}");
+                    _logger.LogWarning($"[ConPaymentService] | CreateMassWithdrawal | No user found for ID {successfulRequest.AffiliateId}");
                     continue;
                 }
 
@@ -654,13 +674,12 @@ public class ConPaymentService : BaseService, IConPaymentService
 
                 await _walletRepository.CreateWalletAsync(debitTransaction);
                 await _walletWithDrawalService.CreateWalletWithdrawalAsync(walletWithdrawal);
-
-                await RemoveCacheKey(successfulRequest.AffiliateId, CacheKeys.BalanceInformationModel2);
+                
+                await _redisCache.InvalidateBalanceAsync(successfulRequest.AffiliateId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    $"[ConPaymentService] | CreateMassWithdrawal | Error processing affiliateId: {successfulRequest.AffiliateId}, {ex}");
+                _logger.LogError($"[ConPaymentService] | CreateMassWithdrawal | Error processing affiliateId: {successfulRequest.AffiliateId}, {ex}");
             }
         }
 
@@ -682,7 +701,7 @@ public class ConPaymentService : BaseService, IConPaymentService
             {
                 var response = await _accountServiceAdapter.GetAffiliateBtcByAffiliateId(request.AffiliateId, _brandService.BrandId);
 
-                if (response?.Content == null)
+                if (response.Content == null)
                 {
                     _logger.LogWarning($"Null response for affiliate {request.AffiliateId}");
                     continue;
@@ -729,31 +748,30 @@ public class ConPaymentService : BaseService, IConPaymentService
 
         return withdrawals;
     }
-
-    private async Task RemoveCacheKey(int affiliateId, string stringKey)
-    {
-        var key = string.Format(stringKey, affiliateId);
-        var existsKey = await _redisCache.KeyExists(key);
-
-        if (existsKey)
-            await _redisCache.Delete(key);
-    }
-
     private async Task UpdateSuccessfulWithdrawals(List<long> successfulWithdrawalIds)
     {
-        _logger.LogInformation(
-            $"[WalletService] | UpdateSuccessfulWithdrawals | Starting update for {successfulWithdrawalIds.ToJsonString()} successful withdrawals.");
+        _logger.LogInformation($"[WalletService] | UpdateSuccessfulWithdrawals | Starting update for {successfulWithdrawalIds.ToJsonString()} successful withdrawals.");
         var withdrawals = await _walletRequestRepository.GetWalletRequestsByIds(successfulWithdrawalIds);
 
         foreach (var withdrawal in withdrawals)
         {
-            _logger.LogDebug(
-                $"[WalletService] | UpdateSuccessfulWithdrawals | Updating status for withdrawal ID: {withdrawal.Id}");
+            _logger.LogDebug($"[WalletService] | UpdateSuccessfulWithdrawals | Updating status for withdrawal ID: {withdrawal.Id}");
             withdrawal.Status = (int)WithdrawalStatus.Completed;
             withdrawal.UpdatedAt = DateTime.Now;
         }
 
         await _walletRequestRepository.UpdateBulkWalletRequestsAsync(withdrawals);
         _logger.LogInformation($"[WalletService] | UpdateSuccessfulWithdrawals | Successfully updated withdrawals.");
+    }
+    
+    private async Task ExecuteHouseCoinPlanPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
+    {
+        walletRequest.ProductsList = products.Select(product => new ProductsRequests
+        {
+            IdProduct = product.ProductId,
+            Count = product.Quantity
+        }).ToList();
+
+        await _coinPayPaymentStrategy.ExecuteHouseCoinPayment(walletRequest);
     }
 }

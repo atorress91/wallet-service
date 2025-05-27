@@ -24,10 +24,11 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
     private readonly IWalletRepository        _walletRepository;
     private readonly IRecyCoinPdfService _recyCoinPdfService;
     private readonly RedisCache _redisCache;
+    private readonly IHouseCoinPdfService _houseCoinPdfService;
     public CoinPaymentsPaymentStrategy(IInvoiceRepository invoiceRepository,     IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter                            accountServiceAdapter, IBrevoEmailService       brevoEmailService,
         IEcosystemPdfService ecosystemPdfService, IWalletRepository walletRepository,IRecyCoinPdfService recyCoinPdfService,
-        RedisCache redisCache)
+        RedisCache redisCache, IHouseCoinPdfService houseCoinPdfService)
     {
         _invoiceRepository       = invoiceRepository;
         _inventoryServiceAdapter = inventoryServiceAdapter;
@@ -37,6 +38,7 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         _walletRepository        = walletRepository;
         _recyCoinPdfService      = recyCoinPdfService;
         _redisCache              = redisCache;
+        _houseCoinPdfService     = houseCoinPdfService;
      }
     
     private async Task<Dictionary<string, byte[]>> GetPdfContentForTradingAcademy()
@@ -555,6 +557,142 @@ public class CoinPaymentsPaymentStrategy : ICoinPaymentsPaymentStrategy
         if (invoicePdf.Length != Constants.EmptyValue)
         {
             await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
+        }
+
+        return true;
+    }
+    
+     public async Task<bool> ExecuteHouseCoinPayment(WalletRequest request)
+    {
+        var debit = 0;
+        var points = 0m;
+        var commissionable = 0m;
+        byte origin = 0;
+
+        var invoiceDetails = new List<InvoiceDetailsTransactionRequest>();
+        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId, request.BrandId);
+        var productIds = request.ProductsList.Select(p => p.IdProduct).ToArray();
+        var responseList = await _inventoryServiceAdapter.GetProductsIds(productIds, request.BrandId);
+
+        if (!responseList.IsSuccessful)
+            return false;
+
+        if (string.IsNullOrEmpty(responseList.Content))
+            return false;
+
+        var result = JsonSerializer.Deserialize<ProductsResponse>(responseList.Content);
+
+        if (result?.Data.Count == Constants.EmptyValue)
+        {
+            var firstProductId = request.ProductsList.First().IdProduct;
+            var membershipResult = await _inventoryServiceAdapter.GetProductById(firstProductId, request.BrandId);
+
+            var productResponse = JsonSerializer.Deserialize<ProductResponse>(membershipResult.Content!);
+
+            await _accountServiceAdapter.UpdateActivationDate(request.AffiliateId, request.BrandId);
+
+            result.Data.Add(productResponse!.Data);
+        }
+
+        if (result?.Data == null)
+            return false;
+
+        if (result.Data.Count != request.ProductsList.Count)
+            return false;
+
+        foreach (var item in result.Data)
+        {
+            var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
+            var tax = item.Tax;
+            debit += (int)((item.SalePrice * product!.Count) * (1 + (tax / 100)));
+            points += item.BinaryPoints * product.Count;
+            commissionable += item.CommissionableValue * product.Count;
+            if (item.CategoryId == 2)
+            {
+                origin = 1;
+            }
+
+            var invoiceDetail = new InvoiceDetailsTransactionRequest
+            {
+                ProductId = item.Id,
+                PaymentGroupId = item.PaymentGroup,
+                AccumMinPurchase = item.AcumCompMin,
+                ProductName = item.Name!,
+                ProductPrice = item.SalePrice,
+                ProductPriceBtc = Constants.EmptyValue,
+                ProductIva = item.Tax,
+                ProductQuantity = product.Count,
+                ProductCommissionable = item.CommissionableValue,
+                BinaryPoints = item.BinaryPoints,
+                ProductPoints = item.ValuePoints,
+                ProductDiscount = item.ProductDiscount,
+                CombinationId = Constants.EmptyValue,
+                ProductPack = item.ProductPacks,
+                BaseAmount = (item.BaseAmount * product.Count),
+                DailyPercentage = item.DailyPercentage,
+                WaitingDays = item.DaysWait,
+                DaysToPayQuantity = Constants.DaysToPayQuantity,
+                ProductStart = false,
+                BrandId = request.BrandId,
+            };
+
+            invoiceDetails.Add(invoiceDetail);
+        }
+
+        if (debit == Constants.EmptyValue)
+            return false;
+
+        if (invoiceDetails.Count == Constants.EmptyValue)
+            return false;
+
+        var debitTransactionRequest = new DebitTransactionRequest
+        {
+            Debit = debit,
+            AffiliateId = request.AffiliateId,
+            UserId = Constants.AdminUserId,
+            ConceptType = nameof(WalletConceptType.purchasing_pool),
+            Points = points,
+            Concept = Constants.EcoPoolProductCategory,
+            Commissionable = commissionable,
+            Bank = Constants.CoinPayments,
+            PaymentMethod = Constants.CoinPayments,
+            Origin = origin,
+            Level = Constants.EmptyValue,
+            AffiliateUserName = request.AffiliateUserName,
+            AdminUserName = Constants.HouseCoinAdmin,
+            ReceiptNumber = request.ReceiptNumber,
+            Type = true,
+            SecretKey = request.SecretKey,
+            invoices = invoiceDetails,
+            Reason = request.Bank,
+            BrandId = request.BrandId,
+        };
+
+        var spResponse = await _invoiceRepository.HandleDebitTransaction(debitTransactionRequest);
+
+        if (spResponse is null)
+            return false;
+
+        await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
+        var invoicePdf = await _houseCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+        await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
+        {
+            AffiliateId = request.AffiliateId,
+            InvoiceAmount = debitTransactionRequest.Debit,
+            BrandId = request.BrandId,
+            AdminUserName = Constants.HouseCoinAdmin,
+            LevelPercentages = [8.0m, 6.0m, 5.0m, 4.0m, 2.0m],
+        });
+
+        Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
+        {
+            ["Invoice.pdf"] = invoicePdf
+        };
+
+        if (invoicePdf.Length != Constants.EmptyValue)
+        {
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,
+                request.BrandId);
         }
 
         return true;
