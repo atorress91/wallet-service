@@ -113,4 +113,9 @@ public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
                         x.Type == "withdrawal_request" && 
                         x.Status == 1)
             .SumAsync(x => (decimal?)x.Amount);
+
+    public async Task<WalletsRequest?>GetByIdAsync(int id)
+    => await Context.WalletsRequests
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id);
 }

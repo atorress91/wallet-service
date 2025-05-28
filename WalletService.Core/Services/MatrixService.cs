@@ -59,41 +59,58 @@ public class MatrixService : BaseService, IMatrixService
     {
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
 
+        // ✅ VALIDACIÓN DE SALDO SUFICIENTE ANTES DE PROCEDER
+        if (availableBalance < matrixCfg.FeeAmount)
+        {
+            _logger.LogWarning($"User {qualification.UserId} does not have enough balance to qualify in {matrixCfg.MatrixName}. " +
+                               $"Available balance: {availableBalance}, Required: {matrixCfg.FeeAmount}");
+            throw new InvalidOperationException($"Insufficient balance for qualification. Available: {availableBalance:C}, Required: {matrixCfg.FeeAmount:C}");
+        }
+
         await using var tx = await _matrixEarningsRepository.BeginTransactionAsync();
 
-        // 1.a Débito en el wallet
-        await _walletRepository.CreateAsync(new Wallet
+        try
         {
-            AffiliateId = qualification.UserId,
-            UserId = 1,
-            Concept = $"Activación automática en {matrixCfg.MatrixName}",
-            Detail = $"Ciclo de activación: {qualification.QualificationCount + 1}",
-            Debit = matrixCfg.FeeAmount,
-            Credit = 0,
-            AffiliateUserName = userName,
-            AdminUserName = "adminrecycoin",
-            Status = true,
-            ConceptType = "purchasing_pool",
-            BrandId = brandId,
-            Date = DateTime.Now,
-        });
+            // 1.a Débito en el wallet
+            await _walletRepository.CreateAsync(new Wallet
+            {
+                AffiliateId = qualification.UserId,
+                UserId = 1,
+                Concept = $"Activación automática en {matrixCfg.MatrixName}",
+                Detail = $"Ciclo de activación: {qualification.QualificationCount + 1}",
+                Debit = matrixCfg.FeeAmount,
+                Credit = 0,
+                AffiliateUserName = userName,
+                AdminUserName = "adminrecycoin",
+                Status = true,
+                ConceptType = "purchasing_pool",
+                BrandId = brandId,
+                Date = DateTime.Now,
+            });
 
-        // 1.b Actualizar saldo disponible en memoria
-        availableBalance -= matrixCfg.FeeAmount;
+            // 1.b Actualizar saldo disponible en memoria
+            availableBalance -= matrixCfg.FeeAmount;
 
-        // 1.c Actualizar calificación
-        qualification.IsQualified = true;
-        qualification.QualificationCount += 1;
-        qualification.AvailableBalance = availableBalance;
-        qualification.LastQualificationTotalEarnings = qualification.TotalEarnings;
-        qualification.LastQualificationWithdrawnAmount = qualification.WithdrawnAmount;
-        qualification.LastQualificationDate = DateTime.Now;
-        qualification.UpdatedAt = DateTime.Now;
+            // 1.c Actualizar calificación
+            qualification.IsQualified = true;
+            qualification.QualificationCount += 1;
+            qualification.AvailableBalance = availableBalance;
+            qualification.LastQualificationTotalEarnings = qualification.TotalEarnings;
+            qualification.LastQualificationWithdrawnAmount = qualification.WithdrawnAmount;
+            qualification.LastQualificationDate = DateTime.Now;
+            qualification.UpdatedAt = DateTime.Now;
 
-        await _matrixQualificationRepository.UpdateAsync(qualification);
+            await _matrixQualificationRepository.UpdateAsync(qualification);
 
-        await tx.CommitAsync();
-        return availableBalance;
+            await tx.CommitAsync();
+            return availableBalance;
+        }
+        catch (Exception ex)
+        {
+            await tx.RollbackAsync();
+            _logger.LogError(ex, $"Error applying qualification for user {qualification.UserId} in matrix {matrixCfg.MatrixType}");
+            throw;
+        }
     }
 
     private async Task<double> GetQualificationProgressAsync(int userId, int matrixType)
@@ -161,7 +178,8 @@ public class MatrixService : BaseService, IMatrixService
                 // Si califica, procesar calificación completa y recolectar nuevos usuarios
                 if (qualified)
                 {
-                    var (anyQualified, qualifiedMatrixTypes) = await ProcessAllMatrixQualificationsAsync(recipientId,allMatrices.ToList());
+                    var (anyQualified, qualifiedMatrixTypes) =
+                        await ProcessAllMatrixQualificationsAsync(recipientId, allMatrices.ToList());
                     if (anyQualified)
                     {
                         // Obtener los nuevos usuarios que recibieron comisiones
@@ -272,8 +290,8 @@ public class MatrixService : BaseService, IMatrixService
         return 1;
     }
 
-    private async Task<UserProcessingResult> ProcessSingleUserAsync(int userId, 
-        List<MatrixConfiguration> allMatrices) 
+    private async Task<UserProcessingResult> ProcessSingleUserAsync(int userId,
+        List<MatrixConfiguration> allMatrices)
     {
         var userResult = new UserProcessingResult
         {
@@ -285,8 +303,7 @@ public class MatrixService : BaseService, IMatrixService
         try
         {
             // 1. Procesar calificaciones usando la lista cacheada
-            var (qualified, matrixTypes) =
-                await ProcessAllMatrixQualificationsAsync(userId, allMatrices); // ← sobrecarga optimizada
+            var (qualified, matrixTypes) = await ProcessAllMatrixQualificationsAsync(userId, allMatrices); // ← sobrecarga optimizada
             userResult.WasQualified = qualified;
 
             if (qualified && matrixTypes.Any())
@@ -318,7 +335,8 @@ public class MatrixService : BaseService, IMatrixService
         return userResult;
     }
 
-    private async Task<(bool anyQualified, List<int> qualifiedMatrixTypes)> ProcessAllMatrixQualificationsAsync(int userId,
+    private async Task<(bool anyQualified, List<int> qualifiedMatrixTypes)> ProcessAllMatrixQualificationsAsync(
+        int userId,
         List<MatrixConfiguration> allMatrices)
     {
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
@@ -381,20 +399,35 @@ public class MatrixService : BaseService, IMatrixService
             var qualifies = await CheckQualificationAsync(userId, m.MatrixType);
             if (!qualifies) continue;
 
-            // Aplicar calificación (débito + actualización) **dentro de una transacción**
-            availableBalance = await ApplyQualificationAsync(q, m, userName, availableBalance);
+            try
+            {
+                // Aplicar calificación (débito + actualización) **dentro de una transacción**
+                availableBalance = await ApplyQualificationAsync(q, m, userName, availableBalance);
 
-            qualifiedMatrixTypes.Add(m.MatrixType);
-            anyQualified = true;
+                qualifiedMatrixTypes.Add(m.MatrixType);
+                anyQualified = true;
 
-            // Colocar al usuario en la matriz y procesar comisiones
-            await _accountServiceAdapter.PlaceUserInMatrix(new MatrixRequest { UserId = userId, MatrixType = m.MatrixType }, brandId);
+                // Colocar al usuario en la matriz y procesar comisiones
+                await _accountServiceAdapter.PlaceUserInMatrix(
+                    new MatrixRequest { UserId = userId, MatrixType = m.MatrixType }, brandId);
 
-            var recipients = await ProcessMatrixCommissionsAsync(userId, m.MatrixType, q.QualificationCount);
-            usersToVerify.UnionWith(recipients);
+                var recipients = await ProcessMatrixCommissionsAsync(userId, m.MatrixType, q.QualificationCount);
+                usersToVerify.UnionWith(recipients);
 
-            await _redisCache.InvalidateBalanceAsync(userId);
-            await _redisCache.InvalidateBalanceAsync(recipients.ToArray());
+                await _redisCache.InvalidateBalanceAsync(userId);
+                await _redisCache.InvalidateBalanceAsync(recipients.ToArray());
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Available Balance"))
+            {
+                // Si no hay saldo suficiente, loggear y continuar con la siguiente matriz
+                _logger.LogInformation($"User {userId} could not qualify in matrix {m.MatrixType} due to insufficient balance: {ex.Message}");
+                break; // Salir del bucle 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error processing qualification for user {userId} in matrix {m.MatrixType}");
+                // Continuar con la siguiente matriz en caso de otros errores
+            }
         }
 
         // --- Sincronizar saldo final en todos los registros ------------------------
@@ -405,7 +438,7 @@ public class MatrixService : BaseService, IMatrixService
                 qual.UpdatedAt = DateTime.Now;
                 await _matrixQualificationRepository.UpdateAsync(qual);
             }
-        
+
         if (usersToVerify.Count > 0)
         {
             await VerifyRecipientQualificationsAsync(usersToVerify, 1, allMatrices);
@@ -573,7 +606,8 @@ public class MatrixService : BaseService, IMatrixService
         return progress >= requiredAmount; // ***sin tocar IsQualified aquí*** :contentReference[oaicite:0]{index=0}
     }
 
-    public async Task<(bool anyQualified, List<int> qualifiedMatrixTypes)> ProcessAllMatrixQualificationsAsync(int userId)
+    public async Task<(bool anyQualified, List<int> qualifiedMatrixTypes)>
+        ProcessAllMatrixQualificationsAsync(int userId)
     {
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
         var allMatrices = await _redisCache.Remember(

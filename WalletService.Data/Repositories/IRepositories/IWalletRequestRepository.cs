@@ -16,4 +16,5 @@ public interface IWalletRequestRepository
     Task<WalletsRequest?> GetWalletRequestsByInvoiceNumber(int     invoiceId);
     Task<WalletsRequest> UpdateWalletRequestsAsync(WalletsRequest requests);
     Task<decimal?> GetTotalWithdrawnByAffiliateId(long affiliateId);
+    Task<WalletsRequest?> GetByIdAsync(int id);
 }

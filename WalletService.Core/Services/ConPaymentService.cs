@@ -10,6 +10,7 @@ using WalletService.Core.Caching.Extensions;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
+using WalletService.Data.Database;
 using WalletService.Data.Database.CustomModels;
 using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
@@ -42,6 +43,7 @@ public class ConPaymentService : BaseService, IConPaymentService
     private readonly IBrandService _brandService;
     private readonly IWalletWithdrawalService _walletWithDrawalService;
     private readonly ICoinPayPaymentStrategy _coinPayPaymentStrategy;
+    private readonly WalletServiceDbContext _dbContext;
     public ConPaymentService(
         IMapper mapper, IOptions<ApplicationConfiguration> appSettings,
         ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
@@ -56,7 +58,8 @@ public class ConPaymentService : BaseService, IConPaymentService
         RedisCache redisCache,
         IBrandService brandService,
         IWalletWithdrawalService walletWithDrawalService,
-        ICoinPayPaymentStrategy coinPayPaymentStrategy
+        ICoinPayPaymentStrategy coinPayPaymentStrategy,
+        WalletServiceDbContext dbContext
     ) : base(mapper)
     {
         _invoiceRepository = invoiceRepository;
@@ -72,6 +75,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         _brandService = brandService;
         _walletWithDrawalService = walletWithDrawalService;
         _coinPayPaymentStrategy = coinPayPaymentStrategy;
+        _dbContext = dbContext;
         var appSettings1 = appSettings.Value;
         // Configuración específica para brandId = 3
         string apiKey, apiSecret,merchantId;
@@ -563,29 +567,25 @@ public class ConPaymentService : BaseService, IConPaymentService
         }
     }
 
-    public async Task<CoinPaymentWithdrawalResponse?> CreateMassWithdrawal(WalletsRequest[] requests)
+     public async Task<CoinPaymentWithdrawalResponse?> CreateMassWithdrawal(WalletsRequest[] requests)
     {
         _logger.LogInformation($"[ConPaymentService] | CreateMassWithdrawal | Start | requests: {requests.ToJsonString()}");
 
+        // 1) Armar parámetros para la llamada masiva
         var withdrawals = await GetAddressesByAffiliateId(requests);
-
-        SortedList<string, string> parms = new SortedList<string, string>
-        {
-            { "cmd", "create_mass_withdrawal" }
-        };
-
+        var parms = new SortedList<string, string> { { "cmd", "create_mass_withdrawal" } };
         var tax = Constants.CoinPaymentTax;
-        int count = 1;
-        foreach (var w in withdrawals)
+        for (int i = 0; i < withdrawals.Count; i++)
         {
-            decimal amountAfterTax = w.Amount - tax;
-            string prefix = $"wd[wd{count}]";
+            var w = withdrawals[i];
+            var amountAfterTax = w.Amount - tax;
+            var prefix = $"wd[wd{i + 1}]";
             parms.Add($"{prefix}[amount]", amountAfterTax.ToString(CultureInfo.InvariantCulture));
             parms.Add($"{prefix}[address]", w.Address);
             parms.Add($"{prefix}[currency]", w.Currency);
-            count++;
         }
 
+        // 2) Llamar a la API
         var restResponse = await CallApiAsync("create_mass_withdrawal", parms);
         if (!restResponse.IsSuccessful)
             throw new Exception($"Error calling API: {restResponse.StatusDescription}");
@@ -597,45 +597,41 @@ public class ConPaymentService : BaseService, IConPaymentService
             return null;
         }
 
-        var successfulRequests = new List<WalletsRequest>();
-        var successfulIds = new List<long>();
-        int index = 0;
-
+        // 3) Filtrar solo los IDs que la API devolvió con Error == "ok"
+        var succeededApiIds = new List<long>();
+        int idx = 0;
         foreach (var key in withdrawalResults.Result.Keys)
         {
-            var responseData = withdrawalResults.Result[key];
-
-            if (responseData.Error == "ok")
-            {
-                var originalRequest = requests[index];
-                successfulRequests.Add(originalRequest);
-                successfulIds.Add(originalRequest.Id);
-            }
-
-            index++;
+            if (withdrawalResults.Result[key].Error == "ok")
+                succeededApiIds.Add(requests[idx].Id);
+            idx++;
         }
 
         var today = DateTime.Now;
-
-        foreach (var successfulRequest in successfulRequests)
+        foreach (var withdrawalId in succeededApiIds)
         {
+            var req = requests.First(r => r.Id == withdrawalId);
+
+            // **EF Core Transaction por cada retiro individual**
+            await using var tx = await _dbContext.Database.BeginTransactionAsync();
             try
             {
-                var user = await _accountServiceAdapter.GetUserInfo(successfulRequest.AffiliateId,
-                    _brandService.BrandId);
-
+                // 4a) Obtener usuario
+                var user = await _accountServiceAdapter.GetUserInfo(req.AffiliateId, _brandService.BrandId);
                 if (user == null)
                 {
-                    _logger.LogWarning($"[ConPaymentService] | CreateMassWithdrawal | No user found for ID {successfulRequest.AffiliateId}");
+                    _logger.LogWarning($"[ConPaymentService] | No user found for ID {req.AffiliateId}");
+                    await tx.RollbackAsync();
                     continue;
                 }
 
+                // 4b) Crear movimiento en Wallet
                 var debitTransaction = new Wallet
                 {
-                    AffiliateId = successfulRequest.AffiliateId,
+                    AffiliateId = req.AffiliateId,
                     UserId = 1,
                     Credit = 0,
-                    Debit = successfulRequest.Amount,
+                    Debit = req.Amount,
                     Deferred = 0,
                     Status = true,
                     Concept = Constants.SendFundsConcept,
@@ -657,35 +653,48 @@ public class ConPaymentService : BaseService, IConPaymentService
                     ConceptType = WalletConceptType.balance_transfer.ToString(),
                     BrandId = _brandService.BrandId
                 };
+                await _walletRepository.CreateWalletAsync(debitTransaction);
 
+                // 4c) Crear registro de WalletWithdrawal
                 var walletWithdrawal = new WalletWithDrawalRequest
                 {
                     AffiliateId = user.Id,
                     AffiliateUserName = user.UserName ?? "unknown",
-                    Amount = successfulRequest.Amount,
+                    Amount = req.Amount,
                     IsProcessed = true,
-                    Observation = $"{Constants.SendFundsConcept} {successfulRequest.Id}",
+                    Observation = $"{Constants.SendFundsConcept} {req.Id}",
                     AdminObservation = "MassWithdrawal - ConPayments",
                     Date = today,
                     ResponseDate = today,
                     RetentionPercentage = Constants.EmptyValue,
                     Status = true
                 };
-
-                await _walletRepository.CreateWalletAsync(debitTransaction);
                 await _walletWithDrawalService.CreateWalletWithdrawalAsync(walletWithdrawal);
+
+                // 4d) Actualizar el status del WalletRequest
+                var wr = await _walletRequestRepository.GetByIdAsync((int)req.Id);
+                if (wr == null)
+                {
+                    _logger.LogWarning($"[ConPaymentService] | No WalletRequest found for ID {req.Id}");
+                    await tx.RollbackAsync();
+                    continue;
+                }
                 
-                await _redisCache.InvalidateBalanceAsync(successfulRequest.AffiliateId);
+                wr.Status = (int)WithdrawalStatus.Completed;
+                wr.UpdatedAt = today;
+                await _walletRequestRepository.UpdateWalletRequestsAsync(wr);
+
+                // 4e) Commit
+                await tx.CommitAsync();
+
+                // 4f) Invalidar cache
+                await _redisCache.InvalidateBalanceAsync(req.AffiliateId);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"[ConPaymentService] | CreateMassWithdrawal | Error processing affiliateId: {successfulRequest.AffiliateId}, {ex}");
+                await tx.RollbackAsync();
+                _logger.LogError(ex, $"[ConPaymentService] | Error processing withdrawalId {withdrawalId}");
             }
-        }
-
-        if (successfulIds.Count > 0)
-        {
-            await UpdateSuccessfulWithdrawals(successfulIds);
         }
 
         return withdrawalResults;
@@ -722,7 +731,7 @@ public class ConPaymentService : BaseService, IConPaymentService
                     continue;
                 }
 
-                var btcAddress = validData.FirstOrDefault(x => !string.IsNullOrEmpty(x.Address))?.Address;
+                var btcAddress = validData.FirstOrDefault(x => !string.IsNullOrEmpty(x?.Address))?.Address;
 
                 if (string.IsNullOrEmpty(btcAddress))
                 {
