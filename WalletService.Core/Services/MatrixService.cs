@@ -457,8 +457,7 @@ public class MatrixService : BaseService, IMatrixService
         try
         {
             var matrixConfigResponse = await _configurationAdapter.GetMatrixConfiguration(brandId, matrixType);
-            var matrixConfig =
-                JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfigResponse.Content!);
+            var matrixConfig = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfigResponse.Content!);
 
             if (matrixConfigResponse.Content == null || matrixConfigResponse.StatusCode != HttpStatusCode.OK)
                 throw new ApplicationException(
@@ -469,13 +468,11 @@ public class MatrixService : BaseService, IMatrixService
                     $"Error deserialize matrix configuration: {matrixConfigResponse.StatusCode}");
 
             // Verificar que el usuario tenga una posición válida en esta matriz
-            var positionResponse =
-                await _accountServiceAdapter.IsActiveInMatrix(
+            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(
                     new MatrixRequest { UserId = userId, MatrixType = matrixType }, brandId);
 
             // Deserializamos la respuesta completa
-            var matrixPositionResponse =
-                JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!);
+            var matrixPositionResponse = JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!);
             // Extraemos la posición desde la propiedad Data
             var position = matrixPositionResponse?.Data;
 
@@ -600,8 +597,7 @@ public class MatrixService : BaseService, IMatrixService
             ? cfg!.Threshold
             : cfg!.RangeMax * cycle;
 
-        var progress = commissions - qual.LastQualificationTotalEarnings
-            + withdrawn - qual.LastQualificationWithdrawnAmount;
+        var progress = commissions;
 
         return progress >= requiredAmount; // ***sin tocar IsQualified aquí*** :contentReference[oaicite:0]{index=0}
     }
