@@ -578,7 +578,7 @@ public class CoinPayPaymentStrategy : ICoinPayPaymentStrategy
                 InvoiceAmount = debitTransactionRequest.Debit,
                 BrandId = request.BrandId,
                 AdminUserName = Constants.RecycoinAdmin,
-                LevelPercentages = [8.0m,5.0m,4.0m,2.0m,1.0m]
+                LevelPercentages = [15.0m, 5.0m],
             });
             
             _backgroundJobs.Enqueue(() => 
