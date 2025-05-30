@@ -96,8 +96,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
         if (!hasWalletBtc)
             return null;
 
-        var response =
-            await _accountServiceAdapter.VerificationCode(request.VerificationCode, request.UserPassword, request.AffiliateId,_brandService.BrandId);
+        var response = await _accountServiceAdapter.VerificationCode(request.VerificationCode, request.UserPassword, request.AffiliateId,_brandService.BrandId);
         var userAvailableBalance = await _walletRepository.GetAvailableBalanceByAffiliateId(request.AffiliateId,_brandService.BrandId);
         var userReverseBalance   = await _walletRepository.GetReverseBalanceByAffiliateId(request.AffiliateId,_brandService.BrandId);
         var isActivePool         = await _walletRepository.IsActivePoolGreaterThanOrEqualTo25(request.AffiliateId,_brandService.BrandId);

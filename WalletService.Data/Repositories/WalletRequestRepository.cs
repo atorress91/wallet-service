@@ -52,15 +52,15 @@ public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
         SELECT * 
           FROM wallet_service.create_wallet_request(
               {request.AffiliateId},
-              {request.PaymentAffiliateId},
+              {request.PaymentAffiliateId}::integer,
               {request.OrderNumber},
               {request.Amount},
               {request.Concept},
               {request.Status},
-              {request.AttentionDate},
+              {request.AttentionDate}::timestamp with time zone,
               {request.AdminUserName},
               {request.Type},
-              {request.InvoiceNumber},
+              {request.InvoiceNumber}::integer,
               {request.BrandId}
           )";
 
