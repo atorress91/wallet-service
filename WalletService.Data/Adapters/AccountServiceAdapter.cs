@@ -191,10 +191,12 @@ public class AccountServiceAdapter : BaseAdapter, IAccountServiceAdapter
     
     public Task<IRestResponse> GetUplinePositionsAsync(MatrixRequest request, long brandId)
     {
+        var cycle = request.Cycle ?? 0;
         var queryParams = new Dictionary<string, string>
         {
             { "userId", request.UserId.ToString() },
-            { "matrixType", request.MatrixType.ToString() }
+            { "matrixType", request.MatrixType.ToString() },
+            { "cycle", cycle.ToString()  }
         };
 
         return Get("/matrix/get_upline_position_async", queryParams, brandId);

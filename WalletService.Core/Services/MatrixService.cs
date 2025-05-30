@@ -460,16 +460,13 @@ public class MatrixService : BaseService, IMatrixService
             var matrixConfig = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfigResponse.Content!);
 
             if (matrixConfigResponse.Content == null || matrixConfigResponse.StatusCode != HttpStatusCode.OK)
-                throw new ApplicationException(
-                    $"Error retrieving matrix configuration: {matrixConfigResponse.StatusCode}");
+                throw new ApplicationException($"Error retrieving matrix configuration: {matrixConfigResponse.StatusCode}");
 
             if (matrixConfig?.Data is null)
-                throw new ApplicationException(
-                    $"Error deserialize matrix configuration: {matrixConfigResponse.StatusCode}");
+                throw new ApplicationException($"Error deserialize matrix configuration: {matrixConfigResponse.StatusCode}");
 
             // Verificar que el usuario tenga una posición válida en esta matriz
-            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(
-                    new MatrixRequest { UserId = userId, MatrixType = matrixType }, brandId);
+            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(new MatrixRequest { UserId = userId, MatrixType = matrixType }, brandId);
 
             // Deserializamos la respuesta completa
             var matrixPositionResponse = JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!);
@@ -486,7 +483,7 @@ public class MatrixService : BaseService, IMatrixService
 
             // Obtener todas las posiciones superiores (upline)
             var uplinePositionsResponse = await _accountServiceAdapter.GetUplinePositionsAsync(
-                new MatrixRequest { UserId = userId, MatrixType = matrixType }, brandId);
+                new MatrixRequest { UserId = userId, MatrixType = matrixType, Cycle = userQualificationCount}, brandId);
 
             var jObject = JObject.Parse(uplinePositionsResponse.Content!);
             var allUplinePositions = jObject["data"]?.ToObject<IEnumerable<MatrixPositionDto>>();
@@ -669,9 +666,7 @@ public class MatrixService : BaseService, IMatrixService
                 throw new ApplicationException("Matrix configuration data is missing or invalid");
 
             // 2. Verificar si el usuario ya tiene una posición en esta matriz
-            var positionResponse =
-                await _accountServiceAdapter.IsActiveInMatrix(
-                    new MatrixRequest { UserId = userId, MatrixType = matrixType }, _brandService.BrandId);
+            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(new MatrixRequest { UserId = userId, MatrixType = matrixType }, _brandService.BrandId);
             var existing = JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!);
 
             if (positionResponse.IsSuccessful && existing?.Data == true)
