@@ -410,14 +410,17 @@ public class ConPaymentService : BaseService, IConPaymentService
         if (!headers.TryGetValue("Hmac", out var receivedHmac) || String.IsNullOrEmpty(receivedHmac))
             return false;
 
-        if (string.IsNullOrEmpty(ipnRequest.merchant) || ipnRequest.merchant != _merchantId)
+        if (string.IsNullOrEmpty(ipnRequest.merchant))
             return false;
 
         if (ipnRequest.ipn_type != "api")
             return false;
 
-        if (ipnRequest.currency1 != "USDT.TRC20")
+        var validCurrencies = new[] { "USDT.TRC20", "USDT.BEP20" };
+
+        if (!validCurrencies.Contains(ipnRequest.currency1))
             return false;
+
 
         return true;
     }
