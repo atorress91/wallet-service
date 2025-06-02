@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using WalletService.Core.Caching;
+using WalletService.Core.Caching.Extensions;
 using WalletService.Core.PaymentStrategies.IPaymentStrategies;
 using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
@@ -186,13 +187,14 @@ public class WalletRequestService : BaseService, IWalletRequestService
         {
             item.AttentionDate = today;
             item.UpdatedAt     = today;
+            item.CreatedAt     = today;
+            item.CreationDate  = today;
             item.Status        = WalletRequestStatus.cancel.ToByte();
         });
 
         foreach (var userId in ids)
         {
-            var cacheKey = string.Format(CacheKeys.BalanceInformationModel2, userId);
-            await _redisCache.Delete(cacheKey);
+            await _redisCache.InvalidateBalanceAsync((int)userId);
         }
 
         await _walletRequestRepository.UpdateBulkWalletRequestsAsync(idsList.ToList());
