@@ -44,6 +44,7 @@ public class ConPaymentService : BaseService, IConPaymentService
     private readonly IWalletWithdrawalService _walletWithDrawalService;
     private readonly ICoinPayPaymentStrategy _coinPayPaymentStrategy;
     private readonly WalletServiceDbContext _dbContext;
+
     public ConPaymentService(
         IMapper mapper, IOptions<ApplicationConfiguration> appSettings,
         ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
@@ -78,7 +79,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         _dbContext = dbContext;
         var appSettings1 = appSettings.Value;
         // Configuración específica para brandId = 3
-        string apiKey, apiSecret,merchantId;
+        string apiKey, apiSecret, merchantId;
         if (brandService.BrandId == 3)
         {
             // Configuración específica para HouseCoin (brandId = 3)
@@ -93,6 +94,7 @@ public class ConPaymentService : BaseService, IConPaymentService
             apiSecret = appSettings1.ConPayments.Secret;
             merchantId = appSettings1.ConPayments.MerchantId;
         }
+
         _conPaymentsApi = new ConPaymentsApi.ConPaymentsApi(apiSecret, apiKey);
         _merchantId = merchantId;
     }
@@ -168,12 +170,37 @@ public class ConPaymentService : BaseService, IConPaymentService
         var parms = ConfigureParms(request);
 
         var restResponse = await CallApiAsync("create_transaction", parms);
-        _logger.LogInformation(
-            $"[ConPaymentService] | CreatePayment | Response Api | response: {restResponse.ToJsonString()}");
+        _logger.LogInformation($"[ConPaymentService] | CreatePayment | Response Api | response: {restResponse.ToJsonString()}");
 
         if (!restResponse.IsSuccessful)
         {
             throw new Exception($"Error calling API: {restResponse.StatusDescription}");
+        }
+        
+        if (restResponse.IsSuccessful && !string.IsNullOrEmpty(restResponse.Content))
+        {
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(restResponse.Content);
+                var root = doc.RootElement;
+                if (root.TryGetProperty("error", out var errorElement) && errorElement.ValueKind == System.Text.Json.JsonValueKind.String)
+                {
+                    var errorMessage = errorElement.GetString();
+                        
+                    if (!string.IsNullOrEmpty(errorMessage) && !errorMessage.Equals("ok", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogWarning(
+                            $"The API call was technically successful (StatusCode: {restResponse.StatusCode}), but the response body indicates an application-level error: {errorMessage}");
+                        throw new Exception(
+                            $"The API operation failed according to the response content: {errorMessage}");
+                    }
+                }
+            }
+            catch (System.Text.Json.JsonException jsonEx)
+            {
+                _logger.LogWarning(
+                    $"Could not parse the API response content as JSON, although IsSuccessful was true. Content: {restResponse.Content}. Exception: {jsonEx.Message}");
+            }
         }
 
         return await HandleSuccessfulResponse(restResponse, request);
@@ -182,8 +209,8 @@ public class ConPaymentService : BaseService, IConPaymentService
     private void SetRequestDefaults(ConPaymentRequest request)
     {
         // request.Address = Constants.ConPaymentAddress;
-        request.Currency1 = Constants.CoinPaymentsBnbCurrency ;
-        request.Currency2 = Constants.CoinPaymentsBnbCurrency ;
+        request.Currency1 = Constants.CoinPaymentsBnbCurrency;
+        request.Currency2 = Constants.CoinPaymentsBnbCurrency;
 
         if (request.Products.Count > 0)
         {
@@ -268,7 +295,8 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     public async Task<string> ProcessIpnAsync(IpnRequest ipnRequest, IHeaderDictionary headers)
     {
-        _logger.LogInformation($"[ConPaymentService] | ProcessIpnAsync | IpnRequest: {ipnRequest.ToJsonString()} | headers: {headers.ToJsonString()}");
+        _logger.LogInformation(
+            $"[ConPaymentService] | ProcessIpnAsync | IpnRequest: {ipnRequest.ToJsonString()} | headers: {headers.ToJsonString()}");
         if (!IsRequestValid(ipnRequest, headers))
             return "Invalid IPN Request";
 
@@ -341,23 +369,28 @@ public class ConPaymentService : BaseService, IConPaymentService
             {
                 case ProductType.Membership:
                     await ExecuteMembershipPayment(walletRequest, products);
-                    _logger.LogInformation($"[CoinPaymentService] | ProcessPaymentTransaction | Membership Payment executed");
+                    _logger.LogInformation(
+                        $"[CoinPaymentService] | ProcessPaymentTransaction | Membership Payment executed");
                     break;
                 case ProductType.EcoPool:
                     await ExecuteEcoPoolPayment(walletRequest, products);
-                    _logger.LogInformation($"[CoinPaymentService] | ProcessPaymentTransaction | Eco pool Payment executed");
+                    _logger.LogInformation(
+                        $"[CoinPaymentService] | ProcessPaymentTransaction | Eco pool Payment executed");
                     break;
                 case ProductType.RecyCoin:
                     await ExecuteRecyCoinPayment(walletRequest, products);
-                    _logger.LogInformation($"[CoinPaymentService] | ProcessPaymentTransaction | RecyCoin Payment executed");
+                    _logger.LogInformation(
+                        $"[CoinPaymentService] | ProcessPaymentTransaction | RecyCoin Payment executed");
                     break;
                 case ProductType.HouseCoinPlan:
                     await ExecuteHouseCoinPlanPayment(walletRequest, products);
-                    _logger.LogInformation($"[CoinPaymentService] | ProcessPaymentTransaction | HouseCoinPlan Payment executed");
+                    _logger.LogInformation(
+                        $"[CoinPaymentService] | ProcessPaymentTransaction | HouseCoinPlan Payment executed");
                     break;
                 case ProductType.Course:
                     await ExecuteCoursePayment(walletRequest, products);
-                    _logger.LogInformation($"[CoinPaymentService] | ProcessPaymentTransaction | Course Payment executed");
+                    _logger.LogInformation(
+                        $"[CoinPaymentService] | ProcessPaymentTransaction | Course Payment executed");
                     break;
             }
         }
@@ -383,7 +416,8 @@ public class ConPaymentService : BaseService, IConPaymentService
         }
         else
         {
-            var membershipResult = await _inventoryServiceAdapter.GetProductById(productIds.First(), _brandService.BrandId);
+            var membershipResult =
+                await _inventoryServiceAdapter.GetProductById(productIds.First(), _brandService.BrandId);
             var productResult = membershipResult.Content!.ToJsonObject<ProductResponse>();
             firstProductCategory = productResult!.Data.PaymentGroup;
         }
@@ -504,7 +538,7 @@ public class ConPaymentService : BaseService, IConPaymentService
 
         if (bonusPaymentResult is false)
             return;
-        
+
         await _redisCache.InvalidateBalanceAsync(affiliateBonusWinner.Id);
         await _brevoEmailService.SendBonusConfirmation(affiliateBonusWinner, userInfo.UserName ?? string.Empty,
             _brandService.BrandId);
@@ -570,9 +604,10 @@ public class ConPaymentService : BaseService, IConPaymentService
         }
     }
 
-     public async Task<CoinPaymentWithdrawalResponse?> CreateMassWithdrawal(WalletsRequest[] requests)
+    public async Task<CoinPaymentWithdrawalResponse?> CreateMassWithdrawal(WalletsRequest[] requests)
     {
-        _logger.LogInformation($"[ConPaymentService] | CreateMassWithdrawal | Start | requests: {requests.ToJsonString()}");
+        _logger.LogInformation(
+            $"[ConPaymentService] | CreateMassWithdrawal | Start | requests: {requests.ToJsonString()}");
 
         // 1) Armar parámetros para la llamada masiva
         var withdrawals = await GetAddressesByAffiliateId(requests);
@@ -682,7 +717,7 @@ public class ConPaymentService : BaseService, IConPaymentService
                     await tx.RollbackAsync();
                     continue;
                 }
-                
+
                 wr.Status = (int)WithdrawalStatus.Completed;
                 wr.UpdatedAt = today;
                 await _walletRequestRepository.UpdateWalletRequestsAsync(wr);
@@ -711,7 +746,9 @@ public class ConPaymentService : BaseService, IConPaymentService
         {
             try
             {
-                var response = await _accountServiceAdapter.GetAffiliateBtcByAffiliateId(request.AffiliateId, _brandService.BrandId);
+                var response =
+                    await _accountServiceAdapter.GetAffiliateBtcByAffiliateId(request.AffiliateId,
+                        _brandService.BrandId);
 
                 if (response.Content == null)
                 {
@@ -750,7 +787,8 @@ public class ConPaymentService : BaseService, IConPaymentService
                 };
 
                 withdrawals.Add(withdrawal);
-               _logger.LogInformation($"Withdrawal request created for affiliate {request.AffiliateId} to the address {btcAddress}");
+                _logger.LogInformation(
+                    $"Withdrawal request created for affiliate {request.AffiliateId} to the address {btcAddress}");
             }
             catch (Exception ex)
             {
@@ -760,14 +798,17 @@ public class ConPaymentService : BaseService, IConPaymentService
 
         return withdrawals;
     }
+
     private async Task UpdateSuccessfulWithdrawals(List<long> successfulWithdrawalIds)
     {
-        _logger.LogInformation($"[WalletService] | UpdateSuccessfulWithdrawals | Starting update for {successfulWithdrawalIds.ToJsonString()} successful withdrawals.");
+        _logger.LogInformation(
+            $"[WalletService] | UpdateSuccessfulWithdrawals | Starting update for {successfulWithdrawalIds.ToJsonString()} successful withdrawals.");
         var withdrawals = await _walletRequestRepository.GetWalletRequestsByIds(successfulWithdrawalIds);
 
         foreach (var withdrawal in withdrawals)
         {
-            _logger.LogDebug($"[WalletService] | UpdateSuccessfulWithdrawals | Updating status for withdrawal ID: {withdrawal.Id}");
+            _logger.LogDebug(
+                $"[WalletService] | UpdateSuccessfulWithdrawals | Updating status for withdrawal ID: {withdrawal.Id}");
             withdrawal.Status = (int)WithdrawalStatus.Completed;
             withdrawal.UpdatedAt = DateTime.Now;
         }
@@ -775,7 +816,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         await _walletRequestRepository.UpdateBulkWalletRequestsAsync(withdrawals);
         _logger.LogInformation($"[WalletService] | UpdateSuccessfulWithdrawals | Successfully updated withdrawals.");
     }
-    
+
     private async Task ExecuteHouseCoinPlanPayment(WalletRequest walletRequest, ICollection<ProductRequest> products)
     {
         walletRequest.ProductsList = products.Select(product => new ProductsRequests
