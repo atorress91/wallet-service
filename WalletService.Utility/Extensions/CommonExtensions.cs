@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Web;
+using Newtonsoft.Json.Linq;
 using WalletService.Models.Enums;
 
 namespace WalletService.Utility.Extensions;
@@ -90,6 +91,22 @@ public static class CommonExtensions
             yield return func(e1.Current, e2.Current, e3.Current);
     }
 
+    public static int ExtractProductIdFromJson_JArray(this string productsJson)
+    {
+        if (string.IsNullOrWhiteSpace(productsJson))
+            return 0;
+        
+        try
+        {
+            var productsArray = JArray.Parse(productsJson);
+            var firstProduct = productsArray.FirstOrDefault();
+            return firstProduct?["ProductId"]?.Value<int?>() ?? 0;
+        }
+        catch (JsonException) 
+        {
+            return 0;
+        }
+    }
 
     public static string StringUpperNormalize(this string text)
         => text.ToUpper().Replace("İ", "I").Replace("Ş", "S").Replace("Ö", "O").Replace("Ç", "C");

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -11,8 +12,10 @@ using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
+using WalletService.Models.Requests.ConPaymentRequest;
 using WalletService.Models.Requests.MatrixRequest;
 using WalletService.Models.Responses;
+using WalletService.Utility.Extensions;
 
 namespace WalletService.Core.Services;
 
@@ -28,14 +31,15 @@ public class MatrixService : BaseService, IMatrixService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<MatrixService> _logger;
     private readonly RedisCache _redisCache;
-
+    private readonly ICoinPaymentTransactionRepository _coinPaymentTransactionRepository;
     public MatrixService(ILogger<MatrixService> logger,
         IMapper mapper, IConfigurationAdapter configurationAdapter, IBrandService brandService,
         IMatrixQualificationRepository matrixQualificationRepository,
         IMatrixEarningsRepository matrixEarningsRepository,
         IAccountServiceAdapter accountServiceAdapter, IWalletRepository walletRepository,
         IWalletRequestRepository walletRequestRepository,
-        IServiceScopeFactory scopeFactory, RedisCache redisCache) : base(mapper)
+        IServiceScopeFactory scopeFactory, RedisCache redisCache,
+        ICoinPaymentTransactionRepository coinPaymentTransactionRepository) : base(mapper)
     {
         _brandService = brandService;
         _configurationAdapter = configurationAdapter;
@@ -45,17 +49,34 @@ public class MatrixService : BaseService, IMatrixService
         _walletRepository = walletRepository;
         _walletRequestRepository = walletRequestRepository;
         _scopeFactory = scopeFactory;
-
         _logger = logger;
         _redisCache = redisCache;
+        _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
     }
+    private bool IsRequestValid(IpnRequest request, IHeaderDictionary headers)
+    {
+        if(string.IsNullOrEmpty(request.ipn_mode) || request.ipn_mode.ToLower() != "hmac")
+            return false;
+        
+        if(!headers.TryGetValue("Hmac", out var receivedHmac) || String.IsNullOrEmpty(receivedHmac) )
+            return false;
+        
+        if(string.IsNullOrEmpty(request.merchant))
+            return false;
+        
+        if(request.ipn_type != "api")
+            return false;
 
-    // -----------------------------------------------------------------------------
-    // 1.  NUEVO   –  Método transaccional que centraliza débito + calificación
-    // -----------------------------------------------------------------------------
+        var validCurrencies = new[] { "USDT.TRC20", "USDT.BEP20" };
+
+        if (!validCurrencies.Contains(request.currency1))
+            return false;
+
+        return true;
+    }
+    
     private async Task<decimal> ApplyQualificationAsync(MatrixQualification qualification, MatrixConfiguration matrixCfg,
-        string userName,
-        decimal availableBalance)
+        string userName, decimal availableBalance)
     {
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
 
@@ -153,7 +174,6 @@ public class MatrixService : BaseService, IMatrixService
             return 0;
         }
     }
-
     private async Task VerifyRecipientQualificationsAsync(HashSet<int> userIds, int depth,
         IReadOnlyList<MatrixConfiguration> allMatrices)
     {
@@ -212,59 +232,6 @@ public class MatrixService : BaseService, IMatrixService
             break;
         }
     }
-
-    public async Task FixInconsistentQualificationRecordsAsync()
-    {
-        // Obtener todos los registros de calificación con contadores positivos pero valores de corte en 0
-        var inconsistentRecords = await _matrixQualificationRepository.GetAllInconsistentRecordsAsync();
-        var correctedCount = 0;
-
-        var matrixQualifications = inconsistentRecords as MatrixQualification[] ?? inconsistentRecords.ToArray();
-        foreach (var record in matrixQualifications)
-        {
-            try
-            {
-                // 1. Obtener los datos financieros reales y actualizados del usuario
-                var commissions =
-                    await _walletRepository.GetQualificationBalanceAsync(record.UserId, _brandService.BrandId);
-                var totalWithdrawn = await _walletRequestRepository.GetTotalWithdrawnByAffiliateId(record.UserId);
-                var availableBalance =
-                    await _walletRepository.GetAvailableBalanceByAffiliateId((int)record.UserId, _brandService.BrandId);
-                var amountRequests = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(
-                    (int)record.UserId,
-                    _brandService.BrandId);
-                availableBalance -= amountRequests;
-
-                // 2. Actualizar los valores financieros correctos en el registro
-                record.TotalEarnings = commissions ?? 0m;
-                record.WithdrawnAmount = totalWithdrawn ?? 0m;
-                record.AvailableBalance = availableBalance;
-
-                // 3. Establecer los valores de corte para que coincidan con los valores actuales
-                // Esto resetea efectivamente el progreso hacia la siguiente calificación
-                record.LastQualificationTotalEarnings = record.TotalEarnings;
-                record.LastQualificationWithdrawnAmount = record.WithdrawnAmount;
-                record.LastQualificationDate = DateTime.Now;
-                record.UpdatedAt = DateTime.Now;
-
-                // 4. Guardar los cambios
-                await _matrixQualificationRepository.UpdateAsync(record);
-
-                correctedCount++;
-                _logger.LogInformation(
-                    $"Fixed qualification record ID {record.QualificationId} for user {record.UserId}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(
-                    $"Error fixing qualification record ID {record.QualificationId} for user {record.UserId}: {ex.Message}");
-            }
-        }
-
-        _logger.LogInformation(
-            $"Process completed. Corrected {correctedCount} of {matrixQualifications.Count()} records.");
-    }
-
     private async Task<int> GetNextUnqualifiedMatrixTypeAsync(int userId,
         IReadOnlyList<MatrixConfiguration> allMatrices)
     {
@@ -289,9 +256,8 @@ public class MatrixService : BaseService, IMatrixService
         // el próximo objetivo es la Matrix 1 del ciclo siguiente.
         return 1;
     }
-
-    private async Task<UserProcessingResult> ProcessSingleUserAsync(int userId,
-        List<MatrixConfiguration> allMatrices)
+    
+    private async Task<UserProcessingResult> ProcessSingleUserAsync(int userId, List<MatrixConfiguration> allMatrices)
     {
         var userResult = new UserProcessingResult
         {
@@ -334,9 +300,8 @@ public class MatrixService : BaseService, IMatrixService
 
         return userResult;
     }
-
-    private async Task<(bool anyQualified, List<int> qualifiedMatrixTypes)> ProcessAllMatrixQualificationsAsync(
-        int userId,
+    
+    private async Task<(bool anyQualified, List<int> qualifiedMatrixTypes)> ProcessAllMatrixQualificationsAsync(int userId,
         List<MatrixConfiguration> allMatrices)
     {
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
@@ -550,7 +515,148 @@ public class MatrixService : BaseService, IMatrixService
             throw; // Relanzar la excepción para manejo superior
         }
     }
+    
+    // Método específico para activación con CoinPayments (sin débito)
+    private async Task<bool> ProcessCoinPaymentsMatrixActivationAsync(int userId, int matrixType, int? recipientId = null)
+    {
+        try
+        {
+            var targetUserId = recipientId ?? userId;
 
+            // 1. Obtener configuración de la matriz
+            var matrixConfigResponse = await _configurationAdapter.GetMatrixConfiguration(
+                _brandService.BrandId, matrixType);
+            if (matrixConfigResponse.Content == null || matrixConfigResponse.StatusCode != HttpStatusCode.OK)
+                throw new ApplicationException(
+                    $"Error al obtener configuración de matriz: {matrixConfigResponse.StatusCode}");
+
+            var matrixConfig = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfigResponse.Content!)?.Data;
+            if (matrixConfig == null)
+                throw new ApplicationException("La configuración de la matriz es inválida");
+
+            // 2. Verificar si el usuario ya tiene una posición en esta matriz
+            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(
+                new MatrixRequest { UserId = targetUserId, MatrixType = matrixType }, _brandService.BrandId);
+
+            var existing = JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!)?.Data;
+
+            if (positionResponse.IsSuccessful && existing == true)
+                // Si el usuario ya tiene una posición activa en la matriz, no se puede activar nuevamente
+                return false;
+
+            // 3. Obtener información de usuarios
+            var targetInfo = await _accountServiceAdapter.GetUserInfo(targetUserId, _brandService.BrandId);
+            
+            // 5. Crear o actualizar calificación
+            var qualification = await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(targetUserId, matrixType);
+            
+            if (qualification?.IsQualified == true)
+                return false;
+
+            var availableBalance = await _walletRepository.GetAvailableBalanceByAffiliateId(targetUserId, _brandService.BrandId);
+            var pendingAmount = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(targetUserId, _brandService.BrandId);
+            availableBalance -= pendingAmount;
+
+            if (qualification == null)
+            {
+                qualification = new MatrixQualification
+                {
+                    UserId = targetUserId,
+                    MatrixType = matrixType,
+                    TotalEarnings = matrixConfig.Threshold,
+                    WithdrawnAmount = 0,
+                    AvailableBalance = availableBalance,
+                    IsQualified = true,
+                    QualificationCount = 1,
+                    LastQualificationTotalEarnings = matrixConfig.Threshold,
+                    LastQualificationWithdrawnAmount = 0,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
+                    LastQualificationDate = DateTime.Now
+                };
+                await _matrixQualificationRepository.CreateAsync(qualification);
+            }
+            else
+            {
+                qualification.IsQualified = true;
+                qualification.QualificationCount += 1;
+                qualification.AvailableBalance = availableBalance;
+                qualification.LastQualificationTotalEarnings = qualification.TotalEarnings;
+                qualification.LastQualificationWithdrawnAmount = qualification.WithdrawnAmount;
+                qualification.LastQualificationDate = DateTime.Now;
+                qualification.UpdatedAt = DateTime.Now;
+                await _matrixQualificationRepository.UpdateAsync(qualification);
+            }
+
+            // 6. Colocar usuario en la matriz
+            await _accountServiceAdapter.PlaceUserInMatrix(new MatrixRequest { UserId = targetUserId, MatrixType = matrixType }, _brandService.BrandId);
+
+            // 7. Procesar comisiones para uplines
+            await ProcessMatrixCommissionsAsync(targetUserId, matrixType, qualification.QualificationCount);
+
+            // 8. Invalidar cache
+            await _redisCache.InvalidateBalanceAsync(targetUserId);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error in CoinPayments matrix activation for user {userId}, matrix {matrixType}");
+            return false;
+        }
+    }
+    
+    public async Task FixInconsistentQualificationRecordsAsync()
+    {
+        // Obtener todos los registros de calificación con contadores positivos pero valores de corte en 0
+        var inconsistentRecords = await _matrixQualificationRepository.GetAllInconsistentRecordsAsync();
+        var correctedCount = 0;
+
+        var matrixQualifications = inconsistentRecords as MatrixQualification[] ?? inconsistentRecords.ToArray();
+        foreach (var record in matrixQualifications)
+        {
+            try
+            {
+                // 1. Obtener los datos financieros reales y actualizados del usuario
+                var commissions =
+                    await _walletRepository.GetQualificationBalanceAsync(record.UserId, _brandService.BrandId);
+                var totalWithdrawn = await _walletRequestRepository.GetTotalWithdrawnByAffiliateId(record.UserId);
+                var availableBalance =
+                    await _walletRepository.GetAvailableBalanceByAffiliateId((int)record.UserId, _brandService.BrandId);
+                var amountRequests = await _walletRequestRepository.GetTotalWalletRequestAmountByAffiliateId(
+                    (int)record.UserId,
+                    _brandService.BrandId);
+                availableBalance -= amountRequests;
+
+                // 2. Actualizar los valores financieros correctos en el registro
+                record.TotalEarnings = commissions ?? 0m;
+                record.WithdrawnAmount = totalWithdrawn ?? 0m;
+                record.AvailableBalance = availableBalance;
+
+                // 3. Establecer los valores de corte para que coincidan con los valores actuales
+                // Esto resetea efectivamente el progreso hacia la siguiente calificación
+                record.LastQualificationTotalEarnings = record.TotalEarnings;
+                record.LastQualificationWithdrawnAmount = record.WithdrawnAmount;
+                record.LastQualificationDate = DateTime.Now;
+                record.UpdatedAt = DateTime.Now;
+
+                // 4. Guardar los cambios
+                await _matrixQualificationRepository.UpdateAsync(record);
+
+                correctedCount++;
+                _logger.LogInformation(
+                    $"Fixed qualification record ID {record.QualificationId} for user {record.UserId}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    $"Error fixing qualification record ID {record.QualificationId} for user {record.UserId}: {ex.Message}");
+            }
+        }
+
+        _logger.LogInformation(
+            $"Process completed. Corrected {correctedCount} of {matrixQualifications.Count()} records.");
+    }
     public async Task<bool> CheckQualificationAsync(long userId, int matrixType)
     {
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
@@ -599,8 +705,7 @@ public class MatrixService : BaseService, IMatrixService
         return progress >= requiredAmount; // ***sin tocar IsQualified aquí*** :contentReference[oaicite:0]{index=0}
     }
 
-    public async Task<(bool anyQualified, List<int> qualifiedMatrixTypes)>
-        ProcessAllMatrixQualificationsAsync(int userId)
+    public async Task<(bool anyQualified, List<int> qualifiedMatrixTypes)> ProcessAllMatrixQualificationsAsync(int userId)
     {
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
         var allMatrices = await _redisCache.Remember(
@@ -898,5 +1003,58 @@ public class MatrixService : BaseService, IMatrixService
         result.EndTime = DateTime.Now;
         result.ElapsedTimeSeconds = (result.EndTime - result.StartTime).TotalSeconds;
         return result;
+    }
+
+    public async Task<bool> CoinPaymentsMatrixActivationConfirmation(IpnRequest request, IHeaderDictionary headers)
+    {
+        var isValid = IsRequestValid(request, headers);
+        
+        if (!isValid) 
+            return false;
+        
+        var transactionResult = await _coinPaymentTransactionRepository.GetTransactionByTxnId(request.txn_id);
+
+        if (transactionResult is null)
+            return false;
+        
+        if (transactionResult.Status == 100)
+            return false;
+        
+        transactionResult.Status = request.status;
+        transactionResult.AmountReceived = request.received_amount;
+        var matrixType = transactionResult.Products.ExtractProductIdFromJson_JArray();
+
+        if (request.status == -1)
+        {
+            transactionResult.Acredited = false;
+            await _coinPaymentTransactionRepository.UpdateCoinPaymentTransactionAsync(transactionResult);
+            return false;
+        }
+
+        if (!transactionResult.Acredited && request.status == 100)
+        {
+            try
+            {
+                var activationResult = await ProcessCoinPaymentsMatrixActivationAsync(transactionResult.AffiliateId,matrixType);
+            
+                if (activationResult)
+                {
+                    transactionResult.Acredited = true;
+                    _logger.LogInformation($"Matrix {matrixType} activated successfully for user {transactionResult.AffiliateId} via CoinPayments transaction {request.txn_id}");
+                }
+                else
+                {
+                    _logger.LogWarning($"Failed to activate matrix {matrixType} for user {transactionResult.AffiliateId} via CoinPayments transaction {request.txn_id}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error activating matrix for CoinPayments transaction {request.txn_id}");
+                transactionResult.Acredited = false;
+            }
+        }
+    
+        await _coinPaymentTransactionRepository.UpdateCoinPaymentTransactionAsync(transactionResult);
+        return true;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WalletService.Core.Services.IServices;
+using WalletService.Models.Requests.ConPaymentRequest;
 using WalletService.Models.Requests.MatrixQualification;
 using WalletService.Models.Requests.MatrixRequest;
 
@@ -74,5 +75,12 @@ public class MatrixQualificationController : BaseController
     {
         var result = await _matrixService.ProcessAllUsersMatrixQualificationsAsync(userIds);
         return Ok(Success(result));
+    }
+
+    [HttpPost("coinpayments_matrix_activation_confirmation")]
+    public async Task<IActionResult> CoinPaymentsMatrixActivationConfirmation([FromForm] IpnRequest request)
+    {
+        var result = await _matrixService.CoinPaymentsMatrixActivationConfirmation(request, Request.Headers);
+        return result is false ? BadRequest() : Ok("IPN OK");
     }
 }

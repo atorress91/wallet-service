@@ -1,4 +1,6 @@
-﻿using WalletService.Models.Requests.MatrixRequest;
+﻿using Microsoft.AspNetCore.Http;
+using WalletService.Models.Requests.ConPaymentRequest;
+using WalletService.Models.Requests.MatrixRequest;
 using WalletService.Models.Responses;
 
 namespace WalletService.Core.Services.IServices;
@@ -11,4 +13,5 @@ public interface IMatrixService
     Task<bool> ProcessDirectPaymentMatrixActivationAsync(MatrixRequest request);
     Task FixInconsistentQualificationRecordsAsync();
     Task<BatchProcessingResult> ProcessAllUsersMatrixQualificationsAsync(int[]? userIds = null);
+    Task<bool> CoinPaymentsMatrixActivationConfirmation(IpnRequest request,IHeaderDictionary headers);
 }

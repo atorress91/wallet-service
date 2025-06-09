@@ -2,8 +2,8 @@
 
 public class IpnRequest
 {
-    public decimal amount1 { get; set; }
-    public decimal amount2 { get; set; }
+    public string amount1 { get; set; }
+    public string amount2 { get; set; }
     public string buyer_name { get; set; }
     public string currency1 { get; set; }
     public string currency2 { get; set; }

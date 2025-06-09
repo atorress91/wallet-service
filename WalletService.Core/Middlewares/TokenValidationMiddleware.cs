@@ -21,10 +21,10 @@ public class TokenValidationMiddleware
         IBrandRepository brandRepository, ILogger<TokenValidationMiddleware> logger)
     {
         if (context.Request.Path.Value!.Equals("/health", StringComparison.OrdinalIgnoreCase) ||
-            context.Request.Path.Value.Equals("/api/v1/ConPayments/coinPaymentsIPN",
-                StringComparison.OrdinalIgnoreCase) ||
+            context.Request.Path.Value.Equals("/api/v1/ConPayments/coinPaymentsIPN", StringComparison.OrdinalIgnoreCase) ||
             context.Request.Path.Value.Equals("/api/v1/Pagadito/webhook", StringComparison.OrdinalIgnoreCase) ||
-            context.Request.Path.Value.Equals("/api/v1/CoinPay/Webhook", StringComparison.OrdinalIgnoreCase))
+            context.Request.Path.Value.Equals("/api/v1/CoinPay/Webhook", StringComparison.OrdinalIgnoreCase) ||
+            context.Request.Path.Value.Equals("/api/v1/MatrixQualification/coinpayments_matrix_activation_confirmation", StringComparison.OrdinalIgnoreCase))
         {
             await _next(context);
             return;

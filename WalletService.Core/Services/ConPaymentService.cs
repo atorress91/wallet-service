@@ -220,7 +220,8 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     private SortedList<string, string> ConfigureParms(ConPaymentRequest request)
     {
-        request.Amount += 2;
+        var fee = request.Amount * 0.01m;
+        request.Amount += fee;
         var parms = new SortedList<string, string>
         {
             { "cmd", "create_transaction" },
