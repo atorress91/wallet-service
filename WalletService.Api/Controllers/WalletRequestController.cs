@@ -32,11 +32,14 @@ public class WalletRequestController : BaseController
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateWalletRequestAsync([FromBody] WalletRequestRequest request)
+    public async Task<IActionResult> CreateAsync([FromBody] WalletRequestRequest request)
     {
         var result = await _walletRequestService.CreateWalletRequestAsync(request);
 
-        return result is null ? Ok(Fail("The wallet request wasn't created")) : Ok(Success(result));
+        if (result.IsSuccess)
+            return Ok(Success(result.Value!));
+        
+        return BadRequest(Fail(result.Error!));
     }
 
     [HttpPost("processOption")]

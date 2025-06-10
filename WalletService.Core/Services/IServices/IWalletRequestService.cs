@@ -9,7 +9,7 @@ public interface IWalletRequestService
 {
     Task<IEnumerable<WalletRequestDto>> GetAllWalletsRequests();
     Task<IEnumerable<WalletRequestDto>?> GetWalletRequestById(int                    id);
-    Task<WalletRequestDto?> CreateWalletRequestAsync(WalletRequestRequest            request);
+    Task<ResultResponse<WalletRequestDto>> CreateWalletRequestAsync(WalletRequestRequest            request);
     Task CancelWalletRequestsAsync(List<long>                                         id);
     Task<ServicesResponse?> ProcessOption(int                                        option, List<long> ids);
     Task<WalletRequestDto?> CreateWalletRequestRevert(WalletRequestRevertTransaction request);
