@@ -82,7 +82,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
             3 => IsWithdrawalUtcDateAllowed(),
             _ => true
         };
-
+        
         if (!isDateValid && (_brandService.BrandId == 1 || _brandService.BrandId == 3))
             return ResultResponse<WalletRequestDto>.Fail("La fecha de retiro no está permitida");
 
@@ -96,7 +96,7 @@ public class WalletRequestService : BaseService, IWalletRequestService
             return ResultResponse<WalletRequestDto>.Fail("Respuesta de verificación vacía");
 
         var resultValid = JsonConvert.DeserializeObject<ServicesValidCodeAccountResponse>(response.Content);
-        if (resultValid is { Data: false })
+        if (resultValid is { Success: false })
             return ResultResponse<WalletRequestDto>.Fail("Código de verificación inválido");
         
         var available = await _walletRepository.GetAvailableBalanceByAffiliateId(request.AffiliateId, _brandService.BrandId);
@@ -108,6 +108,11 @@ public class WalletRequestService : BaseService, IWalletRequestService
         
         if (_brandService.BrandId == 2 && !await CheckFor10PercentPurchaseEarnings(request.AffiliateId))
             return ResultResponse<WalletRequestDto>.Fail("Necesita tener el 10% de lo que haya ganado en compras para retirar dinero");
+        
+        var cap = await CheckUserWithdrawalCap(request.AffiliateId);
+
+        if (_brandService.BrandId == 2 && request.Amount > cap)
+            return ResultResponse<WalletRequestDto>.Fail($"Sin directos el máximo que puede retirar es de ${cap}");
         
         var walletRequest = new WalletsRequest
         {
@@ -428,5 +433,29 @@ public class WalletRequestService : BaseService, IWalletRequestService
         var minimumPurchaseRequired = commissions * 0.10m;
 
         return purchases >= minimumPurchaseRequired;
+    }
+    
+    private async Task<int> CheckUserWithdrawalCap(int affiliateId)
+    {
+        var users = new[] { affiliateId };
+        
+        var response = await _accountServiceAdapter.GetHave2Children(users, _brandService.BrandId);
+        if (!response.IsSuccessful)
+            throw new InvalidOperationException($"Error retrieving direct users: {response.StatusCode}");
+        
+        List<int> directUsers;
+        try
+        {
+            directUsers = JsonConvert.DeserializeObject<List<int>>(response.Content) ?? new List<int>();
+        }
+        catch (JsonException ex)
+        {
+            throw new FormatException("Could not parse the list of directs.", ex);
+        }
+        
+        if (directUsers.Contains(affiliateId))
+            return int.MaxValue;
+        
+        return 75;
     }
 }

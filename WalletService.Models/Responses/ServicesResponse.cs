@@ -21,7 +21,7 @@ public class ServicesValidCodeAccountResponse
 {
     [JsonPropertyName("success")] public bool Success { get; set; }
 
-    [JsonPropertyName("data")] public bool Data { get; set; }
+    [JsonPropertyName("data")] public object? Data { get; set; }
 
     [JsonPropertyName("message")] public string Message { get; set; } = string.Empty;
 
