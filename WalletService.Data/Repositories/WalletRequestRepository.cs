@@ -10,8 +10,9 @@ public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
 {
     public WalletRequestRepository(WalletServiceDbContext context) : base(context) { }
     public Task<List<WalletsRequest>> GetAllWalletsRequests(long brandId)
-        => Context.WalletsRequests.Where(x => x.Type == WalletRequestType.withdrawal_request.ToString() && x.Status == 0 && x.BrandId == brandId)
-            .AsNoTracking().ToListAsync();
+        => Context.WalletsRequests.Where(x => x.Type == nameof(WalletRequestType.withdrawal_request) && x.Status == 0 && x.BrandId == brandId)
+            .OrderByDescending(x=>x.CreatedAt).AsNoTracking()
+            .ToListAsync();
 
     public Task<List<WalletsRequest>> GetAllWalletRequestRevertTransaction(long brandId)
         => Context.WalletsRequests.Where(x => x.Type == WalletRequestType.revert_invoice_request.ToString() && x.BrandId == brandId)
