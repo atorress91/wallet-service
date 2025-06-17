@@ -105,8 +105,8 @@ public class WalletRequestService : BaseService, IWalletRequestService
         if (request.Amount > available)
             return ResultResponse<WalletRequestDto>.Fail("El monto excede el saldo disponible");
         
-        if (_brandService.BrandId == 2 && !await CheckFor5PercentPurchaseEarnings(request.AffiliateId))
-            return ResultResponse<WalletRequestDto>.Fail("Necesita tener el 5% de lo que haya ganado en compras para retirar dinero");
+        if (_brandService.BrandId == 2 && !await CheckFor10PercentPurchaseEarnings(request.AffiliateId))
+            return ResultResponse<WalletRequestDto>.Fail("Necesita tener el 10% de lo que haya ganado en compras para retirar dinero");
         
         var cap = await CheckUserWithdrawalCap(request.AffiliateId);
 
@@ -424,12 +424,12 @@ public class WalletRequestService : BaseService, IWalletRequestService
         return true;
     }
 
-    private async Task<bool> CheckFor5PercentPurchaseEarnings(int affiliateId)
+    private async Task<bool> CheckFor10PercentPurchaseEarnings(int affiliateId)
     {
         var commissions = await _walletRepository.GetTotalCommissionsPaid(affiliateId, _brandService.BrandId);
         var purchases = await _walletRepository.GetTotalAcquisitionsByAffiliateId(affiliateId, _brandService.BrandId);
 
-        var minimumPurchaseRequired = commissions * 0.05m;
+        var minimumPurchaseRequired = commissions * 0.10m;
 
         return purchases >= minimumPurchaseRequired;
     }
