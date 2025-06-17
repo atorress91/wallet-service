@@ -3,7 +3,9 @@
 public static class Constants
 {
     public const int    OriginEcoPoolPurchase                 = 2;
-    public const string EcoPoolProductCategory                = "Pool Adquisitivo";
+    public const string EcoPoolProductCategory                = "Compra realizada";
+    public const string PurchaseMadeToAffiliateByThirdParty   = "Compra realizada por terceros al afiliado";
+    public const string PurchaseMadeByAffiliateForThirdParty  = "Compra realizada por terceros del afiliado";
     public const string EcoPoolProductCategoryForAdmin        = "Pool Adquisitivo por AdminEcosystem";
     public const string SubjectConfirmPurchase                = "Confirmación de compra";
     public const string SubjectConfirmAffiliation             = "Membresía activa";
