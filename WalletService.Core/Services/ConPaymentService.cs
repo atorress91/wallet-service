@@ -170,24 +170,27 @@ public class ConPaymentService : BaseService, IConPaymentService
         var parms = ConfigureParms(request);
 
         var restResponse = await CallApiAsync("create_transaction", parms);
-        _logger.LogInformation($"[ConPaymentService] | CreatePayment | Response Api | response: {restResponse.ToJsonString()}");
+        _logger.LogInformation(
+            $"[ConPaymentService] | CreatePayment | Response Api | response: {restResponse.ToJsonString()}");
 
         if (!restResponse.IsSuccessful)
         {
             throw new Exception($"Error calling API: {restResponse.StatusDescription}");
         }
-        
+
         if (restResponse.IsSuccessful && !string.IsNullOrEmpty(restResponse.Content))
         {
             try
             {
                 using var doc = System.Text.Json.JsonDocument.Parse(restResponse.Content);
                 var root = doc.RootElement;
-                if (root.TryGetProperty("error", out var errorElement) && errorElement.ValueKind == System.Text.Json.JsonValueKind.String)
+                if (root.TryGetProperty("error", out var errorElement) &&
+                    errorElement.ValueKind == System.Text.Json.JsonValueKind.String)
                 {
                     var errorMessage = errorElement.GetString();
-                        
-                    if (!string.IsNullOrEmpty(errorMessage) && !errorMessage.Equals("ok", StringComparison.OrdinalIgnoreCase))
+
+                    if (!string.IsNullOrEmpty(errorMessage) &&
+                        !errorMessage.Equals("ok", StringComparison.OrdinalIgnoreCase))
                     {
                         _logger.LogWarning(
                             $"The API call was technically successful (StatusCode: {restResponse.StatusCode}), but the response body indicates an application-level error: {errorMessage}");
@@ -607,24 +610,44 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     public async Task<CoinPaymentWithdrawalResponse?> CreateMassWithdrawal(WalletsRequest[] requests)
     {
-        _logger.LogInformation(
-            $"[ConPaymentService] | CreateMassWithdrawal | Start | requests: {requests.ToJsonString()}");
+        _logger.LogInformation($"[ConPaymentService] | CreateMassWithdrawal | Start | requests: {requests.ToJsonString()}");
 
-        // 1) Armar parámetros para la llamada masiva
+        // 1) Validar ANTES de enviar dinero
+        foreach (var req in requests)
+        {
+            var user = await _accountServiceAdapter.GetUserInfo(req.AffiliateId, _brandService.BrandId);
+            if (user == null)
+                throw new InvalidOperationException($"Usuario no encontrado para AffiliateId: {req.AffiliateId}");
+
+            var wr = await _walletRequestRepository.GetByIdAsync((int)req.Id);
+            if (wr == null)
+                throw new InvalidOperationException($"WalletRequest no encontrado para ID: {req.Id}");
+        }
+
+        // 2) Armar parámetros para la llamada masiva
         var withdrawals = await GetAddressesByAffiliateId(requests);
         var parms = new SortedList<string, string> { { "cmd", "create_mass_withdrawal" } };
         var tax = Constants.CoinPaymentTax;
+
+        // Mantener un diccionario para mapear correctamente
+        var keyToRequestMap = new Dictionary<string, WalletsRequest>();
+
         for (int i = 0; i < withdrawals.Count; i++)
         {
             var w = withdrawals[i];
             var amountAfterTax = w.Amount - tax;
-            var prefix = $"wd[wd{i + 1}]";
+            var key = $"wd{i + 1}";
+            var prefix = $"wd[{key}]";
+
             parms.Add($"{prefix}[amount]", amountAfterTax.ToString(CultureInfo.InvariantCulture));
             parms.Add($"{prefix}[address]", w.Address);
             parms.Add($"{prefix}[currency]", w.Currency);
+
+            // Mapear la key con el request correspondiente
+            keyToRequestMap[key] = requests[i];
         }
 
-        // 2) Llamar a la API
+        // 3) Llamar a la API
         var restResponse = await CallApiAsync("create_mass_withdrawal", parms);
         if (!restResponse.IsSuccessful)
             throw new Exception($"Error calling API: {restResponse.StatusDescription}");
@@ -636,35 +659,30 @@ public class ConPaymentService : BaseService, IConPaymentService
             return null;
         }
 
-        // 3) Filtrar solo los IDs que la API devolvió con Error == "ok"
-        var succeededApiIds = new List<long>();
-        int idx = 0;
-        foreach (var key in withdrawalResults.Result.Keys)
-        {
-            if (withdrawalResults.Result[key].Error == "ok")
-                succeededApiIds.Add(requests[idx].Id);
-            idx++;
-        }
-
+        // 4) Procesar resultados exitosos
         var today = DateTime.Now;
-        foreach (var withdrawalId in succeededApiIds)
+        foreach (var kvp in withdrawalResults.Result)
         {
-            var req = requests.First(r => r.Id == withdrawalId);
+            if (kvp.Value.Error != "ok")
+            {
+                _logger.LogWarning($"[ConPaymentService] | Withdrawal {kvp.Key} failed: {kvp.Value.Error}");
+                continue;
+            }
 
-            // **EF Core Transaction por cada retiro individual**
+            if (!keyToRequestMap.TryGetValue(kvp.Key, out var req))
+            {
+                _logger.LogError($"[ConPaymentService] | No se pudo mapear la key {kvp.Key} con un request");
+                continue;
+            }
+
+            // Usar transacción para cada retiro
             await using var tx = await _dbContext.Database.BeginTransactionAsync();
             try
             {
-                // 4a) Obtener usuario
+                // Obtener usuario (ya validado anteriormente)
                 var user = await _accountServiceAdapter.GetUserInfo(req.AffiliateId, _brandService.BrandId);
-                if (user == null)
-                {
-                    _logger.LogWarning($"[ConPaymentService] | No user found for ID {req.AffiliateId}");
-                    await tx.RollbackAsync();
-                    continue;
-                }
 
-                // 4b) Crear movimiento en Wallet
+                // Crear movimiento en Wallet
                 var debitTransaction = new Wallet
                 {
                     AffiliateId = req.AffiliateId,
@@ -694,7 +712,7 @@ public class ConPaymentService : BaseService, IConPaymentService
                 };
                 await _walletRepository.CreateWalletAsync(debitTransaction);
 
-                // 4c) Crear registro de WalletWithdrawal
+                // Crear registro de WalletWithdrawal
                 var walletWithdrawal = new WalletWithDrawalRequest
                 {
                     AffiliateId = user.Id,
@@ -710,29 +728,27 @@ public class ConPaymentService : BaseService, IConPaymentService
                 };
                 await _walletWithDrawalService.CreateWalletWithdrawalAsync(walletWithdrawal);
 
-                // 4d) Actualizar el status del WalletRequest
+                // Actualizar el status del WalletRequest
                 var wr = await _walletRequestRepository.GetByIdAsync((int)req.Id);
-                if (wr == null)
-                {
-                    _logger.LogWarning($"[ConPaymentService] | No WalletRequest found for ID {req.Id}");
-                    await tx.RollbackAsync();
-                    continue;
-                }
-
                 wr.Status = (int)WithdrawalStatus.Completed;
                 wr.UpdatedAt = today;
                 await _walletRequestRepository.UpdateWalletRequestsAsync(wr);
 
-                // 4e) Commit
+                // Commit
                 await tx.CommitAsync();
 
-                // 4f) Invalidar cache
+                // Invalidar cache
                 await _redisCache.InvalidateBalanceAsync(req.AffiliateId);
+
+                _logger.LogInformation(
+                    $"[ConPaymentService] | Successfully processed withdrawal for request ID: {req.Id}");
             }
             catch (Exception ex)
             {
                 await tx.RollbackAsync();
-                _logger.LogError(ex, $"[ConPaymentService] | Error processing withdrawalId {withdrawalId}");
+                _logger.LogError(ex,
+                    $"[ConPaymentService] | Error processing withdrawal for request ID: {req.Id}. Money was sent but database update failed!");
+                
             }
         }
 
