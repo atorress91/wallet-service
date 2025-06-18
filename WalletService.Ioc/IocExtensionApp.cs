@@ -111,6 +111,7 @@ public static class IocExtensionApp
 
     private static void InjectDataBases(IServiceCollection services)
     {
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         var appConfig = services.BuildServiceProvider().GetRequiredService<IOptions<ApplicationConfiguration>>()
             .Value;
 

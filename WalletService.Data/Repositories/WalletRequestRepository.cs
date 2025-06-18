@@ -90,7 +90,10 @@ public class WalletRequestRepository : BaseRepository, IWalletRequestRepository
     public async Task<WalletsRequest> UpdateWalletRequestsAsync(WalletsRequest requests)
     {
         var today = DateTime.Now;
-        requests.UpdatedAt = today;
+        requests.CreatedAt = DateTime.SpecifyKind(today, DateTimeKind.Utc);
+        requests.AttentionDate = DateTime.SpecifyKind(today, DateTimeKind.Utc);
+        requests.CreationDate = DateTime.SpecifyKind(today, DateTimeKind.Utc);
+        requests.UpdatedAt = DateTime.SpecifyKind(today, DateTimeKind.Unspecified);
         Context.WalletsRequests.Update(requests);
         await Context.SaveChangesAsync();
 
