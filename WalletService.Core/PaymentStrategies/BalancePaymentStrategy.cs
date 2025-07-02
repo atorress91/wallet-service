@@ -388,7 +388,29 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         if (spResponse is null)
             return false;
-        
+
+        if (request.BrandId == Constants.RecyCoin)
+        { 
+            // await _bonusRepository.CreateBonus(new BonusRequest
+            // {
+            //     AffiliateId = request.AffiliateId,
+            //     Amount = (debitTransactionRequest.Debit / 2),
+            //     InvoiceId = spResponse.Id,
+            //     Comment = "Bonus for Recycoin"
+            // });
+            var beneficiaryIds = await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest {
+                AffiliateId = request.AffiliateId,
+                InvoiceAmount = debitTransactionRequest.Debit,
+                BrandId = request.BrandId,
+                AdminUserName = Constants.RecycoinAdmin,
+                LevelPercentages = [15.0m, 5.0m],
+            });
+
+            _backgroundJobs.Enqueue(() => 
+                _matrixService.ProcessAllUsersMatrixQualificationsAsync(beneficiaryIds.ToArray())
+            );
+            
+        }
         await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
         
         return true;
