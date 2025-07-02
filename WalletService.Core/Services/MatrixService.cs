@@ -31,7 +31,7 @@ public class MatrixService : BaseService, IMatrixService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<MatrixService> _logger;
     private readonly RedisCache _redisCache;
-    private readonly ICoinPaymentTransactionRepository _coinPaymentTransactionRepository;
+    private readonly ITransactionRepository _transactionRepository;
     public MatrixService(ILogger<MatrixService> logger,
         IMapper mapper, IConfigurationAdapter configurationAdapter, IBrandService brandService,
         IMatrixQualificationRepository matrixQualificationRepository,
@@ -39,7 +39,7 @@ public class MatrixService : BaseService, IMatrixService
         IAccountServiceAdapter accountServiceAdapter, IWalletRepository walletRepository,
         IWalletRequestRepository walletRequestRepository,
         IServiceScopeFactory scopeFactory, RedisCache redisCache,
-        ICoinPaymentTransactionRepository coinPaymentTransactionRepository) : base(mapper)
+        ITransactionRepository transactionRepository) : base(mapper)
     {
         _brandService = brandService;
         _configurationAdapter = configurationAdapter;
@@ -51,7 +51,7 @@ public class MatrixService : BaseService, IMatrixService
         _scopeFactory = scopeFactory;
         _logger = logger;
         _redisCache = redisCache;
-        _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
+        _transactionRepository = transactionRepository;
     }
     private bool IsRequestValid(IpnRequest request, IHeaderDictionary headers)
     {
@@ -1012,7 +1012,7 @@ public class MatrixService : BaseService, IMatrixService
         if (!isValid) 
             return false;
         
-        var transactionResult = await _coinPaymentTransactionRepository.GetTransactionByTxnId(request.txn_id);
+        var transactionResult = await _transactionRepository.GetTransactionByTxnId(request.txn_id);
 
         if (transactionResult is null)
             return false;
@@ -1027,7 +1027,7 @@ public class MatrixService : BaseService, IMatrixService
         if (request.status == -1)
         {
             transactionResult.Acredited = false;
-            await _coinPaymentTransactionRepository.UpdateCoinPaymentTransactionAsync(transactionResult);
+            await _transactionRepository.UpdateTransactionAsync(transactionResult);
             return false;
         }
 
@@ -1054,7 +1054,7 @@ public class MatrixService : BaseService, IMatrixService
             }
         }
     
-        await _coinPaymentTransactionRepository.UpdateCoinPaymentTransactionAsync(transactionResult);
+        await _transactionRepository.UpdateTransactionAsync(transactionResult);
         return true;
     }
 }

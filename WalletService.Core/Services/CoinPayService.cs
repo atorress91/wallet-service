@@ -27,7 +27,7 @@ namespace WalletService.Core.Services;
 public class CoinPayService : BaseService, ICoinPayService
 {
     private readonly ICoinPayAdapter _coinPayAdapter;
-    private readonly ICoinPaymentTransactionRepository _transactionRepository;
+    private readonly ITransactionRepository _transactionRepository;
     private readonly ILogger<CoinPayService> _logger;
     private readonly IAccountServiceAdapter _accountServiceAdapter;
     private readonly IInvoiceRepository _invoiceRepository;
@@ -39,7 +39,7 @@ public class CoinPayService : BaseService, ICoinPayService
     private readonly RedisCache _redisCache;
     private readonly IWalletRepository _walletRepository;
     public CoinPayService(IMapper mapper, ICoinPayAdapter coinPayAdapter,
-        ICoinPaymentTransactionRepository transactionRepository, ILogger<CoinPayService> logger,
+        ITransactionRepository transactionRepository, ILogger<CoinPayService> logger,
         IAccountServiceAdapter accountServiceAdapter,
         IInvoiceRepository invoiceRepository,
         ICoinPayPaymentStrategy coinPayPaymentStrategy,
@@ -173,7 +173,7 @@ public class CoinPayService : BaseService, ICoinPayService
         }
     }
 
-    private async Task ProcessPaymentTransaction(CoinpaymentTransaction transactionResult)
+    private async Task ProcessPaymentTransaction(Transaction transactionResult)
     {
         _logger.LogInformation(
             $"[CoinPayService] | ProcessPaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
@@ -268,7 +268,7 @@ public class CoinPayService : BaseService, ICoinPayService
         var result = response.Content!.ToJsonObject<CreateTransactionResponse>() ??
                      new CreateTransactionResponse();
 
-        var paymentTransaction = new CoinpaymentTransaction
+        var paymentTransaction = new Transaction
         {
             IdTransaction = result.Data!.IdTransaction.ToString(),
             AffiliateId = request.AffiliateId,
@@ -280,10 +280,10 @@ public class CoinPayService : BaseService, ICoinPayService
             PaymentMethod = "CoinPay",
             CreatedAt = today,
             UpdatedAt = today,
-            BrandId   = _brandService.BrandId 
+            BrandId   = _brandService.BrandId
         };
 
-        await _transactionRepository.CreateCoinPaymentTransaction(paymentTransaction);
+        await _transactionRepository.CreateTransaction(paymentTransaction);
 
         return result;
     }
@@ -293,7 +293,7 @@ public class CoinPayService : BaseService, ICoinPayService
         _logger.LogInformation("Starting to create a channel: {RequestDetails}", request.ToJsonString());
 
         var today = DateTime.Now;
-        CoinpaymentTransaction? transactionResponse;
+        Transaction? transactionResponse;
 
         var channelRequest = new CreateChannelRequest
         {
@@ -324,11 +324,11 @@ public class CoinPayService : BaseService, ICoinPayService
         }
 
         var existingTransaction =
-            await _transactionRepository.GetCoinPaymentTransactionByIdTransaction(channel.Data!.Id.ToString(),
+            await _transactionRepository.GetTransactionByIdTransaction(channel.Data!.Id.ToString(),
                 _brandService.BrandId);
         _logger.LogInformation("Checking for existing transaction with ID: {TransactionId}", channel.Data!.Id);
 
-        var paymentTransaction = new CoinpaymentTransaction
+        var paymentTransaction = new Transaction
         {
             IdTransaction = channel.Data.Id.ToString(),
             AffiliateId = request.AffiliateId,
@@ -341,7 +341,8 @@ public class CoinPayService : BaseService, ICoinPayService
             CreatedAt = today,
             UpdatedAt = today,
             Reference = channelRequest.IdExternalIdentification.ToString(),
-            BrandId   = _brandService.BrandId 
+            BrandId   = _brandService.BrandId ,
+            Address   =  channel.Data.Address,
         };
 
         if (existingTransaction is { Acredited: false })
@@ -351,13 +352,13 @@ public class CoinPayService : BaseService, ICoinPayService
             existingTransaction.Amount = request.Amount;
             existingTransaction.Products = JsonSerializer.Serialize(request.Products);
             existingTransaction.UpdatedAt = today;
-            transactionResponse = await _transactionRepository.UpdateCoinPaymentTransactionAsync(existingTransaction);
+            transactionResponse = await _transactionRepository.UpdateTransactionAsync(existingTransaction);
         }
         else
         {
             _logger.LogInformation("Creating a new transaction for newly created channel with ID: {TransactionId}",
                 paymentTransaction.IdTransaction);
-            transactionResponse = await _transactionRepository.CreateCoinPaymentTransaction(paymentTransaction);
+            transactionResponse = await _transactionRepository.CreateTransaction(paymentTransaction);
         }
 
         if (transactionResponse == null)
@@ -500,7 +501,7 @@ public class CoinPayService : BaseService, ICoinPayService
                 break;
         }
 
-        await _transactionRepository.UpdateCoinPaymentTransactionAsync(existingTransaction);
+        await _transactionRepository.UpdateTransactionAsync(existingTransaction);
         _logger.LogInformation(
             $"[CoinPayService] | ReceiveCoinPayNotifications | Transaction status updated in the database | Reference: {existingTransaction.Reference}");
 

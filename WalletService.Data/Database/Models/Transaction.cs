@@ -1,7 +1,7 @@
 ﻿
 namespace WalletService.Data.Database.Models;
 
-public partial class CoinpaymentTransaction
+public partial class Transaction
 {
     public long Id { get; set; }
 
@@ -32,4 +32,5 @@ public partial class CoinpaymentTransaction
     public long BrandId { get; set; }
 
     public virtual Brand Brand { get; set; } = null!;
+    public string? Address { get; set; }
 }

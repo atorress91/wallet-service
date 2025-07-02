@@ -17,12 +17,12 @@ namespace WalletService.Core.Services;
 
 public class PaymentTransactionService : BaseService, IPaymentTransactionService
 {
-    private readonly ICoinPaymentTransactionRepository _paymentTransactionRepository;
+    private readonly ITransactionRepository _paymentTransactionRepository;
     private readonly IAccountServiceAdapter            _accountServiceAdapter;
     private readonly IInventoryServiceAdapter          _inventoryServiceAdapter;
     private readonly IWireTransferStrategy             _wireTransferStrategy;
     private readonly IBrandService                     _brandService;
-    public PaymentTransactionService(IMapper mapper,                ICoinPaymentTransactionRepository paymentTransactionRepository,
+    public PaymentTransactionService(IMapper mapper,                ITransactionRepository paymentTransactionRepository,
         IAccountServiceAdapter               accountServiceAdapter, IInventoryServiceAdapter          inventoryServiceAdapter,
         IWireTransferStrategy                wireTransferStrategy,IBrandService brandService) :
         base(mapper)
@@ -41,14 +41,14 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
         if (user is null)
             return null;
 
-        var transaction = Mapper.Map<CoinpaymentTransaction>(request);
+        var transaction = Mapper.Map<Transaction>(request);
 
         transaction.Acredited      = false;
         transaction.Status         = Constants.EmptyValue;
         transaction.AmountReceived = Constants.EmptyValue;
         transaction.PaymentMethod  = "wire_transfer";
 
-        var response = await _paymentTransactionRepository.CreateCoinPaymentTransaction(transaction);
+        var response = await _paymentTransactionRepository.CreateTransaction(transaction);
 
         if (response is null)
             return null;
@@ -140,7 +140,7 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
         return false;
     }
 
-    private WalletRequest BuildWalletRequest(CoinpaymentTransaction payment, ConfirmPaymentTransactionRequest request)
+    private WalletRequest BuildWalletRequest(Transaction payment, ConfirmPaymentTransactionRequest request)
     {
         var products = payment.Products.ToJsonObject<List<ProductRequest>>();
 
@@ -206,13 +206,13 @@ public class PaymentTransactionService : BaseService, IPaymentTransactionService
         }
     }
 
-    private async Task<bool> UpdatePaymentTransaction(CoinpaymentTransaction payment)
+    private async Task<bool> UpdatePaymentTransaction(Transaction payment)
     {
         payment.Acredited      = true;
         payment.Status         = 100;
         payment.AmountReceived = payment.Amount;
 
-        var transaction = await _paymentTransactionRepository.UpdateCoinPaymentTransactionAsync(payment);
+        var transaction = await _paymentTransactionRepository.UpdateTransactionAsync(payment);
 
         return transaction is not null;
     }

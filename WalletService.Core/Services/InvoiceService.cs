@@ -23,7 +23,7 @@ namespace WalletService.Core.Services;
 public class InvoiceService : BaseService, IInvoiceService
 {
     private readonly IInvoiceRepository _invoiceRepository;
-    private readonly ICoinPaymentTransactionRepository _coinPaymentTransactionRepository;
+    private readonly ITransactionRepository _transactionRepository;
     private readonly ILogger<InvoiceService> _logger;
     private readonly IAccountServiceAdapter _accountServiceAdapter;
     private readonly IBrevoEmailService _brevoEmailService;
@@ -36,7 +36,7 @@ public class InvoiceService : BaseService, IInvoiceService
     private readonly IRecyCoinPdfService _recyCoinPdfService;
 
     public InvoiceService(IMapper mapper, IInvoiceRepository invoiceRepository,
-        ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
+        ITransactionRepository transactionRepository,
         ILogger<InvoiceService> logger, IAccountServiceAdapter accountServiceAdapter,
         IBrevoEmailService brevoEmailService, IWalletModel1ARepository walletModel1ARepository,
         IWalletModel1BRepository walletModel1BRepository, IWalletRepository walletRepository,
@@ -44,7 +44,7 @@ public class InvoiceService : BaseService, IInvoiceService
         IRecyCoinPdfService recyCoinPdfService) : base(mapper)
     {
         _invoiceRepository = invoiceRepository;
-        _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
+        _transactionRepository = transactionRepository;
         _logger = logger;
         _accountServiceAdapter = accountServiceAdapter;
         _brevoEmailService = brevoEmailService;
@@ -122,7 +122,7 @@ public class InvoiceService : BaseService, IInvoiceService
 
         builder.AppendLine($"[InvoiceService] | RevertUnconfirmedOrUnpaidTransactions | Started");
         var transactionsResults =
-            await _coinPaymentTransactionRepository.GetAllUnconfirmedOrUnpaidTransactions(_brandService.BrandId);
+            await _transactionRepository.GetAllUnconfirmedOrUnpaidTransactions(_brandService.BrandId);
         var idsTransactions = transactionsResults.Select(e => e.IdTransaction).ToList();
 
         if (idsTransactions is { Count: 0 })

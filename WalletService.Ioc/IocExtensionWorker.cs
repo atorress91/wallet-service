@@ -144,7 +144,7 @@ public static class IocExtensionWorker
         services.AddScoped<IEcoPoolConfigurationRepository, EcoPoolConfigurationRepository>();
         services.AddScoped<IResultsEcoPoolRepository, ResultsEcoPoolRepository>();
         services.AddScoped<IApiClientRepository, ApiClientRepository>();
-        services.AddScoped<ICoinPaymentTransactionRepository, CoinPaymentTransactionRepository>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IWalletModel1ARepository, WalletModel1ARepository>();
         services.AddScoped<IWalletModel1BRepository, WalletModel1BRepository>();
         services.AddScoped<IBrandRepository, BrandRepository>();

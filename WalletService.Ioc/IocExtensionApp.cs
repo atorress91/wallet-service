@@ -205,7 +205,7 @@ public static class IocExtensionApp
         services.AddScoped<IEcoPoolConfigurationRepository, EcoPoolConfigurationRepository>();
         services.AddScoped<IResultsEcoPoolRepository, ResultsEcoPoolRepository>();
         services.AddScoped<IApiClientRepository, ApiClientRepository>();
-        services.AddScoped<ICoinPaymentTransactionRepository, CoinPaymentTransactionRepository>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IBrandRepository, BrandRepository>();
         services.AddScoped<IBonusRepository, BonusRepository>();
         services.AddScoped<ICreditRepository, CreditRepository>();

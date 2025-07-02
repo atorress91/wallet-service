@@ -30,7 +30,7 @@ public class ConPaymentService : BaseService, IConPaymentService
 {
     private readonly string _merchantId;
     private readonly ConPaymentsApi.ConPaymentsApi _conPaymentsApi;
-    private readonly ICoinPaymentTransactionRepository _coinPaymentTransactionRepository;
+    private readonly ITransactionRepository _transactionRepository;
     private readonly IInvoiceRepository _invoiceRepository;
     private readonly IAccountServiceAdapter _accountServiceAdapter;
     private readonly ILogger<ConPaymentService> _logger;
@@ -47,7 +47,7 @@ public class ConPaymentService : BaseService, IConPaymentService
 
     public ConPaymentService(
         IMapper mapper, IOptions<ApplicationConfiguration> appSettings,
-        ICoinPaymentTransactionRepository coinPaymentTransactionRepository,
+        ITransactionRepository transactionRepository,
         IInvoiceRepository invoiceRepository,
         ILogger<ConPaymentService> logger,
         IAccountServiceAdapter accountServiceAdapter,
@@ -64,7 +64,7 @@ public class ConPaymentService : BaseService, IConPaymentService
     ) : base(mapper)
     {
         _invoiceRepository = invoiceRepository;
-        _coinPaymentTransactionRepository = coinPaymentTransactionRepository;
+        _transactionRepository = transactionRepository;
         _logger = logger;
         _accountServiceAdapter = accountServiceAdapter;
         _walletRepository = walletRepository;
@@ -257,7 +257,7 @@ public class ConPaymentService : BaseService, IConPaymentService
     {
         var result = JsonConvert.DeserializeObject<CreateConPaymentsTransactionResponse>(restResponse.Content!);
 
-        var paymentTransaction = new CoinpaymentTransaction
+        var paymentTransaction = new Transaction
         {
             IdTransaction = result!.Result!.Txn_Id!,
             AffiliateId = Convert.ToInt32(request.ItemNumber),
@@ -269,10 +269,11 @@ public class ConPaymentService : BaseService, IConPaymentService
             PaymentMethod = "Coinpayment",
             CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.Now,
-            BrandId = _brandService.BrandId
+            BrandId = _brandService.BrandId,
+            Address = result.Result.Address,
         };
 
-        await _coinPaymentTransactionRepository.CreateCoinPaymentTransaction(paymentTransaction);
+        await _transactionRepository.CreateTransaction(paymentTransaction);
 
         return result;
     }
@@ -304,7 +305,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         if (!IsRequestValid(ipnRequest, headers))
             return "Invalid IPN Request";
 
-        var transactionResult = await _coinPaymentTransactionRepository.GetTransactionByTxnId(ipnRequest.txn_id);
+        var transactionResult = await _transactionRepository.GetTransactionByTxnId(ipnRequest.txn_id);
 
         if (transactionResult is null)
             return "Transaction not found";
@@ -334,21 +335,21 @@ public class ConPaymentService : BaseService, IConPaymentService
             await GrantWelcomeBonus(transactionResult.AffiliateId, transactionResult.Products);
         }
 
-        await _coinPaymentTransactionRepository.UpdateCoinPaymentTransactionAsync(transactionResult);
+        await _transactionRepository.UpdateTransactionAsync(transactionResult);
         return "IPN OK";
     }
 
-    private async Task HandleCancelledTransaction(CoinpaymentTransaction transactionResult, IpnRequest ipnRequest,
+    private async Task HandleCancelledTransaction(Transaction transactionResult, IpnRequest ipnRequest,
         string products)
     {
         _logger.LogInformation(
             $"[ConPaymentService] | HandleCancelledTransaction | transactionResult: {transactionResult.ToJsonString()}");
-        await _coinPaymentTransactionRepository.UpdateCoinPaymentTransactionAsync(transactionResult);
+        await _transactionRepository.UpdateTransactionAsync(transactionResult);
 
         await RevertUnconfirmedOrUnpaidTransactions(ipnRequest.txn_id, products);
     }
 
-    private async Task HandlePaymentTransaction(CoinpaymentTransaction transactionResult, IpnRequest ipnRequest)
+    private async Task HandlePaymentTransaction(Transaction transactionResult, IpnRequest ipnRequest)
     {
         _logger.LogInformation(
             $"[ConPaymentService] | HandlePaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
@@ -463,7 +464,7 @@ public class ConPaymentService : BaseService, IConPaymentService
         return true;
     }
 
-    private WalletRequest BuildWalletRequest(IpnRequest ipnRequest, CoinpaymentTransaction transaction)
+    private WalletRequest BuildWalletRequest(IpnRequest ipnRequest, Transaction transaction)
     {
         return new WalletRequest
         {

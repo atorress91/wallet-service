@@ -17,7 +17,7 @@ public partial class Brand
 
     public DateTime? DeletedAt { get; set; }
 
-    public virtual ICollection<CoinpaymentTransaction> CoinpaymentTransactions { get; } = new List<CoinpaymentTransaction>();
+    public virtual ICollection<Transaction> CoinpaymentTransactions { get; } = new List<Transaction>();
 
     public virtual ICollection<Invoice> Invoices { get; } = new List<Invoice>();
 

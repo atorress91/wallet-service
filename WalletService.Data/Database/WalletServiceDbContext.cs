@@ -23,7 +23,7 @@ public partial class WalletServiceDbContext : DbContext
 
     public virtual DbSet<Brand> Brand { get; set; }
 
-    public virtual DbSet<CoinpaymentTransaction> PaymentTransaction { get; set; }
+    public virtual DbSet<Transaction> Transactions { get; set; }
 
     public virtual DbSet<Commission> Commissions { get; set; }
 
@@ -204,11 +204,11 @@ public partial class WalletServiceDbContext : DbContext
             entity.HasQueryFilter(e => !e.DeletedAt.HasValue);
         });
 
-        modelBuilder.Entity<CoinpaymentTransaction>(entity =>
+        modelBuilder.Entity<Transaction>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("idx_17305_pk__coinpaym__3214ec07bb110a2b");
 
-            entity.ToTable("coinpayment_transactions", "wallet_service");
+            entity.ToTable("transactions", "wallet_service");
 
             entity.HasIndex(e => e.IdTransaction, "idx_17305_uq__coinpaym__45542f44f9ec0298").IsUnique();
 
@@ -230,7 +230,8 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.Reference).HasColumnName("reference");
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-
+            entity.Property(e => e.Address).HasColumnName("address");
+            
             entity.HasOne(d => d.Brand).WithMany(p => p.CoinpaymentTransactions)
                 .HasForeignKey(d => d.BrandId)
                 .OnDelete(DeleteBehavior.ClientSetNull)

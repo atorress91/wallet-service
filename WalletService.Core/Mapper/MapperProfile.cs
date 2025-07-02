@@ -64,7 +64,7 @@ public class MapperProfile : Profile
         CreateMap<WalletTransactionRequest, Wallet>();
         CreateMap<ResultsModel2, ResultsEcoPoolDto>();
         CreateMap<ResultsModel2Level, ResultEcoPoolLevelsDto>();
-        CreateMap<CoinpaymentTransaction, PaymentTransactionDto>();
+        CreateMap<Transaction, PaymentTransactionDto>();
         CreateMap<InvoicesTradingAcademyResponse, InvoiceTradingAcademyDto>();
         CreateMap<InvoiceModelOneAndTwoResponse, InvoiceModelOneAndTwoDto>();
         CreateMap<MatrixEarning, MatrixEarningDto>();
@@ -134,12 +134,12 @@ public class MapperProfile : Profile
         CreateMap<ResultEcoPoolLevelsDto, ResultsModel2Level>()
             .ForMember(d => d.Id, map => map.Ignore());
 
-        CreateMap<CoinPaymentTransactionRequest, CoinpaymentTransaction>()
+        CreateMap<CoinPaymentTransactionRequest, Transaction>()
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());
 
-        CreateMap<PaymentTransactionRequest, CoinpaymentTransaction>()
+        CreateMap<PaymentTransactionRequest, Transaction>()
             .ForMember(d => d.Id, map => map.Ignore())
             .ForMember(d => d.UpdatedAt, map => map.Ignore())
             .ForMember(d => d.CreatedAt, map => map.Ignore());

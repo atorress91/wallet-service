@@ -31,7 +31,7 @@ public class PagaditoService : BaseService, IPagaditoService
 {
     private readonly IPagaditoAdapter _pagaditoAdapter;
     private readonly ApplicationConfiguration _appSettings;
-    private readonly ICoinPaymentTransactionRepository _transactionRepository;
+    private readonly ITransactionRepository _transactionRepository;
     private readonly IPagaditoPaymentStrategy _pagaditoPaymentStrategy;
     private readonly IInventoryServiceAdapter _inventoryServiceAdapter;
     private readonly ILogger<PagaditoService> _logger;
@@ -39,7 +39,7 @@ public class PagaditoService : BaseService, IPagaditoService
     private readonly IInvoiceRepository _invoiceRepository;
     private readonly IBrandService _brandService;
     public PagaditoService(IOptions<ApplicationConfiguration> appSettings, IMapper mapper,
-        IPagaditoAdapter pagaditoAdapter, ICoinPaymentTransactionRepository transactionRepository,
+        IPagaditoAdapter pagaditoAdapter, ITransactionRepository transactionRepository,
         IPagaditoPaymentStrategy pagaditoPaymentStrategy,
         IInventoryServiceAdapter inventoryServiceAdapter, ILogger<PagaditoService> logger,
         IAccountServiceAdapter accountServiceAdapter, IInvoiceRepository invoiceRepository,IBrandService brandService) : base(mapper)
@@ -136,7 +136,7 @@ public class PagaditoService : BaseService, IPagaditoService
         }
     }
 
-    private async Task ProcessPaymentTransaction(CoinpaymentTransaction transactionResult)
+    private async Task ProcessPaymentTransaction(Transaction transactionResult)
     {
         _logger.LogInformation(
             $"[PagaditoService] | ProcessPaymentTransaction | transactionResult: {transactionResult.ToJsonString()}");
@@ -233,7 +233,7 @@ public class PagaditoService : BaseService, IPagaditoService
 
         var productsJson = JsonSerializer.Serialize(productDetails);
 
-        var paymentTransaction = new CoinpaymentTransaction
+        var paymentTransaction = new Transaction
         {
             IdTransaction = pagaditoTransaction.Ern,
             AffiliateId = request.AffiliateId,
@@ -248,7 +248,7 @@ public class PagaditoService : BaseService, IPagaditoService
             BrandId   = _brandService.BrandId 
         };
 
-        await _transactionRepository.CreateCoinPaymentTransaction(paymentTransaction);
+        await _transactionRepository.CreateTransaction(paymentTransaction);
 
         return executeTransaction.Value;
     }
@@ -320,7 +320,7 @@ public class PagaditoService : BaseService, IPagaditoService
         
         long brandId = (long)_brandService.BrandId;
         var existingTransaction =
-            await _transactionRepository.GetCoinPaymentTransactionByIdTransaction(purchaseRequest.Resource!.Ern!,brandId);
+            await _transactionRepository.GetTransactionByIdTransaction(purchaseRequest.Resource!.Ern!,brandId);
 
         if (existingTransaction is null)
         {
@@ -357,7 +357,7 @@ public class PagaditoService : BaseService, IPagaditoService
             _logger.LogInformation($"[PagaditoService] | UpdateTransactionStatus | Transaction processed");
         }
 
-        await _transactionRepository.UpdateCoinPaymentTransactionAsync(existingTransaction);
+        await _transactionRepository.UpdateTransactionAsync(existingTransaction);
         _logger.LogInformation($"[PagaditoService] | UpdateTransactionStatus | Transaction status updated");
 
         return true;
