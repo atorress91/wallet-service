@@ -14,4 +14,5 @@ public interface IMatrixService
     Task FixInconsistentQualificationRecordsAsync();
     Task<BatchProcessingResult> ProcessAllUsersMatrixQualificationsAsync(int[]? userIds = null);
     Task<bool> CoinPaymentsMatrixActivationConfirmation(IpnRequest request,IHeaderDictionary headers);
+    Task<bool> HasReachedWithdrawalLimitAsync(int userId);
 }

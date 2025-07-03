@@ -83,4 +83,11 @@ public class MatrixQualificationController : BaseController
         var result = await _matrixService.CoinPaymentsMatrixActivationConfirmation(request, Request.Headers);
         return result is false ? BadRequest() : Ok("IPN OK");
     }
+    
+    [HttpGet("has-reached-withdrawal-limit")]
+    public async Task<IActionResult> HasReachedWithdrawalLimit([FromQuery] int userId)
+    {
+        var result = await _matrixService.HasReachedWithdrawalLimitAsync(userId);
+        return Ok(Success(result));
+    }
 }

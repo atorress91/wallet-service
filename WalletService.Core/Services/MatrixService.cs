@@ -236,24 +236,49 @@ public class MatrixService : BaseService, IMatrixService
         IReadOnlyList<MatrixConfiguration> allMatrices)
     {
         var qualifications = await _matrixQualificationRepository.GetAllByUserIdAsync(userId);
-
         var matrixQualifications = qualifications as MatrixQualification[] ?? qualifications.ToArray();
-        var minCycle = matrixQualifications.Length != 0 ? matrixQualifications.Min(q => q.QualificationCount) : 0;
+    
+        // Si no hay calificaciones, empezar con Matrix 1
+        if (matrixQualifications.Length == 0)
+            return 1;
 
-        // buscamos la PRIMERA matriz cuyo QC == minCycle  y   !IsQualified
-        foreach (var m in allMatrices.OrderBy(m => m.MatrixType))
+        // Crear un diccionario para fácil acceso
+        var qualificationDict = matrixQualifications.ToDictionary(q => q.MatrixType);
+
+        // Encontrar el ciclo máximo alcanzado por cualquier matriz
+        var maxCycle = matrixQualifications.Max(q => q.QualificationCount);
+
+        // Buscar la primera matriz que no ha completado todos los ciclos hasta maxCycle
+        foreach (var matrix in allMatrices.OrderBy(m => m.MatrixType))
         {
-            var qualification = matrixQualifications.FirstOrDefault(x => x.MatrixType == m.MatrixType);
+            if (!qualificationDict.TryGetValue(matrix.MatrixType, out var qualification))
+            {
+                // Si no existe registro para esta matriz, es la siguiente
+                return matrix.MatrixType;
+            }
 
-            var faltante = qualification == null // nunca se creó
-                           || !qualification.IsQualified // aún no alcanzó el umbral
-                           || qualification.QualificationCount < minCycle;
+            // Si esta matriz está atrasada en ciclos
+            if (qualification.QualificationCount < maxCycle)
+            {
+                // Si no está calificada en su ciclo actual, es la siguiente
+                if (!qualification.IsQualified)
+                {
+                    return matrix.MatrixType;
+                }
+                // Si está calificada pero con menos ciclos que el máximo, 
+                // necesita avanzar al siguiente ciclo
+                return matrix.MatrixType;
+            }
 
-            if (faltante) return m.MatrixType;
+            // Si está en el ciclo máximo pero no calificada
+            if (qualification.QualificationCount == maxCycle && !qualification.IsQualified)
+            {
+                return matrix.MatrixType;
+            }
         }
 
-        // Si todas están calificadas con el mismo ciclo,
-        // el próximo objetivo es la Matrix 1 del ciclo siguiente.
+        // Si todas las matrices están en el ciclo máximo y calificadas,
+        // la siguiente es Matrix 1 del siguiente ciclo
         return 1;
     }
     
@@ -1056,5 +1081,74 @@ public class MatrixService : BaseService, IMatrixService
     
         await _transactionRepository.UpdateTransactionAsync(transactionResult);
         return true;
+    }
+
+    public async Task<bool> HasReachedWithdrawalLimitAsync(int userId)
+    {   
+        var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
+        
+        try 
+        {
+            // 1. Obtener el total de comisiones ganadas (acumuladas)
+            var totalCommissions = await _walletRepository.GetQualificationBalanceAsync(userId, brandId) ?? 0m;
+            
+            // 2. Obtener configuración de todas las matrices
+            var allMatrices = await _redisCache.Remember(
+                $"matrix_cfg_{brandId}",
+                TimeSpan.FromMinutes(10),
+                async () =>
+                {
+                    var resp = await _configurationAdapter.GetAllMatrixConfigurations(brandId);
+                    var data = JObject.Parse(resp.Content!)["data"]!.ToObject<List<MatrixConfiguration>>()!;
+                    return data.OrderBy(m => m.MatrixType).ToList();
+                });
+            
+            // 3. Determinar la siguiente matriz a calificar
+            var nextMatrixType = await GetNextUnqualifiedMatrixTypeAsync(userId, allMatrices);
+            
+            // 4. Obtener configuración de la matriz específica
+            var cfgResp = await _configurationAdapter.GetMatrixConfiguration(brandId, nextMatrixType);
+            if (cfgResp.Content == null || cfgResp.StatusCode != HttpStatusCode.OK)
+            {
+                _logger.LogWarning($"Error retrieving matrix configuration for type {nextMatrixType}: {cfgResp.StatusCode}");
+                return false; // En caso de error, permitir retiros
+            }
+
+            var cfg = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(cfgResp.Content!)?.Data;
+            if (cfg == null)
+            {
+                _logger.LogWarning($"Invalid matrix configuration for type {nextMatrixType}");
+                return false;
+            }
+            
+            // 5. Obtener el registro de calificación para saber el ciclo actual
+            var qualification = await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(userId, nextMatrixType);
+            
+            // Si no existe, está en ciclo 0
+            var cycle = qualification?.QualificationCount ?? 0;
+            
+            // 6. Calcular el objetivo según el ciclo
+            var goal = cycle == 0 ? cfg.Threshold : cfg.RangeMax * cycle;
+            
+            // 7. Calcular el límite del 84%
+            var withdrawalLimit = goal * 0.84m;
+            
+            // 8. Verificar si ha alcanzado el límite
+            var hasReachedLimit = totalCommissions >= withdrawalLimit;
+            
+            _logger.LogInformation($"User {userId} withdrawal limit check: " +
+                                  $"Matrix {nextMatrixType}, Cycle {cycle}, " +
+                                  $"Total commissions: {totalCommissions:C}, " +
+                                  $"Goal: {goal:C}, " +
+                                  $"84% Limit: {withdrawalLimit:C}, " +
+                                  $"Has reached limit: {hasReachedLimit}");
+            
+            return hasReachedLimit;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error checking withdrawal limit for user {userId}");
+            return false; // En caso de error, permitir retiros por seguridad
+        }
     }
 }
