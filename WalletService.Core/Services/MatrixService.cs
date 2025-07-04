@@ -1087,12 +1087,21 @@ public class MatrixService : BaseService, IMatrixService
     {   
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
         
+        // Cache key específica 
+        var cacheKey = $"withdrawal_limit_{brandId}_{userId}";
+        
+        // Intentar obtener del cache
+        var cachedResult = await _redisCache.Get<bool?>(cacheKey);
+        if (cachedResult.HasValue)
+        {
+            _logger.LogDebug($"Withdrawal limit retrieved from cache for user {userId}");
+            return cachedResult.Value;
+        }
+        
         try 
         {
-            // 1. Obtener el total de comisiones ganadas (acumuladas)
             var totalCommissions = await _walletRepository.GetQualificationBalanceAsync(userId, brandId) ?? 0m;
             
-            // 2. Obtener configuración de todas las matrices
             var allMatrices = await _redisCache.Remember(
                 $"matrix_cfg_{brandId}",
                 TimeSpan.FromMinutes(10),
@@ -1103,15 +1112,13 @@ public class MatrixService : BaseService, IMatrixService
                     return data.OrderBy(m => m.MatrixType).ToList();
                 });
             
-            // 3. Determinar la siguiente matriz a calificar
             var nextMatrixType = await GetNextUnqualifiedMatrixTypeAsync(userId, allMatrices);
             
-            // 4. Obtener configuración de la matriz específica
             var cfgResp = await _configurationAdapter.GetMatrixConfiguration(brandId, nextMatrixType);
             if (cfgResp.Content == null || cfgResp.StatusCode != HttpStatusCode.OK)
             {
                 _logger.LogWarning($"Error retrieving matrix configuration for type {nextMatrixType}: {cfgResp.StatusCode}");
-                return false; // En caso de error, permitir retiros
+                return false;
             }
 
             var cfg = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(cfgResp.Content!)?.Data;
@@ -1121,20 +1128,14 @@ public class MatrixService : BaseService, IMatrixService
                 return false;
             }
             
-            // 5. Obtener el registro de calificación para saber el ciclo actual
             var qualification = await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(userId, nextMatrixType);
-            
-            // Si no existe, está en ciclo 0
             var cycle = qualification?.QualificationCount ?? 0;
-            
-            // 6. Calcular el objetivo según el ciclo
             var goal = cycle == 0 ? cfg.Threshold : cfg.RangeMax * cycle;
-            
-            // 7. Calcular el límite del 84%
             var withdrawalLimit = goal * 0.84m;
-            
-            // 8. Verificar si ha alcanzado el límite
             var hasReachedLimit = totalCommissions >= withdrawalLimit;
+            
+            // Guardar en cache por 2 minutos
+            await _redisCache.Set(cacheKey, hasReachedLimit, TimeSpan.FromMinutes(2));
             
             _logger.LogInformation($"User {userId} withdrawal limit check: " +
                                   $"Matrix {nextMatrixType}, Cycle {cycle}, " +
@@ -1148,7 +1149,7 @@ public class MatrixService : BaseService, IMatrixService
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Error checking withdrawal limit for user {userId}");
-            return false; // En caso de error, permitir retiros por seguridad
+            return false;
         }
     }
 }
