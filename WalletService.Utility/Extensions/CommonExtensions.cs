@@ -345,9 +345,9 @@ public static class CommonExtensions
 
         string seed = $"{DateTime.UtcNow:yyyyMMddHHmmss}{affiliateId}";
 
-        using (var sha1 = System.Security.Cryptography.SHA1.Create())
+        using (var sha1 = SHA1.Create())
         {
-            byte[] hash = sha1.ComputeHash(System.Text.Encoding.UTF8.GetBytes(seed));
+            byte[] hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(seed));
             int uniqueId = BitConverter.ToInt32(hash, 0);
 
             return Math.Abs(uniqueId);

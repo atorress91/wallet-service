@@ -25,10 +25,9 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
     private readonly RedisCache               _redisCache;
     private readonly IBrandService            _brandService;
     private readonly IRecyCoinPdfService      _recyCoinPdfService;
-    private readonly IBonusRepository         _bonusRepository;
     private readonly IHouseCoinPdfService     _houseCoinPdfService;
     private readonly IMatrixService _matrixService;
-    private IBackgroundJobClient _backgroundJobs;
+    private readonly IBackgroundJobClient _backgroundJobs;
     public BalancePaymentStrategy(IInventoryServiceAdapter inventoryServiceAdapter,
         IAccountServiceAdapter                             accountServiceAdapter, IWalletRepository walletRepository,
         IEcosystemPdfService                                ecosystemPdfService,
@@ -36,7 +35,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         RedisCache                                         redisCache,IBrandService brandService,
         IRecyCoinPdfService                                recyCoinPdfService,
         IHouseCoinPdfService                               houseCoinPdfService,
-        IBonusRepository bonusRepository, IMatrixService   matrixService,
+        IMatrixService   matrixService,
         IBackgroundJobClient backgroundJobs)
     {
         _inventoryServiceAdapter = inventoryServiceAdapter;
@@ -48,7 +47,6 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         _redisCache              = redisCache;
         _brandService            = brandService;
         _recyCoinPdfService      = recyCoinPdfService;
-        _bonusRepository         = bonusRepository;
         _houseCoinPdfService     = houseCoinPdfService;
         _matrixService           = matrixService;
         _backgroundJobs          = backgroundJobs;
@@ -122,8 +120,6 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (result.Data.Count != request.ProductsList.Count)
             return false;
         
-        var productNames = result.Data.Select(item => item.Name).ToArray();
-
         foreach (var item in result.Data)
         {
             var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
@@ -177,7 +173,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Debit             = debit,
             AffiliateId       = request.AffiliateId,
             UserId            = Constants.AdminUserId,
-            ConceptType       = WalletConceptType.purchasing_pool.ToString(),
+            ConceptType       = nameof(WalletConceptType.purchasing_pool),
             Points            = points,
             Concept           = Constants.EcoPoolProductCategory,
             Commissionable    = commissionable,
@@ -206,71 +202,57 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
         
-        if (request.BrandId == Constants.RecyCoin)
-        { 
-            // await _bonusRepository.CreateBonus(new BonusRequest
-            // {
-            //     AffiliateId = request.AffiliateId,
-            //     Amount = (debitTransactionRequest.Debit / 2),
-            //     InvoiceId = spResponse.Id,
-            //     Comment = "Bonus for Recycoin"
-            // });
-            var beneficiaryIds = await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest {
-                AffiliateId = request.AffiliateId,
-                InvoiceAmount = debitTransactionRequest.Debit,
-                BrandId = request.BrandId,
-                AdminUserName = Constants.RecycoinAdmin,
-                LevelPercentages = [15.0m, 5.0m],
-            });
-
-            _backgroundJobs.Enqueue(() => 
-                _matrixService.ProcessAllUsersMatrixQualificationsAsync(beneficiaryIds.ToArray())
-            );
-            
-        }
-
-        if (request.BrandId == Constants.HouseCoin)
+        switch (request.BrandId)
         {
-            await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
+            case Constants.RecyCoin:
             {
-                AffiliateId = request.AffiliateId, InvoiceAmount = debitTransactionRequest.Debit,
-                BrandId = request.BrandId,
-                AdminUserName = Constants.HouseCoinAdmin,
-                LevelPercentages = [8.0m, 6.0m, 5.0m, 4.0m, 2.0m],
-            });
+                var beneficiaryIds = await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest {
+                    AffiliateId = request.AffiliateId,
+                    InvoiceAmount = debitTransactionRequest.Debit,
+                    BrandId = request.BrandId,
+                    AdminUserName = Constants.RecycoinAdmin,
+                    LevelPercentages = [15.0m, 5.0m],
+                });
+
+                _backgroundJobs.Enqueue(() => 
+                    _matrixService.ProcessAllUsersMatrixQualificationsAsync(beneficiaryIds.ToArray())
+                );
+                break;
+            }
+            case Constants.HouseCoin:
+                await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest
+                {
+                    AffiliateId = request.AffiliateId, InvoiceAmount = debitTransactionRequest.Debit,
+                    BrandId = request.BrandId,
+                    AdminUserName = Constants.HouseCoinAdmin,
+                    LevelPercentages = [8.0m, 6.0m, 5.0m, 4.0m, 2.0m],
+                });
+                break;
         }
-        
+
         await _redisCache.InvalidateBalanceAsync(request.AffiliateId);
-
-        byte[] invoicePdf;
-        if (request.BrandId == Constants.RecyCoin)
+        
+        byte[]? invoicePdf = null;
+        if (request.BrandId != Constants.Ecosystem) 
         {
-            invoicePdf = await _recyCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
-        }
-        else if (request.BrandId == Constants.HouseCoin)  
-        {
-            invoicePdf = await _houseCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
-        }
-        else
-        {
-            invoicePdf = await _ecosystemPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse);
+            invoicePdf = request.BrandId switch
+            {
+                Constants.RecyCoin => await _recyCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse),
+                Constants.HouseCoin => await _houseCoinPdfService.GenerateInvoice(userInfoResponse!, debitTransactionRequest, spResponse),
+                _ => null
+            };
         }
         
-        var productPdfsContents = await CommonExtensions.GetPdfContentFromProductNames(productNames!);
-
-        Dictionary<string, byte[]> allPdfData = new Dictionary<string, byte[]>
+        var allPdfData = new Dictionary<string, byte[]>();
+        
+        if (invoicePdf != null)
         {
-            ["Invoice.pdf"] = invoicePdf
-        };
-
-        foreach (var pdfDataEntry in productPdfsContents)
-        {
-            allPdfData[pdfDataEntry.Key] = pdfDataEntry.Value;
+            allPdfData["Invoice.pdf"] = invoicePdf;
         }
-
+        
         if (allPdfData.Count > Constants.EmptyValue)
         {
-            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse,request.BrandId);
+            await _brevoEmailService.SendEmailPurchaseConfirm(userInfoResponse!, allPdfData, spResponse, request.BrandId);
         }
 
         return true;
@@ -284,7 +266,6 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         byte origin         = 0;
 
         var invoiceDetails   = new List<InvoiceDetailsTransactionRequest>();
-        var userInfoResponse = await _accountServiceAdapter.GetUserInfo(request.AffiliateId,request.BrandId);
         var productIds       = request.ProductsList.Select(p => p.IdProduct).ToArray();
         var responseList     = await _inventoryServiceAdapter.GetProductsIds(productIds,request.BrandId);
 
@@ -314,8 +295,6 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (result.Data.Count != request.ProductsList.Count)
             return false;
         
-        var productNames = result.Data.Select(item => item.Name).ToArray();
-
         foreach (var item in result.Data)
         {
             var product = request.ProductsList.FirstOrDefault(x => x.IdProduct == item.Id);
@@ -366,7 +345,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Debit             = debit,
             AffiliateId       = request.AffiliateId,
             UserId            = Constants.AdminUserId,
-            ConceptType       = WalletConceptType.purchasing_pool.ToString(),
+            ConceptType       = nameof(WalletConceptType.purchasing_pool),
             Points            = points,
             Concept           = Constants.EcoPoolProductCategoryForAdmin,
             Commissionable    = commissionable,
@@ -391,13 +370,6 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
 
         if (request.BrandId == Constants.RecyCoin)
         { 
-            // await _bonusRepository.CreateBonus(new BonusRequest
-            // {
-            //     AffiliateId = request.AffiliateId,
-            //     Amount = (debitTransactionRequest.Debit / 2),
-            //     InvoiceId = spResponse.Id,
-            //     Comment = "Bonus for Recycoin"
-            // });
             var beneficiaryIds = await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest {
                 AffiliateId = request.AffiliateId,
                 InvoiceAmount = debitTransactionRequest.Debit,
@@ -495,7 +467,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Debit             = debit,
             AffiliateId       = request.AffiliateId,
             UserId            = Constants.AdminUserId,
-            ConceptType       = WalletConceptType.purchasing_pool.ToString(),
+            ConceptType       = nameof(WalletConceptType.purchasing_pool),
             Points            = points,
             Concept           = Constants.EcoPoolProductCategory,
             Commissionable    = commissionable,
@@ -614,7 +586,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Debit             = debit,
             AffiliateId       = request.AffiliateId,
             UserId            = Constants.AdminUserId,
-            ConceptType       = WalletConceptType.purchasing_pool.ToString(),
+            ConceptType       = nameof(WalletConceptType.purchasing_pool),
             Points            = points,
             Concept           = Constants.EcoPoolProductCategoryForAdmin,
             Commissionable    = commissionable,
@@ -728,7 +700,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Debit             = debit,
             AffiliateId       = request.AffiliateId,
             UserId            = Constants.AdminUserId,
-            ConceptType       = WalletConceptType.purchasing_pool.ToString(),
+            ConceptType       = nameof(WalletConceptType.purchasing_pool),
             Points            = points,
             Concept           = Constants.Membership,
             Commissionable    = commissionable,
@@ -761,13 +733,13 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Concept           = Constants.CommissionMembership + ' ' + request.AffiliateUserName,
             Credit            = Constants.MembershipBonus,
             AffiliateUserName = affiliateBonusWinner.UserName,
-            ConceptType       = WalletConceptType.membership_bonus.ToString(),
+            ConceptType       = nameof(WalletConceptType.membership_bonus),
             AdminUserName     = Constants.AdminEcosystemUserName
         };
 
         var bonusPaymentResult = await PayMembershipBonusToFather(creditTransactionForWinningBonus);
 
-        if (bonusPaymentResult is false)
+        if (!bonusPaymentResult)
             return false;
         
         await _redisCache.InvalidateBalanceAsync(affiliateBonusWinner.Id);
