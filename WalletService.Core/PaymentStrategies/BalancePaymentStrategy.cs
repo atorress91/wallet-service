@@ -354,7 +354,13 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             Origin            = origin,
             Level             = Constants.EmptyValue,
             AffiliateUserName = request.AffiliateUserName,
-            AdminUserName     = request.BrandId == 1 ? Constants.AdminEcosystemUserName : Constants.RecycoinAdmin,
+            AdminUserName     = request.BrandId switch
+            {
+                1 => Constants.AdminEcosystemUserName,
+                2 => Constants.RecycoinAdmin,
+                3 => Constants.HouseCoinAdmin,
+                _ => Constants.AdminEcosystemUserName
+            },
             ReceiptNumber     = request.ReceiptNumber,
             Type              = true,
             SecretKey         = request.SecretKey,
