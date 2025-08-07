@@ -174,11 +174,11 @@ public class WalletService : BaseService, IWalletService
   
         var paymentGroupId = _brandService.BrandId switch
         {
-            1 => 1,
+            1 => 2,
             2 => 11,
             3 => 12,
             4 => 13,
-            _ => 1
+            _ => 2
         };
 
         var enabledAffiliates = response!.Data;
