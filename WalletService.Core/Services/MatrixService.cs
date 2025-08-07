@@ -55,26 +55,29 @@ public class MatrixService : BaseService, IMatrixService
     }
     private bool IsRequestValid(IpnRequest request, IHeaderDictionary headers)
     {
-        if(string.IsNullOrEmpty(request.ipn_mode) || request.ipn_mode.ToLower() != "hmac")
-            return false;
-        
-        if(!headers.TryGetValue("Hmac", out var receivedHmac) || String.IsNullOrEmpty(receivedHmac) )
-            return false;
-        
-        if(string.IsNullOrEmpty(request.merchant))
-            return false;
-        
-        if(request.ipn_type != "api")
+        if (string.IsNullOrEmpty(request.ipn_mode) || request.ipn_mode.ToLower() != "hmac")
             return false;
 
-        var validCurrencies = new[] { "USDT.TRC20", "USDT.BEP20" };
+        if (!headers.TryGetValue("Hmac", out var receivedHmac) || String.IsNullOrEmpty(receivedHmac))
+            return false;
+
+        if (string.IsNullOrEmpty(request.merchant))
+            return false;
+
+        if (request.ipn_type != "api")
+            return false;
+
+        var validCurrencies = new[]
+        {
+            "USDT.TRC20", "USDT.BEP20"
+        };
 
         if (!validCurrencies.Contains(request.currency1))
             return false;
 
         return true;
     }
-    
+
     private async Task<decimal> ApplyQualificationAsync(MatrixQualification qualification, MatrixConfiguration matrixCfg,
         string userName, decimal availableBalance)
     {
@@ -129,7 +132,7 @@ public class MatrixService : BaseService, IMatrixService
         catch (Exception ex)
         {
             await tx.RollbackAsync();
-            _logger.LogError(ex, $"Error applying qualification for user {qualification.UserId} in matrix {matrixCfg.MatrixType}");
+            _logger.LogError(ex, "Error applying qualification for user {UserId} in matrix {MatrixType}", qualification.UserId, matrixCfg.MatrixType);
             throw;
         }
     }
@@ -237,7 +240,7 @@ public class MatrixService : BaseService, IMatrixService
     {
         var qualifications = await _matrixQualificationRepository.GetAllByUserIdAsync(userId);
         var matrixQualifications = qualifications as MatrixQualification[] ?? qualifications.ToArray();
-    
+
         // Si no hay calificaciones, empezar con Matrix 1
         if (matrixQualifications.Length == 0)
             return 1;
@@ -265,6 +268,7 @@ public class MatrixService : BaseService, IMatrixService
                 {
                     return matrix.MatrixType;
                 }
+
                 // Si está calificada pero con menos ciclos que el máximo, 
                 // necesita avanzar al siguiente ciclo
                 return matrix.MatrixType;
@@ -281,7 +285,7 @@ public class MatrixService : BaseService, IMatrixService
         // la siguiente es Matrix 1 del siguiente ciclo
         return 1;
     }
-    
+
     private async Task<UserProcessingResult> ProcessSingleUserAsync(int userId, List<MatrixConfiguration> allMatrices)
     {
         var userResult = new UserProcessingResult
@@ -325,7 +329,7 @@ public class MatrixService : BaseService, IMatrixService
 
         return userResult;
     }
-    
+
     private async Task<(bool anyQualified, List<int> qualifiedMatrixTypes)> ProcessAllMatrixQualificationsAsync(int userId,
         List<MatrixConfiguration> allMatrices)
     {
@@ -399,7 +403,11 @@ public class MatrixService : BaseService, IMatrixService
 
                 // Colocar al usuario en la matriz y procesar comisiones
                 await _accountServiceAdapter.PlaceUserInMatrix(
-                    new MatrixRequest { UserId = userId, MatrixType = m.MatrixType }, brandId);
+                    new MatrixRequest
+                    {
+                        UserId = userId,
+                        MatrixType = m.MatrixType
+                    }, brandId);
 
                 var recipients = await ProcessMatrixCommissionsAsync(userId, m.MatrixType, q.QualificationCount);
                 usersToVerify.UnionWith(recipients);
@@ -410,12 +418,12 @@ public class MatrixService : BaseService, IMatrixService
             catch (InvalidOperationException ex) when (ex.Message.Contains("Available Balance"))
             {
                 // Si no hay saldo suficiente, loggear y continuar con la siguiente matriz
-                _logger.LogInformation($"User {userId} could not qualify in matrix {m.MatrixType} due to insufficient balance: {ex.Message}");
+                _logger.LogInformation(ex, "User {UserId} could not qualify in matrix {MatrixType} due to insufficient balance", userId, m.MatrixType);
                 break; // Salir del bucle 
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error processing qualification for user {userId} in matrix {m.MatrixType}");
+                _logger.LogError(ex, "Error processing qualification for user {UserId} in matrix {MatrixType}", userId, m.MatrixType);
                 // Continuar con la siguiente matriz en caso de otros errores
             }
         }
@@ -456,7 +464,11 @@ public class MatrixService : BaseService, IMatrixService
                 throw new ApplicationException($"Error deserialize matrix configuration: {matrixConfigResponse.StatusCode}");
 
             // Verificar que el usuario tenga una posición válida en esta matriz
-            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(new MatrixRequest { UserId = userId, MatrixType = matrixType }, brandId);
+            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(new MatrixRequest
+            {
+                UserId = userId,
+                MatrixType = matrixType
+            }, brandId);
 
             // Deserializamos la respuesta completa
             var matrixPositionResponse = JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!);
@@ -473,7 +485,12 @@ public class MatrixService : BaseService, IMatrixService
 
             // Obtener todas las posiciones superiores (upline)
             var uplinePositionsResponse = await _accountServiceAdapter.GetUplinePositionsAsync(
-                new MatrixRequest { UserId = userId, MatrixType = matrixType, Cycle = userQualificationCount}, brandId);
+                new MatrixRequest
+                {
+                    UserId = userId,
+                    MatrixType = matrixType,
+                    Cycle = userQualificationCount
+                }, brandId);
 
             var jObject = JObject.Parse(uplinePositionsResponse.Content!);
             var allUplinePositions = jObject["data"]?.ToObject<IEnumerable<MatrixPositionDto>>();
@@ -527,20 +544,18 @@ public class MatrixService : BaseService, IMatrixService
                     }
                 }
             }
-
-            // Si todo va bien, confirmar la transacción
+            
             await transaction.CommitAsync();
             return usersReceivedCommissions;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // En caso de error, revertir la transacción
             await transaction.RollbackAsync();
-            _logger.LogWarning($"Error en ProcessMatrixCommissionsAsync: {ex.Message}");
             throw; // Relanzar la excepción para manejo superior
         }
     }
-    
+
     // Método específico para activación con CoinPayments (sin débito)
     private async Task<bool> ProcessCoinPaymentsMatrixActivationAsync(int userId, int matrixType, int? recipientId = null)
     {
@@ -561,7 +576,11 @@ public class MatrixService : BaseService, IMatrixService
 
             // 2. Verificar si el usuario ya tiene una posición en esta matriz
             var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(
-                new MatrixRequest { UserId = targetUserId, MatrixType = matrixType }, _brandService.BrandId);
+                new MatrixRequest
+                {
+                    UserId = targetUserId,
+                    MatrixType = matrixType
+                }, _brandService.BrandId);
 
             var existing = JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!)?.Data;
 
@@ -571,10 +590,10 @@ public class MatrixService : BaseService, IMatrixService
 
             // 3. Obtener información de usuarios
             var targetInfo = await _accountServiceAdapter.GetUserInfo(targetUserId, _brandService.BrandId);
-            
+
             // 5. Crear o actualizar calificación
             var qualification = await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(targetUserId, matrixType);
-            
+
             if (qualification?.IsQualified == true)
                 return false;
 
@@ -614,7 +633,11 @@ public class MatrixService : BaseService, IMatrixService
             }
 
             // 6. Colocar usuario en la matriz
-            await _accountServiceAdapter.PlaceUserInMatrix(new MatrixRequest { UserId = targetUserId, MatrixType = matrixType }, _brandService.BrandId);
+            await _accountServiceAdapter.PlaceUserInMatrix(new MatrixRequest
+            {
+                UserId = targetUserId,
+                MatrixType = matrixType
+            }, _brandService.BrandId);
 
             // 7. Procesar comisiones para uplines
             await ProcessMatrixCommissionsAsync(targetUserId, matrixType, qualification.QualificationCount);
@@ -626,11 +649,11 @@ public class MatrixService : BaseService, IMatrixService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error in CoinPayments matrix activation for user {userId}, matrix {matrixType}");
+            _logger.LogError(ex, "Error in CoinPayments matrix activation for user {UserId}, matrix {MatrixType}", userId, matrixType);
             return false;
         }
     }
-    
+
     public async Task FixInconsistentQualificationRecordsAsync()
     {
         // Obtener todos los registros de calificación con contadores positivos pero valores de corte en 0
@@ -670,17 +693,16 @@ public class MatrixService : BaseService, IMatrixService
 
                 correctedCount++;
                 _logger.LogInformation(
-                    $"Fixed qualification record ID {record.QualificationId} for user {record.UserId}");
+                    "Fixed qualification record ID {QualificationId} for user {UserId}", record.QualificationId, record.UserId);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(
-                    $"Error fixing qualification record ID {record.QualificationId} for user {record.UserId}: {ex.Message}");
+                _logger.LogError(ex, "Error fixing qualification record ID {QualificationId} for user {UserId}", record.QualificationId, record.UserId);
             }
         }
 
-        _logger.LogInformation(
-            $"Process completed. Corrected {correctedCount} of {matrixQualifications.Count()} records.");
+        _logger.LogInformation("Process completed. Corrected {CorrectedCount} of {MatrixQualificationsCount} records.", correctedCount,
+            matrixQualifications.Length);
     }
     public async Task<bool> CheckQualificationAsync(long userId, int matrixType)
     {
@@ -773,7 +795,7 @@ public class MatrixService : BaseService, IMatrixService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning($"Error withdrawing from matrix: {ex.Message}");
+            _logger.LogWarning(ex, "Error withdrawing from matrix: {Message}", ex.Message);
             return false;
         }
     }
@@ -796,7 +818,11 @@ public class MatrixService : BaseService, IMatrixService
                 throw new ApplicationException("Matrix configuration data is missing or invalid");
 
             // 2. Verificar si el usuario ya tiene una posición en esta matriz
-            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(new MatrixRequest { UserId = userId, MatrixType = matrixType }, _brandService.BrandId);
+            var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(new MatrixRequest
+            {
+                UserId = userId,
+                MatrixType = matrixType
+            }, _brandService.BrandId);
             var existing = JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!);
 
             if (positionResponse.IsSuccessful && existing?.Data == true)
@@ -846,7 +872,7 @@ public class MatrixService : BaseService, IMatrixService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning($"Error in admin matrix placement: {ex.Message}");
+            _logger.LogWarning(ex,"Error in admin matrix placement: {Message}", ex.Message);
             return false;
         }
     }
@@ -879,7 +905,11 @@ public class MatrixService : BaseService, IMatrixService
                 return false;
 
             var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(
-                new MatrixRequest { UserId = targetUserId, MatrixType = request.MatrixType }, _brandService.BrandId);
+                new MatrixRequest
+                {
+                    UserId = targetUserId,
+                    MatrixType = request.MatrixType
+                }, _brandService.BrandId);
 
             var existing = JsonConvert.DeserializeObject<MatrixPositionResponse>(positionResponse.Content!)?.Data;
 
@@ -1033,18 +1063,18 @@ public class MatrixService : BaseService, IMatrixService
     public async Task<bool> CoinPaymentsMatrixActivationConfirmation(IpnRequest request, IHeaderDictionary headers)
     {
         var isValid = IsRequestValid(request, headers);
-        
-        if (!isValid) 
+
+        if (!isValid)
             return false;
-        
+
         var transactionResult = await _transactionRepository.GetTransactionByTxnId(request.txn_id);
 
         if (transactionResult is null)
             return false;
-        
+
         if (transactionResult.Status == 100)
             return false;
-        
+
         transactionResult.Status = request.status;
         transactionResult.AmountReceived = request.received_amount;
         var matrixType = transactionResult.Products.ExtractProductIdFromJson_JArray();
@@ -1060,48 +1090,51 @@ public class MatrixService : BaseService, IMatrixService
         {
             try
             {
-                var activationResult = await ProcessCoinPaymentsMatrixActivationAsync(transactionResult.AffiliateId,matrixType);
-            
+                var activationResult = await ProcessCoinPaymentsMatrixActivationAsync(transactionResult.AffiliateId, matrixType);
+
                 if (activationResult)
                 {
                     transactionResult.Acredited = true;
-                    _logger.LogInformation($"Matrix {matrixType} activated successfully for user {transactionResult.AffiliateId} via CoinPayments transaction {request.txn_id}");
+                    _logger.LogInformation(
+                        "Matrix {MatrixType} activated successfully for user {AffiliateId} via CoinPayments transaction {TxnId}", matrixType,
+                        transactionResult.AffiliateId, request.txn_id);
                 }
                 else
                 {
-                    _logger.LogWarning($"Failed to activate matrix {matrixType} for user {transactionResult.AffiliateId} via CoinPayments transaction {request.txn_id}");
+                    _logger.LogWarning("Failed to activate matrix {MatrixType} for user {AffiliateId} via CoinPayments transaction {TxnId}", matrixType,
+                        transactionResult.AffiliateId, request.txn_id);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error activating matrix for CoinPayments transaction {request.txn_id}");
+                _logger.LogError(ex, "Error activating matrix for CoinPayments transaction {TxnId}", request.txn_id);
                 transactionResult.Acredited = false;
             }
         }
-    
+
         await _transactionRepository.UpdateTransactionAsync(transactionResult);
         return true;
     }
 
     public async Task<bool> HasReachedWithdrawalLimitAsync(int userId)
-    {   
+    {
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
-        
+
         // Cache key específica 
         var cacheKey = $"withdrawal_limit_{brandId}_{userId}";
-        
+
         // Intentar obtener del cache
         var cachedResult = await _redisCache.Get<bool?>(cacheKey);
         if (cachedResult.HasValue)
         {
-            _logger.LogDebug($"Withdrawal limit retrieved from cache for user {userId}");
+            _logger.LogDebug("Withdrawal limit retrieved from cache for user: {UserId}", userId);
             return cachedResult.Value;
         }
-        
-        try 
+
+        try
         {
             var totalCommissions = await _walletRepository.GetQualificationBalanceAsync(userId, brandId) ?? 0m;
-            
+
             var allMatrices = await _redisCache.Remember(
                 $"matrix_cfg_{brandId}",
                 TimeSpan.FromMinutes(10),
@@ -1111,44 +1144,42 @@ public class MatrixService : BaseService, IMatrixService
                     var data = JObject.Parse(resp.Content!)["data"]!.ToObject<List<MatrixConfiguration>>()!;
                     return data.OrderBy(m => m.MatrixType).ToList();
                 });
-            
+
             var nextMatrixType = await GetNextUnqualifiedMatrixTypeAsync(userId, allMatrices);
-            
+
             var cfgResp = await _configurationAdapter.GetMatrixConfiguration(brandId, nextMatrixType);
             if (cfgResp.Content == null || cfgResp.StatusCode != HttpStatusCode.OK)
             {
-                _logger.LogWarning($"Error retrieving matrix configuration for type {nextMatrixType}: {cfgResp.StatusCode}");
+                _logger.LogWarning("Error retrieving matrix configuration for type {NextMatrixType}: {StatusCode}", nextMatrixType, cfgResp.StatusCode);
                 return false;
             }
 
             var cfg = JsonConvert.DeserializeObject<MatrixConfigurationResponse>(cfgResp.Content!)?.Data;
             if (cfg == null)
             {
-                _logger.LogWarning($"Invalid matrix configuration for type {nextMatrixType}");
+                _logger.LogWarning("Invalid matrix configuration for type {NextMatrixType}", nextMatrixType);
                 return false;
             }
-            
+
             var qualification = await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(userId, nextMatrixType);
             var cycle = qualification?.QualificationCount ?? 0;
             var goal = cycle == 0 ? cfg.Threshold : cfg.RangeMax * cycle;
             var withdrawalLimit = goal * 0.84m;
             var hasReachedLimit = totalCommissions >= withdrawalLimit;
-            
+
             // Guardar en cache por 2 minutos
             await _redisCache.Set(cacheKey, hasReachedLimit, TimeSpan.FromMinutes(2));
-            
-            _logger.LogInformation($"User {userId} withdrawal limit check: " +
-                                  $"Matrix {nextMatrixType}, Cycle {cycle}, " +
-                                  $"Total commissions: {totalCommissions:C}, " +
-                                  $"Goal: {goal:C}, " +
-                                  $"84% Limit: {withdrawalLimit:C}, " +
-                                  $"Has reached limit: {hasReachedLimit}");
-            
+
+            _logger.LogInformation("User {UserId} withdrawal limit check: Matrix {MatrixType}, Cycle {Cycle}," +
+                                   " Total commissions: {TotalCommissions:C}, Goal: {Goal:C}, 84% Limit: {WithdrawalLimit:C}," +
+                                   " Has reached limit: {HasReachedLimit}", userId, nextMatrixType, cycle, totalCommissions, goal,
+                withdrawalLimit, hasReachedLimit);
+
             return hasReachedLimit;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error checking withdrawal limit for user {userId}");
+            _logger.LogError(ex, "Error checking withdrawal limit for user {UserId}", userId);
             return false;
         }
     }
