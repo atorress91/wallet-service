@@ -141,59 +141,58 @@ public class MatrixService : BaseService, IMatrixService
         IReadOnlyList<MatrixConfiguration> allMatrices)
     {
         await _redisCache.InvalidateBalanceAsync(userIds.ToArray());
-        while (true)
+
+        // Materializamos una lista una sola vez para reutilizarla en llamadas internas
+        var matricesList = allMatrices as List<MatrixConfiguration> ?? allMatrices.ToList();
+
+        // Límite de profundidad controlado desde el encabezado del bucle
+        for (; depth <= 7 && userIds.Count > 0; depth++)
         {
-            // Limitación de profundidad para evitar ciclos excesivos
-            if (depth > 7) return;
-
-            // Copia de la lista para evitar modificaciones durante la iteración
-            var recipientUserIds = userIds.ToList();
             var nextLevelUsers = new HashSet<int>();
+            var recipientsSnapshot = userIds.ToList();
 
-            foreach (var recipientId in recipientUserIds)
+            foreach (var recipientId in recipientsSnapshot)
             {
-                // Determinar el tipo de matriz actual para este usuario
-                var currentMatrixType = await GetNextUnqualifiedMatrixTypeAsync(recipientId, allMatrices);
-
-                // Verificar calificación solo para la matriz relevante
-                var qualified = await CheckQualificationAsync(recipientId, currentMatrixType);
-
-                // Si califica, procesar calificación completa y recolectar nuevos usuarios
-                if (qualified)
-                {
-                    var (anyQualified, qualifiedMatrixTypes) =
-                        await ProcessAllMatrixQualificationsAsync(recipientId, allMatrices.ToList());
-                    if (anyQualified)
-                    {
-                        // Obtener los nuevos usuarios que recibieron comisiones
-                        var qualification =
-                            await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(recipientId,
-                                currentMatrixType);
-                        if (qualification != null && qualifiedMatrixTypes.Contains(currentMatrixType))
-                        {
-                            var newRecipientsUsers = await ProcessMatrixCommissionsAsync(recipientId, currentMatrixType,
-                                qualification.QualificationCount);
-
-                            // Agregar estos usuarios para la siguiente ronda de verificación
-                            foreach (var newRecipient in newRecipientsUsers)
-                            {
-                                nextLevelUsers.Add(newRecipient);
-                            }
-                        }
-                    }
-                }
+                var newRecipients = await ProcessRecipientAsync(recipientId, matricesList);
+                if (newRecipients.Count > 0)
+                    nextLevelUsers.UnionWith(newRecipients);
             }
 
-            // Procesar el siguiente nivel de usuarios si hay alguno y no superamos el límite de profundidad
-            if (nextLevelUsers.Count > 0)
-            {
-                userIds = nextLevelUsers;
-                depth = depth + 1;
-                continue;
-            }
-
-            break;
+            userIds = nextLevelUsers;
         }
+    }
+
+    private async Task<HashSet<int>> ProcessRecipientAsync(int recipientId, List<MatrixConfiguration> allMatrices)
+    {
+        var nextLevelUsers = new HashSet<int>();
+
+        // Determinar el tipo de matriz actual
+        var currentMatrixType = await GetNextUnqualifiedMatrixTypeAsync(recipientId, allMatrices);
+
+        // Verificar calificación solo para la matriz relevante
+        var qualified = await CheckQualificationAsync(recipientId, currentMatrixType);
+        if (!qualified) return nextLevelUsers;
+
+        // Procesar calificaciones de todas las matrices
+        var (anyQualified, qualifiedMatrixTypes) =
+            await ProcessAllMatrixQualificationsAsync(recipientId, allMatrices);
+        if (!anyQualified) return nextLevelUsers;
+
+        // Verificar que la calificación actual esté incluida
+        var qualification =
+            await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(recipientId, currentMatrixType);
+        if (qualification == null || !qualifiedMatrixTypes.Contains(currentMatrixType))
+            return nextLevelUsers;
+
+        // Procesar comisiones y recopilar nuevos destinatarios
+        var newRecipientsUsers = await ProcessMatrixCommissionsAsync(
+            recipientId,
+            currentMatrixType,
+            qualification.QualificationCount
+        );
+
+        nextLevelUsers.UnionWith(newRecipientsUsers);
+        return nextLevelUsers;
     }
     private async Task<int> GetNextUnqualifiedMatrixTypeAsync(int userId,
         IReadOnlyList<MatrixConfiguration> allMatrices)
@@ -519,8 +518,6 @@ public class MatrixService : BaseService, IMatrixService
             throw; // Relanzar la excepción para manejo superior
         }
     }
-
-    // Método específico para activación con CoinPayments (sin débito)
     private async Task<bool> ProcessCoinPaymentsMatrixActivationAsync(int userId, int matrixType, int? recipientId = null)
     {
         try
@@ -617,7 +614,6 @@ public class MatrixService : BaseService, IMatrixService
             return false;
         }
     }
-
     public async Task FixInconsistentQualificationRecordsAsync()
     {
         // Obtener todos los registros de calificación con contadores positivos pero valores de corte en 0
@@ -715,7 +711,6 @@ public class MatrixService : BaseService, IMatrixService
 
         return progress >= requiredAmount; // ***sin tocar IsQualified aquí*** :contentReference[oaicite:0]{index=0}
     }
-
     public async Task<(bool anyQualified, List<int> qualifiedMatrixTypes)> ProcessAllMatrixQualificationsAsync(int userId)
     {
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
@@ -731,39 +726,6 @@ public class MatrixService : BaseService, IMatrixService
 
         return await ProcessAllMatrixQualificationsAsync(userId, allMatrices);
     }
-
-    public async Task<bool> WithdrawFromMatrixAsync(int userId, short matrixType, decimal amount)
-    {
-        try
-        {
-            // Obtener configuración de matriz
-            var matrixConfigResponse =
-                await _configurationAdapter.GetMatrixConfiguration(_brandService.BrandId, matrixType);
-            var matrixConfig =
-                JsonConvert.DeserializeObject<MatrixConfigurationResponse>(matrixConfigResponse.Content!);
-
-            // Verificar límites de retiro
-            if (amount < matrixConfig!.Data!.MinWithdraw || amount > matrixConfig.Data.MaxWithdraw)
-                return false;
-
-            // Obtener registro de calificación del usuario
-            var qualification = await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(userId, matrixType);
-            if (qualification == null || qualification.AvailableBalance < amount)
-                return false;
-
-            // Actualizar registro de calificación
-            qualification.AvailableBalance -= amount;
-            qualification.WithdrawnAmount += amount;
-
-            return await _matrixQualificationRepository.UpdateAsync(qualification);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Error withdrawing from matrix: {Message}", ex.Message);
-            return false;
-        }
-    }
-
     public async Task<bool> ProcessAdminMatrixPlacementAsync(int userId, int matrixType)
     {
         try
