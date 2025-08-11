@@ -12,6 +12,7 @@ using WalletService.Core.Services.IServices;
 using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
+using WalletService.Models.Constants;
 using WalletService.Models.Requests.ConPaymentRequest;
 using WalletService.Models.Requests.MatrixRequest;
 using WalletService.Models.Responses;
@@ -97,6 +98,7 @@ public class MatrixService : BaseService, IMatrixService
 
         try
         {
+            var adminBase = Math.Round(matrixCfg.FeeAmount * 0.30m, 2);
             // 1.a Débito en el wallet
             await _walletRepository.CreateAsync(new Wallet
             {
@@ -107,13 +109,29 @@ public class MatrixService : BaseService, IMatrixService
                 Debit = matrixCfg.FeeAmount,
                 Credit = 0,
                 AffiliateUserName = userName,
-                AdminUserName = "adminrecycoin",
+                AdminUserName = Constants.RecycoinAdmin,
                 Status = true,
                 ConceptType = "purchasing_pool",
                 BrandId = brandId,
                 Date = DateTime.Now,
             });
 
+            // 1.1a Credito al admin en wallet
+            await _walletRepository.CreateAsync(new Wallet {
+                AffiliateId = 0,
+                UserId = 1, // o el Id de sistema que ya usas
+                Concept = $"Fee admin 30% - {matrixCfg.MatrixName} (User {qualification.UserId})",
+                Detail = $"Ciclo {qualification.QualificationCount + 1}",
+                Debit = 0,
+                Credit = adminBase,
+                AffiliateUserName = Constants.RecycoinAdmin,
+                AdminUserName = Constants.RecycoinAdmin,
+                Status = true,
+                ConceptType = "admin_fee",
+                BrandId = brandId,
+                Date = DateTime.Now,
+            });
+            
             // 1.b Actualizar saldo disponible en memoria
             availableBalance -= matrixCfg.FeeAmount;
 
@@ -491,7 +509,8 @@ public class MatrixService : BaseService, IMatrixService
 
             // Calcular el 10% de comisión del monto de la tarifa
             var commissionAmount = matrixConfig.Data.FeeAmount * 0.1m;
-
+            int paidCount = 0;
+            
             // Obtener todas las posiciones superiores (upline)
             var uplinePositionsResponse = await _accountServiceAdapter.GetUplinePositionsAsync(
                 new MatrixRequest
@@ -552,7 +571,40 @@ public class MatrixService : BaseService, IMatrixService
 
                         // Agregar este usuario a la lista de los que recibieron comisiones
                         usersReceivedCommissions.Add((int)uplineUserId);
+                        paidCount++;
                     }
+                }
+                var missedCount = Math.Max(0, matrixConfig.Data.Levels - paidCount);
+                if (missedCount > 0)
+                {
+                    var adminMissed = Math.Round(missedCount * commissionAmount, 2);
+
+                    // Registro de earning (trazabilidad)
+                    var adminEarning = new MatrixEarning {
+                        UserId = 0,
+                        MatrixType = matrixType,
+                        Amount = adminMissed,
+                        SourceUserId = userId,
+                        EarningType = "Admin_MissedCommission",
+                        CreatedAt = DateTime.Now
+                    };
+                    await _matrixEarningsRepository.CreateAsync(adminEarning, userQualificationCount);
+
+                    // Asiento contable (wallet) como crédito
+                    await _walletRepository.CreateAsync(new Wallet {
+                        AffiliateId = 0,
+                        UserId = 1,
+                        Concept = $"Comisiones no pagadas x{missedCount} - {matrixConfig.Data.MatrixName}",
+                        Detail = $"User {userId} • Ciclo {userQualificationCount}",
+                        Debit = 0,
+                        Credit = adminMissed,
+                        AffiliateUserName = "adminrecycoin",
+                        AdminUserName = "adminrecycoin",
+                        Status = true,
+                        ConceptType = "admin_missed_commission",
+                        BrandId = brandId,
+                        Date = DateTime.Now,
+                    });
                 }
             }
 
@@ -877,7 +929,8 @@ public class MatrixService : BaseService, IMatrixService
             availableBalance -= pendingAmount;
             if (availableBalance < matrixConfig.FeeAmount)
                 return false;
-
+            
+            var adminBase = Math.Round(matrixConfig.FeeAmount * 0.30m, 2);
             var positionResponse = await _accountServiceAdapter.IsActiveInMatrix(
                 new MatrixRequest
                 {
@@ -911,7 +964,7 @@ public class MatrixService : BaseService, IMatrixService
                 BrandId = _brandService.BrandId,
                 Date = DateTime.Now,
             };
-
+            
             var qualification =
                 await _matrixQualificationRepository.GetByUserAndMatrixTypeAsync(targetUserId, request.MatrixType);
             if (qualification?.IsQualified == true)
@@ -920,7 +973,22 @@ public class MatrixService : BaseService, IMatrixService
             var debitResult = await _walletRepository.CreateWalletAsync(debitRequest);
             if (debitResult == null)
                 throw new InvalidOperationException("No se pudo procesar el débito");
-
+            
+            await _walletRepository.CreateAsync(new Wallet {
+                AffiliateId = 0,
+                UserId = 1, 
+                Concept = $"Fee admin 30% - {matrixConfig.MatrixName} (User {qualification.UserId})",
+                Detail = $"Ciclo {qualification.QualificationCount + 1}",
+                Debit = 0,
+                Credit = adminBase,
+                AffiliateUserName = Constants.RecycoinAdmin,
+                AdminUserName = Constants.RecycoinAdmin,
+                Status = true,
+                ConceptType = "admin_fee",
+                BrandId = _brandService.BrandId,
+                Date = DateTime.Now,
+            });
+            
             if (qualification == null)
             {
                 qualification = new MatrixQualification
