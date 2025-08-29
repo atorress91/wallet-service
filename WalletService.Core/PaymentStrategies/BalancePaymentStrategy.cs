@@ -374,7 +374,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
         if (spResponse is null)
             return false;
 
-        if (request.BrandId == Constants.RecyCoin)
+        if (request is { BrandId: Constants.RecyCoin, DailyBonusActivation: true })
         { 
             var beneficiaryIds = await _walletRepository.DistributeCommissionsPerPurchaseAsync(new DistributeCommissionsRequest {
                 AffiliateId = request.AffiliateId,
@@ -383,7 +383,7 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
                 AdminUserName = Constants.RecycoinAdmin,
                 LevelPercentages = [15.0m, 5.0m],
             });
-
+        
             _backgroundJobs.Enqueue(() => 
                 _matrixService.ProcessAllUsersMatrixQualificationsAsync(beneficiaryIds.ToArray())
             );

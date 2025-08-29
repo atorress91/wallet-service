@@ -11,6 +11,7 @@ public class WalletRequest
     public string? SecretKey { get; set; }
     public string? ReceiptNumber { get; set; } 
     public long BrandId { get; set; }
+    public bool? DailyBonusActivation { get; set; }
 
     public ICollection<ProductsRequests> ProductsList { get; set; }
 
