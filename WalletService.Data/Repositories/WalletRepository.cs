@@ -230,7 +230,8 @@ public class WalletRepository : BaseRepository, IWalletRepository
                       {request.Bank},
                       {request.ReceiptNumber},
                       {request.SecretKey},
-                      {request.Reason}
+                      {request.Reason},
+                      {request.IncludeInCommissionCalculation}
                   )")
                 .AsNoTracking()
                 .FirstOrDefaultAsync();

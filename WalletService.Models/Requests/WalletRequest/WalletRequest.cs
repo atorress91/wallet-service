@@ -12,6 +12,7 @@ public class WalletRequest
     public string? ReceiptNumber { get; set; } 
     public long BrandId { get; set; }
     public bool? DailyBonusActivation { get; set; }
+    public bool? IncludeInCommissionCalculation { get; set; }
 
     public ICollection<ProductsRequests> ProductsList { get; set; }
 

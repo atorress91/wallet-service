@@ -360,6 +360,7 @@ public partial class WalletServiceDbContext : DbContext
             entity.Property(e => e.TotalPoints).HasColumnName("total_points");
             entity.Property(e => e.Type).HasColumnName("type");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.IncludeInCommissionCalculation).HasColumnName("include_in_commission_calculation").HasDefaultValue(true);
 
             entity.HasOne(d => d.Brand).WithMany(p => p.Invoices)
                 .HasForeignKey(d => d.BrandId)

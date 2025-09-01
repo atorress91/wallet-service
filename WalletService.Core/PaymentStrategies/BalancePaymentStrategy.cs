@@ -366,7 +366,8 @@ public class BalancePaymentStrategy : IBalancePaymentStrategy
             SecretKey         = request.SecretKey,
             invoices          = invoiceDetails,
             Reason            = string.Empty,
-            BrandId           = request.BrandId
+            BrandId           = request.BrandId,
+            IncludeInCommissionCalculation = request.IncludeInCommissionCalculation,
         };
 
         var spResponse = await _walletRepository.AdminDebitTransaction(debitTransactionRequest);

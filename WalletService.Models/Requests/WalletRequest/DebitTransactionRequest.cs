@@ -20,6 +20,6 @@ public record DebitTransactionRequest
     public bool Type { get; init; }
     public string? SecretKey { get; init; }
     public string? Reason { get; init; }
-
+    public bool? IncludeInCommissionCalculation { get; set; }
     public List<InvoiceDetailsTransactionRequest>? invoices { get; init; } = new List<InvoiceDetailsTransactionRequest>();
 }

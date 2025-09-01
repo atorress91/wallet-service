@@ -58,7 +58,8 @@ public partial class Invoice
     public DateTime? DeletedAt { get; set; }
 
     public long BrandId { get; set; }
-
+    
+    public bool IncludeInCommissionCalculation { get; set; }
     public virtual ICollection<BonusTransactionHistory> BonusTransactionHistories { get; } = new List<BonusTransactionHistory>();
 
     public virtual Brand Brand { get; set; } = null!;
