@@ -13,6 +13,7 @@ using WalletService.Data.Adapters.IAdapters;
 using WalletService.Data.Database.Models;
 using WalletService.Data.Repositories.IRepositories;
 using WalletService.Models.Constants;
+using WalletService.Models.Enums;
 using WalletService.Models.Requests.ConPaymentRequest;
 using WalletService.Models.Requests.MatrixRequest;
 using WalletService.Models.Responses;
@@ -127,7 +128,7 @@ public class MatrixService : BaseService, IMatrixService
                 AffiliateUserName = Constants.RecycoinAdmin,
                 AdminUserName = Constants.RecycoinAdmin,
                 Status = true,
-                ConceptType = "admin_fee",
+                ConceptType = nameof(WalletConceptType.commission_passed_wallet),
                 BrandId = brandId,
                 Date = DateTime.Now,
             });
@@ -984,7 +985,7 @@ public class MatrixService : BaseService, IMatrixService
                 AffiliateUserName = Constants.RecycoinAdmin,
                 AdminUserName = Constants.RecycoinAdmin,
                 Status = true,
-                ConceptType = "admin_fee",
+                ConceptType = nameof(WalletConceptType.commission_passed_wallet),
                 BrandId = _brandService.BrandId,
                 Date = DateTime.Now,
             });
