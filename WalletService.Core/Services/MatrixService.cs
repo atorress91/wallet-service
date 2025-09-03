@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
@@ -788,6 +789,7 @@ public class MatrixService : BaseService, IMatrixService
         _logger.LogInformation("Process completed. Corrected {CorrectedCount} of {MatrixQualificationsCount} records.", correctedCount,
             matrixQualifications.Length);
     }
+    [SuppressMessage("ReSharper.DPA", "DPA0000: DPA issues")]
     public async Task<bool> CheckQualificationAsync(long userId, int matrixType)
     {
         var brandId = _brandService.BrandId == 0 ? 2 : _brandService.BrandId;
@@ -1124,7 +1126,7 @@ public class MatrixService : BaseService, IMatrixService
             .ToArray();
 
         // 3. ---------------- Paralelismo controlado -----------------------------
-        const int maxDop = 1; // <- ajustar CPU/BD
+        const int maxDop = 8; // <- ajustar CPU/BD
         using var throttler = new SemaphoreSlim(maxDop);
 
         var tasks = usersToProcess.Select(async uid =>
